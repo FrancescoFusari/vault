@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,7 +8,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -18,8 +18,24 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Fetch existing tags from the database
+    const { data: notes } = await supabase
+      .from('notes')
+      .select('tags');
+
+    const existingTags = new Set<string>();
+    notes?.forEach(note => {
+      note.tags.forEach((tag: string) => existingTags.add(tag));
+    });
+
     const { content } = await req.json();
     console.log('Analyzing note content:', content);
+    console.log('Existing tags:', Array.from(existingTags));
 
     // First, generate a title
     const titleResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -63,7 +79,14 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'Analyze the following note and provide a category and relevant tags. Respond with a JSON object containing "category" (string) and "tags" (array of strings). Do not include any markdown formatting or code blocks in your response.'
+            content: `Analyze the following note and provide a category and relevant tags. Here are the existing tags in the system that you should reuse if they fit the content: ${Array.from(existingTags).join(', ')}. 
+            
+            Respond with a JSON object containing:
+            - "category" (string)
+            - "tags" (array of strings, including both existing and new tags if needed)
+            
+            Reuse existing tags when they match the content to create better connections between notes.
+            Do not include any markdown formatting or code blocks in your response.`
           },
           {
             role: 'user',
@@ -83,7 +106,6 @@ serve(async (req) => {
     const analysisContent = analysisData.choices[0]?.message?.content;
     console.log('Analysis content:', analysisContent);
 
-    // Parse the response content as JSON
     let result;
     try {
       result = JSON.parse(analysisContent);
@@ -92,8 +114,10 @@ serve(async (req) => {
       throw new Error('Invalid response format from OpenAI');
     }
 
-    // Add the generated title as the first tag
-    result.tags = [generatedTitle, ...result.tags];
+    // Add the generated title as the first tag if it's not already present
+    if (!result.tags.includes(generatedTitle)) {
+      result.tags = [generatedTitle, ...result.tags];
+    }
     console.log('Final analysis result:', result);
 
     return new Response(
