@@ -2,8 +2,6 @@ import { useState } from "react";
 import { NoteInput } from "@/components/NoteInput";
 import { NoteList } from "@/components/NoteList";
 import { analyzeNote } from "@/lib/openai";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -18,25 +16,25 @@ interface Note {
 
 const Index = () => {
   const [notes, setNotes] = useState<Note[]>([]);
-  const [apiKey, setApiKey] = useState('');
   const navigate = useNavigate();
 
   const handleNoteSubmit = async (content: string) => {
-    if (!apiKey) {
-      throw new Error('Please enter your OpenAI API key');
+    try {
+      const analysis = await analyzeNote(content);
+      
+      const newNote: Note = {
+        id: Date.now().toString(),
+        content,
+        category: analysis.category,
+        tags: analysis.tags,
+        createdAt: new Date().toISOString(),
+      };
+
+      setNotes(prev => [newNote, ...prev]);
+    } catch (error) {
+      console.error('Error analyzing note:', error);
+      throw new Error('Failed to analyze note. Please try again.');
     }
-
-    const analysis = await analyzeNote(content, apiKey);
-    
-    const newNote: Note = {
-      id: Date.now().toString(),
-      content,
-      category: analysis.category,
-      tags: analysis.tags,
-      createdAt: new Date().toISOString(),
-    };
-
-    setNotes(prev => [newNote, ...prev]);
   };
 
   const handleSignOut = async () => {
@@ -54,17 +52,6 @@ const Index = () => {
           </p>
         </div>
         <Button variant="outline" onClick={handleSignOut}>Sign Out</Button>
-      </div>
-
-      <div className="max-w-md mx-auto mb-8">
-        <Label htmlFor="apiKey">OpenAI API Key</Label>
-        <Input
-          id="apiKey"
-          type="password"
-          placeholder="Enter your OpenAI API key"
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-        />
       </div>
 
       <NoteInput onNoteSubmit={handleNoteSubmit} />
