@@ -5,7 +5,7 @@ interface Note {
   content: string;
   category: string;
   tags: string[];
-  createdAt: string;
+  created_at: string;
 }
 
 interface NoteListProps {

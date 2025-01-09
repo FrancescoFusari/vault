@@ -5,35 +5,49 @@ import { analyzeNote } from "@/lib/openai";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 
 interface Note {
   id: string;
   content: string;
   category: string;
   tags: string[];
-  createdAt: string;
+  created_at: string;
 }
 
 const Index = () => {
-  const [notes, setNotes] = useState<Note[]>([]);
   const navigate = useNavigate();
+
+  const { data: notes = [], refetch } = useQuery({
+    queryKey: ['notes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('notes')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as Note[];
+    }
+  });
 
   const handleNoteSubmit = async (content: string) => {
     try {
       const analysis = await analyzeNote(content);
       
-      const newNote: Note = {
-        id: Date.now().toString(),
-        content,
-        category: analysis.category,
-        tags: analysis.tags,
-        createdAt: new Date().toISOString(),
-      };
+      const { error } = await supabase
+        .from('notes')
+        .insert({
+          content,
+          category: analysis.category,
+          tags: analysis.tags,
+        });
 
-      setNotes(prev => [newNote, ...prev]);
+      if (error) throw error;
+      refetch(); // Refresh the notes list
     } catch (error) {
-      console.error('Error analyzing note:', error);
-      throw new Error('Failed to analyze note. Please try again.');
+      console.error('Error saving note:', error);
+      throw new Error('Failed to save note. Please try again.');
     }
   };
 

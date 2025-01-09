@@ -8,7 +8,7 @@ interface NoteCardProps {
     content: string;
     category: string;
     tags: string[];
-    createdAt: string;
+    created_at: string;
   };
 }
 
@@ -23,7 +23,7 @@ export const NoteCard = ({ note }: NoteCardProps) => {
         </div>
         <div className="flex items-center text-sm text-muted-foreground">
           <CalendarIcon className="mr-1 h-4 w-4" />
-          {new Date(note.createdAt).toLocaleDateString()}
+          {new Date(note.created_at).toLocaleDateString()}
         </div>
       </CardHeader>
       <CardContent>
