@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Auth as SupabaseAuth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
-import { AuthError } from "@supabase/supabase-js";
+import { AuthError, AuthApiError } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -37,7 +37,29 @@ const Auth = () => {
   const handleAuthError = (error: AuthError) => {
     console.error("Auth error:", error);
     
-    // Parse the error message from the response body if available
+    if (error instanceof AuthApiError) {
+      // Handle specific API error codes
+      switch (error.status) {
+        case 400:
+          if (error.message.includes("Email not confirmed")) {
+            setError("Please verify your email address before signing in.");
+            return;
+          }
+          if (error.message.includes("Invalid login credentials")) {
+            setError("Invalid email or password. Please check your credentials and try again.");
+            return;
+          }
+          break;
+        case 422:
+          if (error.message.includes("weak_password")) {
+            setError("Password should be at least 6 characters long.");
+            return;
+          }
+          break;
+      }
+    }
+    
+    // Try to parse detailed error message from response body
     try {
       const bodyObj = JSON.parse(error.message);
       if (bodyObj.message) {
@@ -45,16 +67,17 @@ const Auth = () => {
         return;
       }
     } catch (e) {
-      // If parsing fails, continue with default error handling
+      // If parsing fails, use default error handling
     }
 
-    // Default error messages
+    // Default error messages for common cases
     switch (error.message) {
       case "weak_password":
         setError("Password should be at least 6 characters long.");
         break;
       case "invalid_credentials":
-        setError("Invalid email or password.");
+      case "invalid_grant":
+        setError("Invalid email or password. Please check your credentials and try again.");
         break;
       default:
         setError(error.message);
