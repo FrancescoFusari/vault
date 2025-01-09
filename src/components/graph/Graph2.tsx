@@ -42,19 +42,24 @@ export const Graph2 = ({ notes, highlightedNoteId }: Graph2Props) => {
       });
     });
 
-    const maxTagCount = Math.max(...Array.from(tagUsageCount.values()));
-    const centerX = 250;
-    const centerY = 250;
-    const radius = 200;
-
+    const maxTagCount = Math.max(...Array.from(tagUsageCount.values()), 1);
+    
+    // Calculate dimensions based on container size
+    const centerX = dimensions.width / 2;
+    const centerY = dimensions.height / 2;
+    const radius = Math.min(dimensions.width, dimensions.height) * 0.35; // Adjust radius based on container size
+    
     // Position notes in a polygon
     notes.forEach((note, index) => {
+      if (notes.length === 0) return;
+      
+      // Calculate angle for even distribution
       const angle = (2 * Math.PI * index) / notes.length;
       const x = centerX + radius * Math.cos(angle);
       const y = centerY + radius * Math.sin(angle);
       
       if (!nodeMap.has(note.id)) {
-        const title = note.content.split('\n')[0].substring(0, 20);
+        const title = note.content.split('\n')[0].substring(0, 30);
         nodes.push({
           id: note.id,
           type: 'noteNode',
@@ -78,8 +83,10 @@ export const Graph2 = ({ notes, highlightedNoteId }: Graph2Props) => {
         if (!nodeMap.has(tag)) {
           const tagCount = tagUsageCount.get(tag) || 1;
           const scale = 0.5 + (tagCount / maxTagCount) * 1.5; // Scale between 0.5 and 2
+          
+          // Position tags in inner circle with random variation
           const randomAngle = Math.random() * 2 * Math.PI;
-          const randomRadius = Math.random() * (radius * 0.4); // Keep tags within 40% of the radius
+          const randomRadius = (radius * 0.3) * Math.random(); // Keep tags within 30% of the center
           const tagX = centerX + randomRadius * Math.cos(randomAngle);
           const tagY = centerY + randomRadius * Math.sin(randomAngle);
 
@@ -119,7 +126,7 @@ export const Graph2 = ({ notes, highlightedNoteId }: Graph2Props) => {
     const { nodes: newNodes, edges: newEdges } = getNodesAndEdges();
     setNodes(newNodes);
     setEdges(newEdges);
-  }, [notes, highlightedNoteId, theme]);
+  }, [notes, highlightedNoteId, theme, dimensions.width, dimensions.height]);
 
   const handleNodeClick = (event: React.MouseEvent, node: Node) => {
     if (node.data.type === 'note') {
