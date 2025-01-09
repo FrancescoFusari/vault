@@ -41,8 +41,12 @@ export const NoteGraph = ({ notes, highlightedNoteId }: NoteGraphProps) => {
 
   useEffect(() => {
     if (graphRef.current) {
-      graphRef.current.d3Force('charge').strength(isMobile ? -100 : -150);
-      graphRef.current.d3Force('link').distance(isMobile ? 60 : 100);
+      // Adjust force simulation parameters based on screen size
+      graphRef.current.d3Force('charge').strength(isMobile ? -200 : -300);
+      graphRef.current.d3Force('link').distance(isMobile ? 80 : 120);
+      
+      // Adjust collision detection for better spacing on mobile
+      graphRef.current.d3Force('collision', d3.forceCollide(isMobile ? 20 : 30));
     }
   }, [isMobile]);
 
@@ -55,10 +59,10 @@ export const NoteGraph = ({ notes, highlightedNoteId }: NoteGraphProps) => {
       const node = graphData.nodes.find((n: GraphNode) => n.id === highlightedNoteId);
       if (node) {
         graphRef.current.centerAt(node.x, node.y, 1000);
-        graphRef.current.zoom(2.5, 1000);
+        graphRef.current.zoom(isMobile ? 2 : 2.5, 1000);
       }
     }
-  }, [highlightedNoteId, graphData]);
+  }, [highlightedNoteId, graphData, isMobile]);
 
   return (
     <div 
@@ -71,7 +75,7 @@ export const NoteGraph = ({ notes, highlightedNoteId }: NoteGraphProps) => {
         graphData={graphData}
         nodeLabel="name"
         nodeColor={node => getNodeColor(node as GraphNode, hoveredNode, graphData, theme)}
-        nodeRelSize={isMobile ? 4 : 6}
+        nodeRelSize={isMobile ? 8 : 6} // Increased size on mobile for better touch targets
         linkColor={link => getLinkColor(link, hoveredNode, theme)}
         linkWidth={link => getLinkWidth(link, hoveredNode)}
         onNodeClick={handleNodeClick}
@@ -83,6 +87,8 @@ export const NoteGraph = ({ notes, highlightedNoteId }: NoteGraphProps) => {
         onEngineStop={() => {
           graphRef.current?.zoomToFit(400, 50);
         }}
+        minZoom={isMobile ? 1 : 0.5} // Limit minimum zoom on mobile
+        maxZoom={isMobile ? 4 : 8} // Adjust maximum zoom based on device
       />
     </div>
   );

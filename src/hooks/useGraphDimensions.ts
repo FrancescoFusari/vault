@@ -11,17 +11,18 @@ export const useGraphDimensions = (
 ): Dimensions => {
   const [dimensions, setDimensions] = useState<Dimensions>({ 
     width: 800, 
-    height: 600 
+    height: isMobile ? window.innerHeight * 0.6 : 600 // Adjust height based on screen size
   });
 
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
         const { width } = containerRef.current.getBoundingClientRect();
-        setDimensions({
-          width: width,
-          height: isMobile ? 400 : 600
-        });
+        const height = isMobile 
+          ? Math.min(window.innerHeight * 0.6, 500) // Cap mobile height
+          : Math.min(window.innerHeight * 0.7, 600); // Cap desktop height
+        
+        setDimensions({ width, height });
       }
     };
 

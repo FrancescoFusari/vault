@@ -14,8 +14,8 @@ export const processGraphData = (
     if (!nodeSet.has(note.id)) {
       nodes.push({
         id: note.id,
-        name: note.tags[0] || note.content.substring(0, isMobile ? 20 : 30) + '...',
-        val: isMobile ? 1.5 : 2,
+        name: note.tags[0] || note.content.substring(0, isMobile ? 30 : 40) + '...',
+        val: isMobile ? 2.5 : 2, // Increased size for mobile
         type: 'note',
         color: note.id === highlightedNoteId 
           ? '#f43f5e' 
@@ -28,7 +28,7 @@ export const processGraphData = (
       nodes.push({
         id: note.category,
         name: note.category,
-        val: isMobile ? 2 : 3,
+        val: isMobile ? 3.5 : 3, // Increased size for mobile
         type: 'category',
         color: theme === 'dark' ? '#f59e0b' : '#d97706'
       });
@@ -41,7 +41,7 @@ export const processGraphData = (
         nodes.push({
           id: tag,
           name: tag,
-          val: isMobile ? 1.2 : 1.5,
+          val: isMobile ? 2 : 1.5, // Adjusted size for mobile
           type: 'tag',
           color: theme === 'dark' ? '#22c55e' : '#16a34a'
         });
