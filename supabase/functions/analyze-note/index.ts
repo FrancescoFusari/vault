@@ -49,7 +49,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'Generate a short, concise title (maximum 5 words) for the following note. Respond with just the title, nothing else.'
+            content: 'Generate a concise, descriptive title (2-5 words) for the following note. The title should capture the main topic or theme. Respond with just the title, nothing else.'
           },
           {
             role: 'user',
@@ -114,10 +114,14 @@ serve(async (req) => {
       throw new Error('Invalid response format from OpenAI');
     }
 
-    // Add the generated title as the first tag if it's not already present
-    if (!result.tags.includes(generatedTitle)) {
-      result.tags = [generatedTitle, ...result.tags];
+    // Add the generated title as the first tag
+    if (generatedTitle && !result.tags.includes(generatedTitle)) {
+      result.tags.unshift(generatedTitle);
     }
+
+    // Add title to the response
+    result.title = generatedTitle;
+    
     console.log('Final analysis result:', result);
 
     return new Response(
