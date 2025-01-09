@@ -4,6 +4,9 @@ import { NoteList } from "@/components/NoteList";
 import { analyzeNote } from "@/lib/openai";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface Note {
   id: string;
@@ -16,6 +19,7 @@ interface Note {
 const Index = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [apiKey, setApiKey] = useState('');
+  const navigate = useNavigate();
 
   const handleNoteSubmit = async (content: string) => {
     if (!apiKey) {
@@ -35,13 +39,21 @@ const Index = () => {
     setNotes(prev => [newNote, ...prev]);
   };
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate('/auth');
+  };
+
   return (
     <div className="container mx-auto py-8 space-y-8">
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold text-primary">Smart Notes</h1>
-        <p className="text-muted-foreground">
-          Write notes and let AI categorize them for you
-        </p>
+      <div className="flex justify-between items-center">
+        <div className="text-center space-y-4">
+          <h1 className="text-4xl font-bold text-primary">Smart Notes</h1>
+          <p className="text-muted-foreground">
+            Write notes and let AI categorize them for you
+          </p>
+        </div>
+        <Button variant="outline" onClick={handleSignOut}>Sign Out</Button>
       </div>
 
       <div className="max-w-md mx-auto mb-8">
