@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import { useTheme } from 'next-themes';
 import * as d3 from 'd3';
-import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { useGraphDimensions } from '@/hooks/useGraphDimensions';
 import { processGraphData } from '@/utils/graphUtils';
@@ -25,6 +24,7 @@ export const MobileNoteGraph = ({ notes, highlightedNoteId }: MobileNoteGraphPro
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [hasInitiallyZoomed, setHasInitiallyZoomed] = useState(false);
 
   useEffect(() => {
     const data = processGraphData(notes, highlightedNoteId, theme, true);
@@ -48,11 +48,15 @@ export const MobileNoteGraph = ({ notes, highlightedNoteId }: MobileNoteGraphPro
       graphRef.current.d3Force('link').distance(60);
       graphRef.current.d3Force('collision', d3.forceCollide(25));
       
-      setTimeout(() => {
-        graphRef.current.zoomToFit(400, 10);
-      }, 100);
+      // Only zoom to fit once on initial load
+      if (!hasInitiallyZoomed) {
+        setTimeout(() => {
+          graphRef.current.zoomToFit(400, 10);
+          setHasInitiallyZoomed(true);
+        }, 100);
+      }
     }
-  }, []);
+  }, [hasInitiallyZoomed]);
 
   const handleNodeClick = (node: GraphNode) => {
     if (node.type === 'note') {
@@ -98,9 +102,6 @@ export const MobileNoteGraph = ({ notes, highlightedNoteId }: MobileNoteGraphPro
         width={dimensions.width}
         height={dimensions.height}
         cooldownTicks={50}
-        onEngineStop={() => {
-          graphRef.current?.zoomToFit(400, 10);
-        }}
       />
       {selectedNode && selectedNode.type === 'note' && (
         <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
