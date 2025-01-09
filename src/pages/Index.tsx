@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NoteInput } from "@/components/NoteInput";
 import { NoteList } from "@/components/NoteList";
 import { analyzeNote } from "@/lib/openai";
@@ -18,6 +18,17 @@ interface Note {
 const Index = () => {
   const navigate = useNavigate();
 
+  // Add effect to check authentication
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/auth');
+      }
+    };
+    checkAuth();
+  }, [navigate]);
+
   const { data: notes = [], refetch } = useQuery({
     queryKey: ['notes'],
     queryFn: async () => {
@@ -33,6 +44,11 @@ const Index = () => {
 
   const handleNoteSubmit = async (content: string) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('User not authenticated');
+      }
+
       const analysis = await analyzeNote(content);
       
       const { error } = await supabase
@@ -41,6 +57,7 @@ const Index = () => {
           content,
           category: analysis.category,
           tags: analysis.tags,
+          user_id: session.user.id
         });
 
       if (error) throw error;
