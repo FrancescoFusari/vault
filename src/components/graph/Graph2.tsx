@@ -10,6 +10,7 @@ import {
   Edge,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import './Graph2.css';
 import { useTheme } from 'next-themes';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
@@ -28,7 +29,6 @@ export const Graph2 = ({ notes, highlightedNoteId }: Graph2Props) => {
   const { toast } = useToast();
   const dimensions = useGraphDimensions(containerRef, false);
   
-  // Convert notes to nodes and edges
   const getNodesAndEdges = () => {
     const nodes: Node[] = [];
     const edges: Edge[] = [];
@@ -41,11 +41,12 @@ export const Graph2 = ({ notes, highlightedNoteId }: Graph2Props) => {
           id: note.id,
           type: 'noteNode',
           data: { 
-            label: note.tags[0] || note.content.substring(0, 40) + '...',
+            label: note.tags[0] || note.content.substring(0, 20) + '...',
             type: 'note',
             isHighlighted: note.id === highlightedNoteId
           },
           position: { x: Math.random() * 500, y: Math.random() * 500 },
+          className: 'circle-node note-node',
           style: {
             background: theme === 'dark' ? '#1e293b' : '#f8fafc',
             border: note.id === highlightedNoteId ? '2px solid #f43f5e' : undefined,
@@ -54,7 +55,7 @@ export const Graph2 = ({ notes, highlightedNoteId }: Graph2Props) => {
         nodeMap.set(note.id, true);
       }
 
-      // Add category node and edge
+      // Add category node
       if (!nodeMap.has(note.category)) {
         nodes.push({
           id: note.category,
@@ -64,6 +65,7 @@ export const Graph2 = ({ notes, highlightedNoteId }: Graph2Props) => {
             type: 'category'
           },
           position: { x: Math.random() * 500, y: Math.random() * 500 },
+          className: 'circle-node category-node',
           style: {
             background: theme === 'dark' ? '#f59e0b' : '#d97706',
             color: 'white',
@@ -76,6 +78,7 @@ export const Graph2 = ({ notes, highlightedNoteId }: Graph2Props) => {
         source: note.id,
         target: note.category,
         animated: note.id === highlightedNoteId,
+        className: 'thin-edge',
       });
 
       // Add tag nodes and edges
@@ -89,6 +92,7 @@ export const Graph2 = ({ notes, highlightedNoteId }: Graph2Props) => {
               type: 'tag'
             },
             position: { x: Math.random() * 500, y: Math.random() * 500 },
+            className: 'circle-node tag-node',
             style: {
               background: theme === 'dark' ? '#22c55e' : '#16a34a',
               color: 'white',
@@ -100,6 +104,7 @@ export const Graph2 = ({ notes, highlightedNoteId }: Graph2Props) => {
           id: `${note.id}-${tag}`,
           source: note.id,
           target: tag,
+          className: 'thin-edge',
         });
       });
     });
@@ -150,10 +155,10 @@ export const Graph2 = ({ notes, highlightedNoteId }: Graph2Props) => {
         nodesConnectable={false}
         elementsSelectable={true}
         style={{
-          backgroundColor: theme === 'dark' ? '#1e293b' : '#f8fafc'
+          backgroundColor: theme === 'dark' ? '#020617' : '#f8fafc'
         }}
       >
-        <Background />
+        <Background color={theme === 'dark' ? '#334155' : '#94a3b8'} />
         <Controls />
         <MiniMap 
           nodeColor={(node) => {

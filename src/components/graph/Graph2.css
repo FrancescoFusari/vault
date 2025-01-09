@@ -1,20 +1,49 @@
-.react-flow__node {
-  padding: 10px;
-  border-radius: 8px;
-  min-width: 150px;
-  font-size: 12px;
+.circle-node {
+  width: 50px !important;
+  height: 50px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  padding: 8px;
   text-align: center;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
 }
 
-.react-flow__node-noteNode {
-  border-width: 1px;
+.circle-node:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.react-flow__node-categoryNode,
-.react-flow__node-tagNode {
+.note-node {
+  font-size: 8px;
+  width: 40px !important;
+  height: 40px !important;
+}
+
+.category-node {
+  width: 60px !important;
+  height: 60px !important;
+  font-weight: 600;
+}
+
+.tag-node {
+  width: 45px !important;
+  height: 45px !important;
   font-weight: 500;
+}
+
+.thin-edge {
+  stroke-width: 1;
+  opacity: 0.5;
+}
+
+.thin-edge.animated {
+  stroke-dasharray: 5;
+  animation: dashdraw 0.5s linear infinite;
 }
 
 .react-flow__controls {
@@ -24,4 +53,10 @@
 
 .react-flow__minimap {
   border-radius: 8px;
+}
+
+@keyframes dashdraw {
+  from {
+    stroke-dashoffset: 10;
+  }
 }
