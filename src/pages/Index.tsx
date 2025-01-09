@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { NoteInput } from "@/components/NoteInput";
 import { NoteList } from "@/components/NoteList";
 import { NoteGraph } from "@/components/NoteGraph";
+import { MobileNoteGraph } from "@/components/MobileNoteGraph";
 import { TagView } from "@/components/TagView";
 import { analyzeNote } from "@/lib/openai";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Note {
   id: string;
@@ -20,6 +22,7 @@ interface Note {
 
 const Index = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -104,7 +107,11 @@ const Index = () => {
         <TabsContent value="graph">
           <div className="mt-6">
             <h2 className="text-2xl font-semibold mb-6">Knowledge Graph</h2>
-            <NoteGraph notes={notes} />
+            {isMobile ? (
+              <MobileNoteGraph notes={notes} />
+            ) : (
+              <NoteGraph notes={notes} />
+            )}
           </div>
         </TabsContent>
         <TabsContent value="tags">
