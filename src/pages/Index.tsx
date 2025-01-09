@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { NoteInput } from "@/components/NoteInput";
 import { NoteList } from "@/components/NoteList";
+import { NoteGraph } from "@/components/NoteGraph";
 import { analyzeNote } from "@/lib/openai";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -18,7 +20,6 @@ interface Note {
 const Index = () => {
   const navigate = useNavigate();
 
-  // Add effect to check authentication
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -61,7 +62,7 @@ const Index = () => {
         });
 
       if (error) throw error;
-      refetch(); // Refresh the notes list
+      refetch();
     } catch (error) {
       console.error('Error saving note:', error);
       throw new Error('Failed to save note. Please try again.');
@@ -87,10 +88,24 @@ const Index = () => {
 
       <NoteInput onNoteSubmit={handleNoteSubmit} />
       
-      <div className="mt-12">
-        <h2 className="text-2xl font-semibold mb-6">Your Notes</h2>
-        <NoteList notes={notes} />
-      </div>
+      <Tabs defaultValue="list" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="list">List View</TabsTrigger>
+          <TabsTrigger value="graph">Knowledge Graph</TabsTrigger>
+        </TabsList>
+        <TabsContent value="list">
+          <div className="mt-6">
+            <h2 className="text-2xl font-semibold mb-6">Your Notes</h2>
+            <NoteList notes={notes} />
+          </div>
+        </TabsContent>
+        <TabsContent value="graph">
+          <div className="mt-6">
+            <h2 className="text-2xl font-semibold mb-6">Knowledge Graph</h2>
+            <NoteGraph notes={notes} />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
