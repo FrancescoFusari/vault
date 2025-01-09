@@ -24,6 +24,7 @@ export const MobileNoteGraph = ({ notes, highlightedNoteId }: MobileNoteGraphPro
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Process graph data with emphasis on frequently connected nodes
   useEffect(() => {
@@ -41,27 +42,22 @@ export const MobileNoteGraph = ({ notes, highlightedNoteId }: MobileNoteGraphPro
 
     setGraphData(data);
 
-    // Only zoom to fit when data changes
-    if (graphRef.current && data.nodes.length > 0) {
+    // Only zoom to fit on initial load
+    if (graphRef.current && data.nodes.length > 0 && !isInitialized) {
       setTimeout(() => {
         graphRef.current.zoomToFit(400, 10);
+        setIsInitialized(true);
       }, 300);
     }
-  }, [notes, highlightedNoteId, theme]);
+  }, [notes, highlightedNoteId, theme, isInitialized]);
 
   // Initialize force simulation
   useEffect(() => {
     if (graphRef.current) {
-      // Optimize force simulation for mobile
+      // Set initial force simulation parameters
       graphRef.current.d3Force('charge').strength(-150);
       graphRef.current.d3Force('link').distance(60);
       graphRef.current.d3Force('collision', d3.forceCollide(25));
-      
-      // Stop force simulation after initial layout
-      setTimeout(() => {
-        graphRef.current.d3Force('center', null);
-        graphRef.current.d3Force('charge').strength(-50);
-      }, 1000);
     }
   }, []);
 
@@ -108,8 +104,6 @@ export const MobileNoteGraph = ({ notes, highlightedNoteId }: MobileNoteGraphPro
         backgroundColor={theme === 'dark' ? '#1e293b' : '#f8fafc'}
         width={dimensions.width}
         height={dimensions.height}
-        cooldownTicks={50}
-        warmupTicks={50}
       />
       {selectedNode && selectedNode.type === 'note' && (
         <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
