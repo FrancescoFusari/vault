@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 interface AnalysisResult {
   category: string;
   tags: string[];
