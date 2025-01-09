@@ -54,10 +54,8 @@ export const MobileNoteGraph = ({ notes, highlightedNoteId }: MobileNoteGraphPro
       graphRef.current.d3Force('link').distance(60);
       graphRef.current.d3Force('collision', d3.forceCollide(25));
       
-      // Enable zoom constraints
-      graphRef.current.zoom(2);
-      graphRef.current.minZoom(1);
-      graphRef.current.maxZoom(5);
+      // Center the graph initially
+      graphRef.current.zoomToFit(400, 50);
     }
   }, []);
 
@@ -94,6 +92,9 @@ export const MobileNoteGraph = ({ notes, highlightedNoteId }: MobileNoteGraphPro
         nodeLabel="name"
         nodeRelSize={6}
         linkWidth={2}
+        minZoom={1}
+        maxZoom={5}
+        zoom={2}
         nodeColor={(node: any) => {
           const n = node as GraphNode;
           if (n.id === highlightedNoteId) return '#f43f5e';
