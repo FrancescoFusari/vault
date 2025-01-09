@@ -88,10 +88,24 @@ const Index = () => {
 
       <NoteInput onNoteSubmit={handleNoteSubmit} />
       
-      <div className="mt-6">
-        <h2 className="text-2xl font-semibold mb-6">Your Notes</h2>
-        <NoteList notes={notes} />
-      </div>
+      <Tabs defaultValue="list" className="w-full">
+        <TabsList>
+          <TabsTrigger value="list">List View</TabsTrigger>
+          <TabsTrigger value="graph">Graph View</TabsTrigger>
+        </TabsList>
+        <TabsContent value="list">
+          <div className="mt-6">
+            <h2 className="text-2xl font-semibold mb-6">Your Notes</h2>
+            <NoteList notes={notes} />
+          </div>
+        </TabsContent>
+        <TabsContent value="graph">
+          <div className="mt-6">
+            <h2 className="text-2xl font-semibold mb-6">Knowledge Graph</h2>
+            <NoteGraph notes={notes} />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
