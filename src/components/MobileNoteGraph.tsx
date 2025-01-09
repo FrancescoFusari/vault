@@ -7,7 +7,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useGraphDimensions } from '@/hooks/useGraphDimensions';
 import { processGraphData } from '@/utils/graphUtils';
 import { GraphNode, GraphData, Note } from '@/types/graph';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Popover, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { CalendarIcon } from "@radix-ui/react-icons";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +39,7 @@ export const MobileNoteGraph = ({ notes, highlightedNoteId }: MobileNoteGraphPro
       ).length;
       return {
         ...node,
-        val: Math.max(2, Math.min(5, 1 + connectionCount * 0.5)) // Scale node size based on connections
+        val: Math.max(2, Math.min(5, 1 + connectionCount * 0.5))
       };
     });
 
@@ -96,8 +96,8 @@ export const MobileNoteGraph = ({ notes, highlightedNoteId }: MobileNoteGraphPro
         linkWidth={2}
         minZoom={0.5}
         maxZoom={8}
-        enableZoomPanInteraction={true}
-        enablePointerInteraction={true}
+        enableZoomInteraction={true}
+        enablePanInteraction={true}
         nodeColor={(node: any) => {
           const n = node as GraphNode;
           if (n.id === highlightedNoteId) return '#f43f5e';
