@@ -24,8 +24,8 @@ export const MobileNoteGraph = ({ notes, highlightedNoteId }: MobileNoteGraphPro
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [popoverOpen, setPopoverOpen] = useState(false);
-  const [hasInitiallyZoomed, setHasInitiallyZoomed] = useState(false);
 
+  // Process graph data with emphasis on frequently connected nodes
   useEffect(() => {
     const data = processGraphData(notes, highlightedNoteId, theme, true);
     
@@ -40,23 +40,30 @@ export const MobileNoteGraph = ({ notes, highlightedNoteId }: MobileNoteGraphPro
     });
 
     setGraphData(data);
+
+    // Only zoom to fit when data changes
+    if (graphRef.current && data.nodes.length > 0) {
+      setTimeout(() => {
+        graphRef.current.zoomToFit(400, 10);
+      }, 300);
+    }
   }, [notes, highlightedNoteId, theme]);
 
+  // Initialize force simulation
   useEffect(() => {
     if (graphRef.current) {
+      // Optimize force simulation for mobile
       graphRef.current.d3Force('charge').strength(-150);
       graphRef.current.d3Force('link').distance(60);
       graphRef.current.d3Force('collision', d3.forceCollide(25));
       
-      // Only zoom to fit once on initial load
-      if (!hasInitiallyZoomed) {
-        setTimeout(() => {
-          graphRef.current.zoomToFit(400, 10);
-          setHasInitiallyZoomed(true);
-        }, 100);
-      }
+      // Stop force simulation after initial layout
+      setTimeout(() => {
+        graphRef.current.d3Force('center', null);
+        graphRef.current.d3Force('charge').strength(-50);
+      }, 1000);
     }
-  }, [hasInitiallyZoomed]);
+  }, []);
 
   const handleNodeClick = (node: GraphNode) => {
     if (node.type === 'note') {
@@ -102,6 +109,7 @@ export const MobileNoteGraph = ({ notes, highlightedNoteId }: MobileNoteGraphPro
         width={dimensions.width}
         height={dimensions.height}
         cooldownTicks={50}
+        warmupTicks={50}
       />
       {selectedNode && selectedNode.type === 'note' && (
         <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
