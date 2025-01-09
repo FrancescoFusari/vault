@@ -21,6 +21,33 @@ serve(async (req) => {
     const { content } = await req.json();
     console.log('Analyzing note content:', content);
 
+    // First, generate a title
+    const titleResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: 'Generate a short, concise title (maximum 5 words) for the following note. Respond with just the title, nothing else.'
+          },
+          {
+            role: 'user',
+            content
+          }
+        ],
+      }),
+    });
+
+    const titleData = await titleResponse.json();
+    const generatedTitle = titleData.choices[0]?.message?.content.trim();
+    console.log('Generated title:', generatedTitle);
+
+    // Then, analyze for category and tags
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -28,7 +55,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',  // Using the recommended fast model
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -45,13 +72,14 @@ serve(async (req) => {
     const data = await response.json();
     console.log('OpenAI response:', data);
 
-    const result = data.choices[0]?.message?.content;
-    if (!result) {
-      throw new Error('No response from OpenAI');
-    }
+    const result = JSON.parse(data.choices[0]?.message?.content);
+    
+    // Add the generated title as the first tag
+    result.tags = [generatedTitle, ...result.tags];
+    console.log('Final analysis result:', result);
 
     return new Response(
-      result,
+      JSON.stringify(result),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
