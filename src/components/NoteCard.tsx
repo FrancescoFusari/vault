@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { CalendarIcon, HashIcon } from "@radix-ui/react-icons";
+import { CalendarIcon, HashtagIcon } from "@radix-ui/react-icons";
 
 interface NoteCardProps {
   note: {
@@ -29,7 +29,7 @@ export const NoteCard = ({ note }: NoteCardProps) => {
       <CardContent>
         <p className="text-sm mb-4">{note.content}</p>
         <div className="flex items-center gap-2 flex-wrap">
-          <HashIcon className="h-4 w-4 text-muted-foreground" />
+          <HashtagIcon className="h-4 w-4 text-muted-foreground" />
           {note.tags.map((tag) => (
             <Badge key={tag} variant="secondary" className="tag">
               {tag}
