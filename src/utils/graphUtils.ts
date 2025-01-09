@@ -1,5 +1,4 @@
 import { GraphData, GraphNode, GraphLink, Note } from "@/types/graph";
-import { Theme } from "next-themes";
 
 export const processGraphData = (
   notes: Note[], 
