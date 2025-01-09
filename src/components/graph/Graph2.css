@@ -1,0 +1,27 @@
+.react-flow__node {
+  padding: 10px;
+  border-radius: 8px;
+  min-width: 150px;
+  font-size: 12px;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+.react-flow__node-noteNode {
+  border-width: 1px;
+}
+
+.react-flow__node-categoryNode,
+.react-flow__node-tagNode {
+  font-weight: 500;
+}
+
+.react-flow__controls {
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  border-radius: 8px;
+}
+
+.react-flow__minimap {
+  border-radius: 8px;
+}
