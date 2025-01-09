@@ -9,6 +9,8 @@ interface Node {
   val: number;
   type: 'note' | 'category' | 'tag';
   color?: string;
+  x?: number;
+  y?: number;
 }
 
 interface Link {
@@ -37,6 +39,7 @@ export const NoteGraph = ({ notes, highlightedNoteId }: NoteGraphProps) => {
   const { theme } = useTheme();
   const isMobile = useIsMobile();
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+  const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
 
   const processDataForGraph = (): GraphData => {
     const nodes: Node[] = [];
@@ -111,17 +114,18 @@ export const NoteGraph = ({ notes, highlightedNoteId }: NoteGraphProps) => {
   }, [isMobile]);
 
   useEffect(() => {
+    setGraphData(processDataForGraph());
+  }, [notes, highlightedNoteId, theme, isMobile]);
+
+  useEffect(() => {
     if (highlightedNoteId && graphRef.current) {
-      const data = graphRef.current.getGraphData();
-      const node = data.nodes.find((n: Node) => n.id === highlightedNoteId);
+      const node = graphData.nodes.find((n: Node) => n.id === highlightedNoteId);
       if (node) {
         graphRef.current.centerAt(node.x, node.y, 1000);
         graphRef.current.zoom(2.5, 1000);
       }
     }
-  }, [highlightedNoteId]);
-
-  const graphData = processDataForGraph();
+  }, [highlightedNoteId, graphData]);
 
   return (
     <div 
