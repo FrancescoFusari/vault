@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { NoteInput } from "@/components/NoteInput";
 import { NoteList } from "@/components/NoteList";
 import { NoteGraph } from "@/components/NoteGraph";
+import { TagView } from "@/components/TagView";
 import { analyzeNote } from "@/lib/openai";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -92,6 +93,7 @@ const Index = () => {
         <TabsList>
           <TabsTrigger value="list">List View</TabsTrigger>
           <TabsTrigger value="graph">Graph View</TabsTrigger>
+          <TabsTrigger value="tags">Tags View</TabsTrigger>
         </TabsList>
         <TabsContent value="list">
           <div className="mt-6">
@@ -103,6 +105,12 @@ const Index = () => {
           <div className="mt-6">
             <h2 className="text-2xl font-semibold mb-6">Knowledge Graph</h2>
             <NoteGraph notes={notes} />
+          </div>
+        </TabsContent>
+        <TabsContent value="tags">
+          <div className="mt-6">
+            <h2 className="text-2xl font-semibold mb-6">Tags Overview</h2>
+            <TagView />
           </div>
         </TabsContent>
       </Tabs>
