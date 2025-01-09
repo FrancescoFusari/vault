@@ -1,41 +1,31 @@
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import { CalendarIcon } from "@radix-ui/react-icons";
+import { useNavigate } from "react-router-dom";
 
 interface NoteCardProps {
   note: {
     id: string;
     content: string;
-    category: string;
-    tags: string[];
     created_at: string;
   };
 }
 
 export const NoteCard = ({ note }: NoteCardProps) => {
+  const navigate = useNavigate();
+  const title = note.content.split('\n')[0].substring(0, 50) + (note.content.length > 50 ? '...' : '');
+
   return (
-    <Card className="note-card">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <div className="flex items-center space-x-2">
-          <Badge variant="outline" className="text-primary">
-            {note.category}
-          </Badge>
-        </div>
+    <Card 
+      className="note-card cursor-pointer hover:bg-accent transition-colors"
+      onClick={() => navigate(`/note/${note.id}`)}
+    >
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 py-4">
+        <h3 className="font-medium">{title}</h3>
         <div className="flex items-center text-sm text-muted-foreground">
           <CalendarIcon className="mr-1 h-4 w-4" />
           {new Date(note.created_at).toLocaleDateString()}
         </div>
       </CardHeader>
-      <CardContent>
-        <p className="text-sm mb-4">{note.content}</p>
-        <div className="flex items-center gap-2 flex-wrap">
-          {note.tags.map((tag) => (
-            <Badge key={tag} variant="secondary" className="tag">
-              {tag}
-            </Badge>
-          ))}
-        </div>
-      </CardContent>
     </Card>
   );
 };

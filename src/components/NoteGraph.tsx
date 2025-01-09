@@ -28,9 +28,10 @@ interface NoteGraphProps {
     category: string;
     tags: string[];
   }>;
+  highlightedNoteId?: string;
 }
 
-export const NoteGraph = ({ notes }: NoteGraphProps) => {
+export const NoteGraph = ({ notes, highlightedNoteId }: NoteGraphProps) => {
   const graphRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
@@ -49,7 +50,9 @@ export const NoteGraph = ({ notes }: NoteGraphProps) => {
           name: note.content.substring(0, isMobile ? 20 : 30) + '...',
           val: isMobile ? 1.5 : 2,
           type: 'note',
-          color: theme === 'dark' ? '#94a3b8' : '#475569'
+          color: note.id === highlightedNoteId 
+            ? '#f43f5e' // Highlighted color
+            : theme === 'dark' ? '#94a3b8' : '#475569'
         });
         nodeSet.add(note.id);
       }
@@ -86,7 +89,6 @@ export const NoteGraph = ({ notes }: NoteGraphProps) => {
 
   useEffect(() => {
     if (graphRef.current) {
-      // Adjust force parameters based on device
       graphRef.current.d3Force('charge').strength(isMobile ? -100 : -150);
       graphRef.current.d3Force('link').distance(isMobile ? 60 : 100);
     }
@@ -103,13 +105,20 @@ export const NoteGraph = ({ notes }: NoteGraphProps) => {
       }
     };
 
-    // Initial dimensions
     updateDimensions();
-
-    // Update dimensions on resize
     window.addEventListener('resize', updateDimensions);
     return () => window.removeEventListener('resize', updateDimensions);
   }, [isMobile]);
+
+  useEffect(() => {
+    if (highlightedNoteId && graphRef.current) {
+      const node = graphRef.current.graphData().nodes.find((n: Node) => n.id === highlightedNoteId);
+      if (node) {
+        graphRef.current.centerAt(node.x, node.y, 1000);
+        graphRef.current.zoom(2.5, 1000);
+      }
+    }
+  }, [highlightedNoteId]);
 
   const graphData = processDataForGraph();
 
@@ -131,7 +140,6 @@ export const NoteGraph = ({ notes }: NoteGraphProps) => {
         height={dimensions.height}
         cooldownTicks={isMobile ? 50 : 100}
         onEngineStop={() => {
-          // Ensure graph is centered after initial render
           graphRef.current?.zoomToFit(400, 50);
         }}
       />
