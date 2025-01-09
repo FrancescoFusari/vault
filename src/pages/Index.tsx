@@ -3,6 +3,7 @@ import { NoteInput } from "@/components/NoteInput";
 import { NoteList } from "@/components/NoteList";
 import { NoteGraph } from "@/components/NoteGraph";
 import { MobileNoteGraph } from "@/components/MobileNoteGraph";
+import { Graph2 } from "@/components/graph/Graph2";
 import { TagView } from "@/components/TagView";
 import { analyzeNote } from "@/lib/openai";
 import { Button } from "@/components/ui/button";
@@ -96,6 +97,7 @@ const Index = () => {
         <TabsList>
           <TabsTrigger value="list">List View</TabsTrigger>
           <TabsTrigger value="graph">Graph View</TabsTrigger>
+          <TabsTrigger value="graph2">Graph 2</TabsTrigger>
           <TabsTrigger value="tags">Tags View</TabsTrigger>
         </TabsList>
         <TabsContent value="list">
@@ -112,6 +114,12 @@ const Index = () => {
             ) : (
               <NoteGraph notes={notes} />
             )}
+          </div>
+        </TabsContent>
+        <TabsContent value="graph2">
+          <div className="mt-6">
+            <h2 className="text-2xl font-semibold mb-6">Alternative Graph View</h2>
+            <Graph2 notes={notes} />
           </div>
         </TabsContent>
         <TabsContent value="tags">
