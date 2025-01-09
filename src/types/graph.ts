@@ -23,4 +23,5 @@ export interface Note {
   content: string;
   category: string;
   tags: string[];
+  created_at: string;  // Added this property
 }
