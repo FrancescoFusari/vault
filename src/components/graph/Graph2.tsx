@@ -33,19 +33,37 @@ export const Graph2 = ({ notes, highlightedNoteId }: Graph2Props) => {
     const nodes: Node[] = [];
     const edges: Edge[] = [];
     const nodeMap = new Map<string, boolean>();
+    const tagUsageCount = new Map<string, number>();
 
-    notes.forEach((note) => {
-      // Add note node
+    // Count tag usage
+    notes.forEach(note => {
+      note.tags.forEach(tag => {
+        tagUsageCount.set(tag, (tagUsageCount.get(tag) || 0) + 1);
+      });
+    });
+
+    const maxTagCount = Math.max(...Array.from(tagUsageCount.values()));
+    const centerX = 250;
+    const centerY = 250;
+    const radius = 200;
+
+    // Position notes in a polygon
+    notes.forEach((note, index) => {
+      const angle = (2 * Math.PI * index) / notes.length;
+      const x = centerX + radius * Math.cos(angle);
+      const y = centerY + radius * Math.sin(angle);
+      
       if (!nodeMap.has(note.id)) {
+        const title = note.content.split('\n')[0].substring(0, 20);
         nodes.push({
           id: note.id,
           type: 'noteNode',
           data: { 
-            label: note.tags[0] || note.content.substring(0, 20) + '...',
+            label: title,
             type: 'note',
             isHighlighted: note.id === highlightedNoteId
           },
-          position: { x: Math.random() * 500, y: Math.random() * 500 },
+          position: { x, y },
           className: 'circle-node note-node',
           style: {
             background: theme === 'dark' ? '#1e293b' : '#f8fafc',
@@ -55,47 +73,29 @@ export const Graph2 = ({ notes, highlightedNoteId }: Graph2Props) => {
         nodeMap.set(note.id, true);
       }
 
-      // Add category node
-      if (!nodeMap.has(note.category)) {
-        nodes.push({
-          id: note.category,
-          type: 'categoryNode',
-          data: { 
-            label: note.category,
-            type: 'category'
-          },
-          position: { x: Math.random() * 500, y: Math.random() * 500 },
-          className: 'circle-node category-node',
-          style: {
-            background: theme === 'dark' ? '#f59e0b' : '#d97706',
-            color: 'white',
-          },
-        });
-        nodeMap.set(note.category, true);
-      }
-      edges.push({
-        id: `${note.id}-${note.category}`,
-        source: note.id,
-        target: note.category,
-        animated: note.id === highlightedNoteId,
-        className: 'thin-edge',
-      });
-
       // Add tag nodes and edges
       note.tags.forEach((tag) => {
         if (!nodeMap.has(tag)) {
+          const tagCount = tagUsageCount.get(tag) || 1;
+          const scale = 0.5 + (tagCount / maxTagCount) * 1.5; // Scale between 0.5 and 2
+          const randomAngle = Math.random() * 2 * Math.PI;
+          const randomRadius = Math.random() * (radius * 0.4); // Keep tags within 40% of the radius
+          const tagX = centerX + randomRadius * Math.cos(randomAngle);
+          const tagY = centerY + randomRadius * Math.sin(randomAngle);
+
           nodes.push({
             id: tag,
             type: 'tagNode',
             data: { 
-              label: tag,
+              label: '●',
               type: 'tag'
             },
-            position: { x: Math.random() * 500, y: Math.random() * 500 },
+            position: { x: tagX, y: tagY },
             className: 'circle-node tag-node',
             style: {
               background: theme === 'dark' ? '#22c55e' : '#16a34a',
               color: 'white',
+              transform: `scale(${scale})`,
             },
           });
           nodeMap.set(tag, true);
@@ -124,14 +124,14 @@ export const Graph2 = ({ notes, highlightedNoteId }: Graph2Props) => {
   const handleNodeClick = (event: React.MouseEvent, node: Node) => {
     if (node.data.type === 'note') {
       navigate(`/note/${node.id}`);
-    } else {
+    } else if (node.data.type === 'tag') {
+      const connectedNotes = edges.filter(edge => 
+        edge.source === node.id || edge.target === node.id
+      ).length;
+      
       toast({
-        title: `${node.data.type === 'category' ? 'Category' : 'Tag'}: ${node.data.label}`,
-        description: `Connected to ${
-          edges.filter(edge => 
-            edge.source === node.id || edge.target === node.id
-          ).length
-        } notes`,
+        title: `Tag: ${node.id}`,
+        description: `Connected to ${connectedNotes} notes`,
       });
     }
   };
@@ -165,8 +165,6 @@ export const Graph2 = ({ notes, highlightedNoteId }: Graph2Props) => {
             switch (node.data.type) {
               case 'note':
                 return theme === 'dark' ? '#94a3b8' : '#475569';
-              case 'category':
-                return theme === 'dark' ? '#f59e0b' : '#d97706';
               case 'tag':
                 return theme === 'dark' ? '#22c55e' : '#16a34a';
               default:
