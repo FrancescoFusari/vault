@@ -8,8 +8,6 @@ import { useGraphDimensions } from '@/hooks/useGraphDimensions';
 import { processGraphData } from '@/utils/graphUtils';
 import { getNodeColor, calculateNodeSize } from '@/utils/graphNodeUtils';
 import { GraphNode, GraphData, Note } from '@/types/graph';
-import { Popover } from "@/components/ui/popover";
-import { NotePopover } from './NotePopover';
 
 interface Graph2Props {
   notes: Note[];
@@ -24,13 +22,12 @@ export const Graph2 = ({ notes, highlightedNoteId }: Graph2Props) => {
   const { toast } = useToast();
   const dimensions = useGraphDimensions(containerRef, false);
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
-  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
-  const [popoverOpen, setPopoverOpen] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const data = processGraphData(notes, highlightedNoteId, theme, false);
     
+    // Enhanced node sizing based on connections
     data.nodes = data.nodes.map(node => {
       const connectionCount = data.links.filter(
         link => link.source === node.id || link.target === node.id
@@ -43,21 +40,37 @@ export const Graph2 = ({ notes, highlightedNoteId }: Graph2Props) => {
 
     setGraphData(data);
 
+    // Initial layout setup
     if (graphRef.current && data.nodes.length > 0 && !isInitialized) {
+      const fg = graphRef.current;
+      
+      // Create a radial layout
+      const radius = Math.min(dimensions.width, dimensions.height) / 3;
+      const angleStep = (2 * Math.PI) / data.nodes.length;
+      
+      // Position nodes in a circle
+      data.nodes.forEach((node, i) => {
+        const angle = i * angleStep;
+        const x = radius * Math.cos(angle);
+        const y = radius * Math.sin(angle);
+        node.x = x;
+        node.y = y;
+      });
+
+      // Custom force simulation
+      fg.d3Force('charge').strength(-200);
+      fg.d3Force('link').distance(100);
+      fg.d3Force('center').strength(0.2);
+      
+      // Add radial force
+      fg.d3Force('radial', d3.forceRadial(radius, dimensions.width / 2, dimensions.height / 2).strength(0.1));
+
       setTimeout(() => {
-        graphRef.current.zoomToFit(400, 10);
+        fg.zoomToFit(400, 10);
         setIsInitialized(true);
       }, 300);
     }
-  }, [notes, highlightedNoteId, theme, isInitialized]);
-
-  useEffect(() => {
-    if (graphRef.current) {
-      graphRef.current.d3Force('charge').strength(-150);
-      graphRef.current.d3Force('link').distance(80);
-      graphRef.current.d3Force('collision', d3.forceCollide(30));
-    }
-  }, []);
+  }, [notes, highlightedNoteId, theme, dimensions.width, dimensions.height, isInitialized]);
 
   const handleNodeClick = (node: GraphNode) => {
     if (node.type === 'note') {
@@ -85,7 +98,7 @@ export const Graph2 = ({ notes, highlightedNoteId }: Graph2Props) => {
         graphData={graphData}
         nodeLabel="name"
         nodeRelSize={8}
-        linkWidth={1.5}
+        linkWidth={2}
         minZoom={0.5}
         maxZoom={8}
         enableZoomInteraction={true}
@@ -96,8 +109,17 @@ export const Graph2 = ({ notes, highlightedNoteId }: Graph2Props) => {
         backgroundColor={theme === 'dark' ? '#1e293b' : '#f8fafc'}
         width={dimensions.width}
         height={dimensions.height}
-        d3AlphaDecay={0.01}
-        d3VelocityDecay={0.4}
+        d3AlphaDecay={0.02}
+        d3VelocityDecay={0.3}
+        cooldownTime={2000}
+        onEngineStop={() => {
+          if (!isInitialized) {
+            graphRef.current?.zoomToFit(400);
+          }
+        }}
+        linkDirectionalParticles={2}
+        linkDirectionalParticleWidth={2}
+        linkDirectionalParticleSpeed={0.005}
       />
     </div>
   );
