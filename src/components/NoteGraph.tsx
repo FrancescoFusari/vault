@@ -112,7 +112,8 @@ export const NoteGraph = ({ notes, highlightedNoteId }: NoteGraphProps) => {
 
   useEffect(() => {
     if (highlightedNoteId && graphRef.current) {
-      const node = graphRef.current.graphData().nodes.find((n: Node) => n.id === highlightedNoteId);
+      const data = graphRef.current.getGraphData();
+      const node = data.nodes.find((n: Node) => n.id === highlightedNoteId);
       if (node) {
         graphRef.current.centerAt(node.x, node.y, 1000);
         graphRef.current.zoom(2.5, 1000);
