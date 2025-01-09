@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import { useTheme } from 'next-themes';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/components/ui/use-toast';
 
 interface Node {
   id: string;
@@ -38,8 +40,11 @@ export const NoteGraph = ({ notes, highlightedNoteId }: NoteGraphProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
+  const [hoveredNode, setHoveredNode] = useState<Node | null>(null);
 
   const processDataForGraph = (): GraphData => {
     const nodes: Node[] = [];
@@ -50,7 +55,7 @@ export const NoteGraph = ({ notes, highlightedNoteId }: NoteGraphProps) => {
       if (!nodeSet.has(note.id)) {
         nodes.push({
           id: note.id,
-          name: note.content.substring(0, isMobile ? 20 : 30) + '...',
+          name: note.tags[0] || note.content.substring(0, isMobile ? 20 : 30) + '...',
           val: isMobile ? 1.5 : 2,
           type: 'note',
           color: note.id === highlightedNoteId 
@@ -89,6 +94,21 @@ export const NoteGraph = ({ notes, highlightedNoteId }: NoteGraphProps) => {
 
     return { nodes, links };
   };
+
+  const handleNodeClick = useCallback((node: Node) => {
+    if (node.type === 'note') {
+      navigate(`/note/${node.id}`);
+    } else {
+      toast({
+        title: `${node.type === 'category' ? 'Category' : 'Tag'}: ${node.name}`,
+        description: `Connected to ${
+          graphData.links.filter(link => 
+            link.source === node.id || link.target === node.id
+          ).length
+        } nodes`,
+      });
+    }
+  }, [navigate, toast, graphData.links]);
 
   useEffect(() => {
     if (graphRef.current) {
@@ -137,9 +157,44 @@ export const NoteGraph = ({ notes, highlightedNoteId }: NoteGraphProps) => {
         ref={graphRef}
         graphData={graphData}
         nodeLabel="name"
-        nodeColor={node => (node as Node).color || '#666'}
+        nodeColor={node => {
+          const n = node as Node;
+          if (hoveredNode) {
+            const isConnected = graphData.links.some(
+              link => 
+                (link.source === hoveredNode.id && link.target === n.id) ||
+                (link.target === hoveredNode.id && link.source === n.id)
+            );
+            if (n.id === hoveredNode.id) return n.color;
+            return isConnected ? n.color : theme === 'dark' ? '#1e293b' : '#f8fafc';
+          }
+          return n.color;
+        }}
         nodeRelSize={isMobile ? 4 : 6}
-        linkColor={() => theme === 'dark' ? '#334155' : '#cbd5e1'}
+        linkColor={(link) => {
+          const l = link as Link;
+          if (hoveredNode) {
+            const isConnected = 
+              l.source === hoveredNode.id || 
+              l.target === hoveredNode.id;
+            return isConnected 
+              ? theme === 'dark' ? '#94a3b8' : '#475569'
+              : theme === 'dark' ? '#334155' : '#cbd5e1';
+          }
+          return theme === 'dark' ? '#334155' : '#cbd5e1';
+        }}
+        linkWidth={link => {
+          const l = link as Link;
+          if (hoveredNode) {
+            const isConnected = 
+              l.source === hoveredNode.id || 
+              l.target === hoveredNode.id;
+            return isConnected ? 2 : 1;
+          }
+          return 1;
+        }}
+        onNodeClick={handleNodeClick}
+        onNodeHover={setHoveredNode}
         backgroundColor={theme === 'dark' ? '#1e293b' : '#f8fafc'}
         width={dimensions.width}
         height={dimensions.height}
