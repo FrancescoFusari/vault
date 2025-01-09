@@ -28,7 +28,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o-mini',  // Using the recommended fast model
         messages: [
           {
             role: 'system',
