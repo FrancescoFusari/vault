@@ -47,13 +47,12 @@ export const Graph2 = ({ notes, highlightedNoteId }: Graph2Props) => {
     // Calculate dimensions based on container size
     const centerX = dimensions.width / 2;
     const centerY = dimensions.height / 2;
-    const radius = Math.min(dimensions.width, dimensions.height) * 0.35; // Adjust radius based on container size
+    const radius = Math.min(dimensions.width, dimensions.height) * 0.35;
     
+    if (notes.length === 0) return { nodes, edges };
+
     // Position notes in a polygon
     notes.forEach((note, index) => {
-      if (notes.length === 0) return;
-      
-      // Calculate angle for even distribution
       const angle = (2 * Math.PI * index) / notes.length;
       const x = centerX + radius * Math.cos(angle);
       const y = centerY + radius * Math.sin(angle);
@@ -82,13 +81,24 @@ export const Graph2 = ({ notes, highlightedNoteId }: Graph2Props) => {
       note.tags.forEach((tag) => {
         if (!nodeMap.has(tag)) {
           const tagCount = tagUsageCount.get(tag) || 1;
-          const scale = 0.5 + (tagCount / maxTagCount) * 1.5; // Scale between 0.5 and 2
+          // Scale between 0.5 and 2 based on usage
+          const scale = 0.5 + (tagCount / maxTagCount) * 1.5;
           
-          // Position tags in inner circle with random variation
-          const randomAngle = Math.random() * 2 * Math.PI;
-          const randomRadius = (radius * 0.3) * Math.random(); // Keep tags within 30% of the center
-          const tagX = centerX + randomRadius * Math.cos(randomAngle);
-          const tagY = centerY + randomRadius * Math.sin(randomAngle);
+          // Calculate a position within the inner area of the polygon
+          // Use golden ratio to distribute tags more evenly
+          const goldenRatio = 1.618033988749895;
+          const index = nodes.length;
+          const t = index * goldenRatio;
+          
+          // Use a smaller radius for tags (20% of the note radius)
+          const tagRadius = radius * 0.2;
+          // Spiral layout for tags
+          const spiralAngle = t * 2 * Math.PI;
+          const spiralRadius = tagRadius * (t / (2 * Math.PI));
+          const actualRadius = Math.min(spiralRadius, tagRadius);
+          
+          const tagX = centerX + actualRadius * Math.cos(spiralAngle);
+          const tagY = centerY + actualRadius * Math.sin(spiralAngle);
 
           nodes.push({
             id: tag,
