@@ -17,6 +17,8 @@ interface NetworkNode {
   value: number;
   x?: number;
   y?: number;
+  vx?: number;
+  vy?: number;
 }
 
 interface NetworkLink {
@@ -93,6 +95,7 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
     const width = svgRef.current.clientWidth;
     const height = svgRef.current.clientHeight;
     const data = processData();
+    const nodeRadius = 5; // Base radius for collision detection
 
     // Create SVG
     const svg = d3.select(svgRef.current)
@@ -101,16 +104,57 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
       .attr("height", height)
       .style("background-color", theme === 'dark' ? '#1e293b' : '#f8fafc');
 
-    // Create force simulation
+    // Boundary force to keep nodes within the viewport
+    const boundaryForce = () => {
+      for (const node of data.nodes) {
+        const r = node.value * nodeRadius;
+        
+        if (node.x! < r) {
+          node.x = r;
+          node.vx! *= -0.7; // Bounce with energy loss
+        }
+        if (node.x! > width - r) {
+          node.x = width - r;
+          node.vx! *= -0.7;
+        }
+        if (node.y! < r) {
+          node.y = r;
+          node.vy! *= -0.7;
+        }
+        if (node.y! > height - r) {
+          node.y = height - r;
+          node.vy! *= -0.7;
+        }
+      }
+    };
+
+    // Create force simulation with stronger forces
     const simulation = d3.forceSimulation(data.nodes)
       .force("link", d3.forceLink(data.links)
         .id((d: any) => d.id)
         .distance(isMobile ? 50 : 100))
-      .force("charge", d3.forceManyBody().strength(isMobile ? -100 : -200))
+      .force("charge", d3.forceManyBody().strength(isMobile ? -150 : -300)) // Increased repulsion
       .force("center", d3.forceCenter(width / 2, height / 2))
       .force("x", d3.forceX(width / 2).strength(0.1))
       .force("y", d3.forceY(height / 2).strength(0.1))
-      .force("collision", d3.forceCollide().radius((d: NetworkNode) => d.value * 5));
+      .force("collision", d3.forceCollide().radius((d: NetworkNode) => d.value * nodeRadius))
+      .on("tick", () => {
+        boundaryForce(); // Apply boundary force on each tick
+        
+        link
+          .attr("x1", (d: any) => d.source.x)
+          .attr("y1", (d: any) => d.source.y)
+          .attr("x2", (d: any) => d.target.x)
+          .attr("y2", (d: any) => d.target.y);
+
+        node
+          .attr("cx", (d: NetworkNode) => d.x || 0)
+          .attr("cy", (d: NetworkNode) => d.y || 0);
+
+        label
+          .attr("x", (d: NetworkNode) => d.x || 0)
+          .attr("y", (d: NetworkNode) => (d.y || 0) - (d.value * nodeRadius + 10));
+      });
 
     // Create container for zoom
     const container = svg.append("g");
@@ -133,12 +177,12 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
         .attr("stroke-opacity", 0.6)
         .attr("stroke-width", (d: NetworkLink) => Math.sqrt(d.value));
 
-    // Create nodes
+    // Create nodes with increased initial velocity
     const node = container.append("g")
       .selectAll("circle")
       .data(data.nodes)
       .join("circle")
-        .attr("r", (d: NetworkNode) => d.value * 5)
+        .attr("r", (d: NetworkNode) => d.value * nodeRadius)
         .attr("fill", (d: NetworkNode) => {
           if (d.type === 'tag') {
             return theme === 'dark' ? '#0ea5e9' : '#38bdf8';
@@ -147,6 +191,11 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
         })
         .attr("stroke", theme === 'dark' ? '#1e293b' : '#f8fafc')
         .attr("stroke-width", 2)
+        .each((d: NetworkNode) => {
+          // Add initial random velocity
+          d.vx = (Math.random() - 0.5) * 5;
+          d.vy = (Math.random() - 0.5) * 5;
+        })
         .on("click", (event: any, d: NetworkNode) => {
           if (d.type === 'note') {
             const noteId = d.id.replace('note-', '');
@@ -166,7 +215,7 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
           d3.select(event.currentTarget)
             .transition()
             .duration(200)
-            .attr("r", (d: NetworkNode) => d.value * 6);
+            .attr("r", (d: NetworkNode) => d.value * (nodeRadius + 1));
 
           // Show tooltip
           const tooltip = svg.append("g")
@@ -184,7 +233,7 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
           d3.select(event.currentTarget)
             .transition()
             .duration(200)
-            .attr("r", (d: NetworkNode) => d.value * 5);
+            .attr("r", (d: NetworkNode) => d.value * nodeRadius);
 
           svg.selectAll(".tooltip").remove();
         })
@@ -205,23 +254,6 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
         .style("font-weight", "600")
         .text((d: NetworkNode) => d.name);
 
-    // Update positions on simulation tick
-    simulation.on("tick", () => {
-      link
-        .attr("x1", (d: any) => d.source.x)
-        .attr("y1", (d: any) => d.source.y)
-        .attr("x2", (d: any) => d.target.x)
-        .attr("y2", (d: any) => d.target.y);
-
-      node
-        .attr("cx", (d: NetworkNode) => d.x || 0)
-        .attr("cy", (d: NetworkNode) => d.y || 0);
-
-      label
-        .attr("x", (d: NetworkNode) => d.x || 0)
-        .attr("y", (d: NetworkNode) => (d.y || 0) - (d.value * 5 + 10));
-    });
-
     // Drag functions
     function dragstarted(event: any) {
       if (!event.active) simulation.alphaTarget(0.3).restart();
@@ -238,12 +270,15 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
       if (!event.active) simulation.alphaTarget(0);
       event.subject.fx = null;
       event.subject.fy = null;
+      // Add some velocity after drag
+      event.subject.vx = (Math.random() - 0.5) * 5;
+      event.subject.vy = (Math.random() - 0.5) * 5;
     }
 
   }, [notes, theme, isMobile, toast, navigate]);
 
   return (
-    <div className="w-full h-[600px] border rounded-lg overflow-hidden">
+    <div className="w-full h-full border rounded-lg overflow-hidden">
       <svg ref={svgRef} className="w-full h-full" />
     </div>
   );
