@@ -5,6 +5,7 @@ import TagsPage from "./pages/TagsPage";
 import NetworkPage from "./pages/NetworkPage";
 import Auth from "./pages/Auth";
 import NotePage from "./pages/NotePage";
+import NotesListPage from "./pages/NotesListPage";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -26,6 +27,7 @@ function App() {
           <Route path="/network" element={<NetworkPage />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/note/:id" element={<NotePage />} />
+          <Route path="/notes" element={<NotesListPage />} />
         </Routes>
       </Router>
     </QueryClientProvider>

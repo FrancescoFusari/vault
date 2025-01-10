@@ -1,4 +1,4 @@
-import { List, Tag, Network } from "lucide-react";
+import { List, Tag, Network, FileText } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 export const BottomNav = () => {
@@ -14,6 +14,13 @@ export const BottomNav = () => {
         className={`flex flex-col items-center ${isActive('/') ? 'text-primary' : 'text-muted-foreground'}`}
       >
         <List className="h-5 w-5" />
+        <span className="text-xs mt-1">Home</span>
+      </button>
+      <button
+        onClick={() => navigate('/notes')}
+        className={`flex flex-col items-center ${isActive('/notes') ? 'text-primary' : 'text-muted-foreground'}`}
+      >
+        <FileText className="h-5 w-5" />
         <span className="text-xs mt-1">Notes</span>
       </button>
       <button
