@@ -12,6 +12,12 @@ interface Network3DGraphProps {
   notes: Note[];
 }
 
+interface NetworkLink {
+  source: NetworkNode;
+  target: NetworkNode;
+  value: number;
+}
+
 export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
@@ -32,6 +38,11 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     }
   };
 
+  const getLinkColor = (link: NetworkLink) => {
+    if (!link.source || !link.target) return theme === 'dark' ? '#475569' : '#94a3b8';
+    return theme === 'dark' ? '#475569' : '#94a3b8';
+  };
+
   return (
     <div 
       ref={containerRef} 
@@ -49,7 +60,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           }
           return theme === 'dark' ? '#6366f1' : '#818cf8';
         }}
-        linkColor={() => theme === 'dark' ? '#475569' : '#94a3b8'}
+        linkColor={getLinkColor}
         backgroundColor={theme === 'dark' ? 'hsl(229 19% 12%)' : 'hsl(40 33% 98%)'}
         onNodeClick={handleNodeClick}
         nodeRelSize={6}
@@ -58,7 +69,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         enableNavigationControls={true}
         showNavInfo={true}
         controlType="orbit"
-        // Adjust touch sensitivity through force engine configuration
         forceEngine={isMobile ? "d3" : undefined}
         cooldownTime={isMobile ? 3000 : undefined}
         warmupTicks={isMobile ? 20 : undefined}
