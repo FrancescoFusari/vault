@@ -1,5 +1,5 @@
 import { Card, CardHeader } from "@/components/ui/card";
-import { CalendarIcon } from "@radix-ui/react-icons";
+import { CalendarIcon, Link as LinkIcon } from "@radix-ui/react-icons";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 
@@ -9,6 +9,8 @@ interface NoteCardProps {
     content: string;
     tags: string[];
     created_at: string;
+    input_type?: string;
+    source_url?: string;
   };
 }
 
@@ -39,6 +41,15 @@ export const NoteCard = ({ note }: NoteCardProps) => {
               {tag}
             </Badge>
           ))}
+          {note.source_url && (
+            <Badge 
+              variant="secondary"
+              className="text-xs flex items-center gap-1"
+            >
+              <LinkIcon className="h-3 w-3" />
+              URL
+            </Badge>
+          )}
         </div>
       </CardHeader>
     </Card>
