@@ -48,7 +48,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   return (
     <div 
       ref={containerRef} 
-      className="absolute inset-0 overflow-hidden"
+      className="absolute inset-0 w-full h-full"
     >
       <NetworkGraphSettings 
         settings={settings}

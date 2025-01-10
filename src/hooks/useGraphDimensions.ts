@@ -10,18 +10,15 @@ export const useGraphDimensions = (
   isMobile: boolean
 ): Dimensions => {
   const [dimensions, setDimensions] = useState<Dimensions>({ 
-    width: 800, 
-    height: isMobile ? window.innerHeight * 0.6 : 600 // Adjust height based on screen size
+    width: window.innerWidth, 
+    height: window.innerHeight - (isMobile ? 80 : 0) // Account for bottom nav on mobile
   });
 
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
         const { width } = containerRef.current.getBoundingClientRect();
-        const height = isMobile 
-          ? Math.min(window.innerHeight * 0.6, 500) // Cap mobile height
-          : Math.min(window.innerHeight * 0.7, 600); // Cap desktop height
-        
+        const height = window.innerHeight - (isMobile ? 80 : 0); // Account for bottom nav
         setDimensions({ width, height });
       }
     };
