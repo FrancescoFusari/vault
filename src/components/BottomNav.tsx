@@ -1,4 +1,4 @@
-import { List, Tag, Network, FileText, Settings, Square } from "lucide-react";
+import { List, Tag, FileText, Settings, Square } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 export const BottomNav = () => {
@@ -29,13 +29,6 @@ export const BottomNav = () => {
       >
         <Tag className="h-5 w-5" />
         <span className="text-xs mt-1">Tags</span>
-      </button>
-      <button
-        onClick={() => navigate('/network')}
-        className={`flex flex-col items-center ${isActive('/network') ? 'text-primary' : 'text-muted-foreground'}`}
-      >
-        <Network className="h-5 w-5" />
-        <span className="text-xs mt-1">Network</span>
       </button>
       <button
         onClick={() => navigate('/network3d')}
