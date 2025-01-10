@@ -66,16 +66,23 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       })),
       links: links
         .filter(link => {
+          if (!link.source || !link.target) return false;
           // Ensure both source and target exist and are valid
-          const source = typeof link.source === 'object' ? link.source?.id : link.source;
-          const target = typeof link.target === 'object' ? link.target?.id : link.target;
-          return source && target && validNodeIds.has(source.toString()) && validNodeIds.has(target.toString());
+          const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
+          const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+          return sourceId && targetId && 
+                 validNodeIds.has(String(sourceId)) && 
+                 validNodeIds.has(String(targetId));
         })
-        .map(link => ({
-          source: typeof link.source === 'object' ? link.source.id.toString() : link.source.toString(),
-          target: typeof link.target === 'object' ? link.target.id.toString() : link.target.toString(),
-          value: link.value || 1
-        }))
+        .map(link => {
+          if (!link.source || !link.target) return null;
+          return {
+            source: typeof link.source === 'object' ? String(link.source.id) : String(link.source),
+            target: typeof link.target === 'object' ? String(link.target.id) : String(link.target),
+            value: link.value || 1
+          };
+        })
+        .filter((link): link is NonNullable<typeof link> => link !== null)
     };
 
     setGraphState({
