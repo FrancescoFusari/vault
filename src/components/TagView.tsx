@@ -44,7 +44,7 @@ export const TagView = () => {
       const { data, error } = await supabase
         .from('tag_categories')
         .select('categories')
-        .single();
+        .maybeSingle();
       
       if (error && error.code !== 'PGRST116') throw error;
       return data?.categories as Categories | null;
@@ -53,9 +53,17 @@ export const TagView = () => {
 
   const saveCategoriesMutation = useMutation({
     mutationFn: async (categories: Categories) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       const { error } = await supabase
         .from('tag_categories')
-        .upsert({ categories }, { onConflict: 'user_id' });
+        .upsert({ 
+          categories,
+          user_id: user.id 
+        }, { 
+          onConflict: 'user_id' 
+        });
       
       if (error) throw error;
     },
