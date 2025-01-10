@@ -94,13 +94,13 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
         const noteId = `note-${note.id}`;
         const noteNode: NetworkNode = {
           id: noteId,
-          name: note.content.split('\n')[0].substring(0, 30) + '...',
+          name: note.tags[0] || note.content.split('\n')[0].substring(0, 30) + '...', // Use first tag as title
           type: 'note',
-          value: 2, // Increased size for note nodes
-          originalNote: note // Store the original note data
+          value: 2,
+          originalNote: note
         };
         nodes.push(noteNode);
-        nodeMap.set(noteNode.id, noteNode);
+        nodeMap.set(noteId, noteNode);
 
         // Create links between notes and their tags
         note.tags.forEach(tag => {
