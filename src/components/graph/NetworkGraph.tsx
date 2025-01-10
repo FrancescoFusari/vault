@@ -1,10 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { useTheme } from 'next-themes';
 import { Note } from '@/types/graph';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { NetworkGraphSettings } from './NetworkGraphSettings';
 
 interface NetworkGraphProps {
   notes: Note[];
@@ -31,6 +32,29 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [simulation, setSimulation] = useState<d3.Simulation<NetworkNode, NetworkLink> | null>(null);
+  const [graphSettings, setGraphSettings] = useState({
+    linkDistance: isMobile ? 50 : 100,
+    chargeStrength: isMobile ? -100 : -200,
+    collisionRadius: 5,
+  });
+
+  const handleSettingChange = (setting: string, value: number) => {
+    setGraphSettings(prev => ({ ...prev, [setting]: value }));
+    
+    if (simulation) {
+      simulation
+        .force("link", d3.forceLink()
+          .id((d: any) => d.id)
+          .distance(setting === 'linkDistance' ? value : graphSettings.linkDistance))
+        .force("charge", d3.forceManyBody()
+          .strength(setting === 'chargeStrength' ? value : graphSettings.chargeStrength))
+        .force("collision", d3.forceCollide()
+          .radius((d: NetworkNode) => d.value * (setting === 'collisionRadius' ? value : graphSettings.collisionRadius)))
+        .alpha(1)
+        .restart();
+    }
+  };
 
   useEffect(() => {
     if (!svgRef.current || !notes.length) return;
@@ -102,15 +126,17 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
       .style("background-color", theme === 'dark' ? '#1e293b' : '#f8fafc');
 
     // Create force simulation
-    const simulation = d3.forceSimulation(data.nodes)
+    const newSimulation = d3.forceSimulation(data.nodes)
       .force("link", d3.forceLink(data.links)
         .id((d: any) => d.id)
-        .distance(isMobile ? 50 : 100))
-      .force("charge", d3.forceManyBody().strength(isMobile ? -100 : -200))
+        .distance(graphSettings.linkDistance))
+      .force("charge", d3.forceManyBody().strength(graphSettings.chargeStrength))
       .force("center", d3.forceCenter(width / 2, height / 2))
       .force("x", d3.forceX(width / 2).strength(0.1))
       .force("y", d3.forceY(height / 2).strength(0.1))
-      .force("collision", d3.forceCollide().radius((d: NetworkNode) => d.value * 5));
+      .force("collision", d3.forceCollide().radius((d: NetworkNode) => d.value * graphSettings.collisionRadius));
+
+    setSimulation(newSimulation);
 
     // Create container for zoom
     const container = svg.append("g");
@@ -138,7 +164,7 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
       .selectAll("circle")
       .data(data.nodes)
       .join("circle")
-        .attr("r", (d: NetworkNode) => d.value * 5)
+        .attr("r", (d: NetworkNode) => d.value * graphSettings.collisionRadius)
         .attr("fill", (d: NetworkNode) => {
           if (d.type === 'tag') {
             return theme === 'dark' ? '#0ea5e9' : '#38bdf8';
@@ -162,32 +188,6 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
             });
           }
         })
-        .on("mouseover", (event: any, d: NetworkNode) => {
-          d3.select(event.currentTarget)
-            .transition()
-            .duration(200)
-            .attr("r", (d: NetworkNode) => d.value * 6);
-
-          // Show tooltip
-          const tooltip = svg.append("g")
-            .attr("class", "tooltip")
-            .attr("transform", `translate(${event.pageX},${event.pageY - 28})`);
-
-          tooltip.append("text")
-            .attr("x", 0)
-            .attr("y", 0)
-            .style("font-size", "12px")
-            .style("fill", theme === 'dark' ? '#e2e8f0' : '#334155')
-            .text(d.name);
-        })
-        .on("mouseout", (event: any) => {
-          d3.select(event.currentTarget)
-            .transition()
-            .duration(200)
-            .attr("r", (d: NetworkNode) => d.value * 5);
-
-          svg.selectAll(".tooltip").remove();
-        })
         .call(d3.drag()
           .on("start", dragstarted)
           .on("drag", dragged)
@@ -206,7 +206,7 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
         .text((d: NetworkNode) => d.name);
 
     // Update positions on simulation tick
-    simulation.on("tick", () => {
+    newSimulation.on("tick", () => {
       link
         .attr("x1", (d: any) => d.source.x)
         .attr("y1", (d: any) => d.source.y)
@@ -219,12 +219,12 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
 
       label
         .attr("x", (d: NetworkNode) => d.x || 0)
-        .attr("y", (d: NetworkNode) => (d.y || 0) - (d.value * 5 + 10));
+        .attr("y", (d: NetworkNode) => (d.y || 0) - (d.value * graphSettings.collisionRadius + 10));
     });
 
     // Drag functions
     function dragstarted(event: any) {
-      if (!event.active) simulation.alphaTarget(0.3).restart();
+      if (!event.active) newSimulation.alphaTarget(0.3).restart();
       event.subject.fx = event.subject.x;
       event.subject.fy = event.subject.y;
     }
@@ -235,15 +235,19 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
     }
 
     function dragended(event: any) {
-      if (!event.active) simulation.alphaTarget(0);
+      if (!event.active) newSimulation.alphaTarget(0);
       event.subject.fx = null;
       event.subject.fy = null;
     }
 
-  }, [notes, theme, isMobile, toast, navigate]);
+  }, [notes, theme, isMobile, toast, navigate, graphSettings]);
 
   return (
-    <div className="w-full h-[600px] border rounded-lg overflow-hidden">
+    <div className="w-full h-[600px] border rounded-lg overflow-hidden relative">
+      <NetworkGraphSettings 
+        settings={graphSettings}
+        onSettingChange={handleSettingChange}
+      />
       <svg ref={svgRef} className="w-full h-full" />
     </div>
   );
