@@ -21,29 +21,33 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
 
   // Process notes to include both regular notes and batch items
-  const processedNotes = notes.map(note => ({
+  const processedNotes = notes.filter(note => note && note.content).map(note => ({
     ...note,
     category: note.category || note.analyzed_category || 'Uncategorized',
-    tags: note.tags || note.analyzed_tags || []
+    tags: (note.tags || note.analyzed_tags || []).filter(Boolean)
   }));
 
   const { nodes, links, tagUsageCount, colorScale } = processNetworkData(processedNotes);
+
+  // Create a map of valid node IDs for quick lookup
+  const validNodeIds = new Set(nodes.map(node => node.id));
 
   // Ensure all nodes and links are properly formatted
   const graphData = {
     nodes: nodes.map(node => ({
       ...node,
-      id: node.id.toString(), // Ensure IDs are strings
+      id: node.id.toString(),
     })),
-    links: links.filter(link => 
-      // Only include links where both source and target nodes exist
-      nodes.some(n => n.id === link.source) && 
-      nodes.some(n => n.id === link.target)
-    ).map(link => ({
-      ...link,
-      source: link.source.toString(),
-      target: link.target.toString(),
-    }))
+    links: links
+      .filter(link => 
+        validNodeIds.has(link.source.toString()) && 
+        validNodeIds.has(link.target.toString())
+      )
+      .map(link => ({
+        ...link,
+        source: link.source.toString(),
+        target: link.target.toString(),
+      }))
   };
 
   const handleNodeClick = (node: NetworkNode) => {

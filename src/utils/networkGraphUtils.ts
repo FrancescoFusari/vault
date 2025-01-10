@@ -28,7 +28,7 @@ export const processNetworkData = (notes: Note[]) => {
   notes.forEach(note => {
     const noteTags = note.tags || [];
     noteTags.forEach(tag => {
-      if (tag) {  // Only process non-empty tags
+      if (tag && typeof tag === 'string') {
         allTags.add(tag);
         tagUsageCount.set(tag, (tagUsageCount.get(tag) || 0) + 1);
       }
@@ -46,45 +46,48 @@ export const processNetworkData = (notes: Note[]) => {
 
   // Add tag nodes
   Array.from(allTags).forEach(tag => {
-    if (tag) {  // Only process non-empty tags
+    if (tag && typeof tag === 'string') {
+      const tagId = `tag-${tag}`;
       const tagNode: NetworkNode = {
-        id: `tag-${tag}`,
+        id: tagId,
         name: tag,
         type: 'tag',
         value: 2
       };
       nodes.push(tagNode);
-      nodeMap.set(tagNode.id, tagNode);
+      nodeMap.set(tagId, tagNode);
     }
   });
 
   // Add note nodes and links
   notes.forEach(note => {
-    const noteId = `note-${note.id}`;
-    const noteNode: NetworkNode = {
-      id: noteId,
-      name: note.tags?.[0] || note.content.split('\n')[0].substring(0, 30) + '...',
-      type: 'note',
-      value: 2,
-      originalNote: note
-    };
-    nodes.push(noteNode);
-    nodeMap.set(noteId, noteNode);
+    if (note && note.id) {
+      const noteId = `note-${note.id}`;
+      const noteNode: NetworkNode = {
+        id: noteId,
+        name: note.tags?.[0] || note.content.substring(0, 30) + '...',
+        type: 'note',
+        value: 2,
+        originalNote: note
+      };
+      nodes.push(noteNode);
+      nodeMap.set(noteId, noteNode);
 
-    // Create links between notes and their tags
-    const noteTags = note.tags || [];
-    noteTags.forEach(tag => {
-      if (tag) {  // Only process non-empty tags
-        const tagNode = nodeMap.get(`tag-${tag}`);
-        if (tagNode) {
-          links.push({
-            source: noteId,
-            target: tagNode.id,
-            value: 1
-          });
+      // Create links between notes and their tags
+      const noteTags = note.tags || [];
+      noteTags.forEach(tag => {
+        if (tag && typeof tag === 'string') {
+          const tagId = `tag-${tag}`;
+          if (nodeMap.has(tagId)) {
+            links.push({
+              source: noteId,
+              target: tagId,
+              value: 1
+            });
+          }
         }
-      }
-    });
+      });
+    }
   });
 
   return { nodes, links, tagUsageCount, colorScale };
