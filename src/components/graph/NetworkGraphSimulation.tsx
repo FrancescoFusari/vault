@@ -33,8 +33,6 @@ export const NetworkGraphSimulation = ({
   const simulationRef = useRef<d3.Simulation<NetworkNode, NetworkLink> | null>(null);
   const { theme } = useTheme();
   const isMobile = useIsMobile();
-  const pressedNodeRef = useRef<NetworkNode | null>(null);
-  const pressTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!svgRef.current || !nodes.length) return;
@@ -56,53 +54,6 @@ export const NetworkGraphSimulation = ({
       });
 
     svg.call(zoom as any);
-
-    // Create a map of connected nodes for quick lookup
-    const getConnectedNodes = (node: NetworkNode) => {
-      return new Set(links
-        .filter(link => link.source === node || link.target === node)
-        .flatMap(link => [
-          (link.source as NetworkNode).id,
-          (link.target as NetworkNode).id
-        ]));
-    };
-
-    const updateForces = (pressedNode: NetworkNode | null) => {
-      if (!simulationRef.current) return;
-
-      if (pressedNode) {
-        const connectedNodeIds = getConnectedNodes(pressedNode);
-        
-        // Fix the position of the pressed node
-        pressedNode.fx = pressedNode.x;
-        pressedNode.fy = pressedNode.y;
-        
-        // Apply magnetic forces
-        simulationRef.current
-          .force("magnetic", d3.forceManyBody()
-            .strength((d: NetworkNode) => {
-              if (d === pressedNode) return 0;
-              return connectedNodeIds.has(d.id) ? 100 : -300;
-            })
-            .distanceMax(300)
-          );
-      } else {
-        // Reset to default forces and unfix the previously pressed node
-        nodes.forEach(node => {
-          node.fx = null;
-          node.fy = null;
-        });
-        
-        simulationRef.current
-          .force("charge", d3.forceManyBody()
-            .strength(settings.chargeStrength)
-            .distanceMax(200));
-      }
-
-      simulationRef.current
-        .alpha(0.5)
-        .restart();
-    };
 
     simulationRef.current = d3.forceSimulation(nodes)
       .force("link", d3.forceLink(links)
@@ -141,44 +92,15 @@ export const NetworkGraphSimulation = ({
         .attr("stroke-width", 2)
         .style("cursor", (d: NetworkNode) => d.type === 'note' ? "pointer" : "default");
 
-    // Handle long press
-    const handlePointerDown = (event: any, d: NetworkNode) => {
-      event.preventDefault();
-      pressedNodeRef.current = d;
-      // Fix the node position immediately on press
-      d.fx = d.x;
-      d.fy = d.y;
-      pressTimerRef.current = window.setTimeout(() => {
-        updateForces(d);
-      }, 200);
-    };
-
-    const handlePointerUp = (event: any) => {
-      event.preventDefault();
-      if (pressTimerRef.current) {
-        clearTimeout(pressTimerRef.current);
-        pressTimerRef.current = null;
-      }
-      if (pressedNodeRef.current) {
-        const node = pressedNodeRef.current;
-        // Unfix the node position
-        node.fx = null;
-        node.fy = null;
-        pressedNodeRef.current = null;
-        updateForces(null);
-        
-        if (node.type === 'note') {
-          onNodeClick(node);
-        }
-      }
-    };
+    node.filter((d: NetworkNode) => d.type === 'note')
+      .on("click", (event: any, d: NetworkNode) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onNodeClick(d);
+      });
 
     const drag = d3.drag<any, NetworkNode>()
       .on("start", (event: any) => {
-        if (pressTimerRef.current) {
-          clearTimeout(pressTimerRef.current);
-          pressTimerRef.current = null;
-        }
         event.sourceEvent.stopPropagation();
         if (!event.active && simulationRef.current) {
           simulationRef.current.alphaTarget(0.1).restart();
@@ -237,14 +159,6 @@ export const NetworkGraphSimulation = ({
       if (simulationRef.current) {
         simulationRef.current.stop();
       }
-      if (pressTimerRef.current) {
-        clearTimeout(pressTimerRef.current);
-      }
-      // Make sure to unfix any fixed nodes when unmounting
-      nodes.forEach(node => {
-        node.fx = null;
-        node.fy = null;
-      });
     };
   }, [width, height, nodes, links, theme, isMobile, tagUsageCount, colorScale, onNodeClick, settings]);
 
