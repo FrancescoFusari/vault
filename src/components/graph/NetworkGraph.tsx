@@ -71,19 +71,34 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
       const links: NetworkLink[] = [];
       const allTags = new Set<string>();
       const nodeMap = new Map<string, NetworkNode>();
+      const tagUsageCount = new Map<string, number>();
 
-      // First collect all tags
+      // First collect all tags and count their usage
       notes.forEach(note => {
-        note.tags.forEach(tag => allTags.add(tag));
+        note.tags.forEach(tag => {
+          allTags.add(tag);
+          tagUsageCount.set(tag, (tagUsageCount.get(tag) || 0) + 1);
+        });
       });
+
+      // Find the maximum tag usage (with a minimum of 8 for scaling)
+      const maxTagUsage = Math.max(8, ...Array.from(tagUsageCount.values()));
+      console.log('Max tag usage:', maxTagUsage);
+
+      // Create color scale for tags
+      const colorScale = d3.scaleLinear<string>()
+        .domain([1, maxTagUsage])
+        .range(['#94a3b8', '#ef4444']) // From grey to red
+        .interpolate(d3.interpolateHcl);
 
       // Add tag nodes
       Array.from(allTags).forEach(tag => {
+        const usageCount = tagUsageCount.get(tag) || 1;
         const tagNode: NetworkNode = {
           id: `tag-${tag}`,
           name: tag,
           type: 'tag',
-          value: notes.filter(note => note.tags.includes(tag)).length * 2
+          value: 2 // Fixed size for all tag nodes
         };
         nodes.push(tagNode);
         nodeMap.set(tagNode.id, tagNode);
@@ -115,12 +130,12 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
         });
       });
 
-      return { nodes, links };
+      return { nodes, links, tagUsageCount, colorScale };
     };
 
     const width = svgRef.current.clientWidth;
     const height = svgRef.current.clientHeight;
-    const data = processData();
+    const { nodes, links, tagUsageCount, colorScale } = processData();
 
     // Create SVG
     const svg = d3.select(svgRef.current)
@@ -128,19 +143,6 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
       .attr("width", width)
       .attr("height", height)
       .style("background-color", theme === 'dark' ? '#1e293b' : '#f8fafc');
-
-    // Create force simulation
-    const newSimulation = d3.forceSimulation(data.nodes)
-      .force("link", d3.forceLink(data.links)
-        .id((d: any) => d.id)
-        .distance(graphSettings.linkDistance))
-      .force("charge", d3.forceManyBody().strength(graphSettings.chargeStrength))
-      .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("x", d3.forceX(width / 2).strength(0.1))
-      .force("y", d3.forceY(height / 2).strength(0.1))
-      .force("collision", d3.forceCollide().radius((d: NetworkNode) => d.value * graphSettings.collisionRadius));
-
-    setSimulation(newSimulation);
 
     // Create container for zoom
     const container = svg.append("g");
@@ -157,29 +159,25 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
     // Create links
     const link = container.append("g")
       .selectAll("line")
-      .data(data.links)
+      .data(links)
       .join("line")
         .attr("stroke", theme === 'dark' ? '#475569' : '#94a3b8')
         .attr("stroke-opacity", 0.6)
         .attr("stroke-width", (d: NetworkLink) => Math.sqrt(d.value));
 
-    // Create nodes with larger size for notes
+    // Create nodes with color based on usage for tags
     const node = container.append("g")
       .selectAll("circle")
-      .data(data.nodes)
+      .data(nodes)
       .join("circle")
-        .attr("r", (d: NetworkNode) => {
-          // Make note nodes significantly larger
-          if (d.type === 'note') {
-            return d.value * graphSettings.collisionRadius * 3;
-          }
-          return d.value * graphSettings.collisionRadius;
-        })
+        .attr("r", (d: NetworkNode) => d.value * graphSettings.collisionRadius)
         .attr("fill", (d: NetworkNode) => {
           if (d.type === 'tag') {
-            return theme === 'dark' ? '#0ea5e9' : '#38bdf8';
+            const tagName = d.name;
+            const usageCount = tagUsageCount.get(tagName) || 1;
+            return colorScale(usageCount);
           }
-          return theme === 'dark' ? '#6366f1' : '#818cf8';
+          return theme === 'dark' ? '#6366f1' : '#818cf8'; // Note nodes color
         })
         .attr("stroke", theme === 'dark' ? '#1e293b' : '#f8fafc')
         .attr("stroke-width", 2)
@@ -187,13 +185,10 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
           if (d.type === 'note' && d.originalNote) {
             setSelectedNote(d.originalNote);
           } else if (d.type === 'tag') {
+            const usageCount = tagUsageCount.get(d.name) || 0;
             toast({
               title: `Tag: ${d.name}`,
-              description: `Connected to ${
-                data.links.filter(link => 
-                  link.source.id === d.id || link.target.id === d.id
-                ).length
-              } notes`,
+              description: `Used ${usageCount} time${usageCount === 1 ? '' : 's'}`,
             });
           }
         })
@@ -205,7 +200,7 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
     // Add labels with larger font for note titles
     const label = container.append("g")
       .selectAll("text")
-      .data(data.nodes)
+      .data(nodes)
       .join("text")
         .style("font-size", (d: NetworkNode) => 
           d.type === 'note' ? (isMobile ? "10px" : "12px") : (isMobile ? "8px" : "10px")
@@ -217,7 +212,7 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
         .text((d: NetworkNode) => d.name);
 
     // Update positions on simulation tick
-    newSimulation.on("tick", () => {
+    simulation.on("tick", () => {
       link
         .attr("x1", (d: any) => d.source.x)
         .attr("y1", (d: any) => d.source.y)
@@ -235,7 +230,7 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
 
     // Drag functions
     function dragstarted(event: any) {
-      if (!event.active) newSimulation.alphaTarget(0.3).restart();
+      if (!event.active) simulation.alphaTarget(0.3).restart();
       event.subject.fx = event.subject.x;
       event.subject.fy = event.subject.y;
     }
@@ -246,7 +241,7 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
     }
 
     function dragended(event: any) {
-      if (!event.active) newSimulation.alphaTarget(0);
+      if (!event.active) simulation.alphaTarget(0);
       event.subject.fx = null;
       event.subject.fy = null;
     }
