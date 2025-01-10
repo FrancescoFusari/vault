@@ -12,6 +12,11 @@ interface NetworkGraphSimulationProps {
   tagUsageCount: Map<string, number>;
   colorScale: d3.ScaleLinear<string, string>;
   onNodeClick: (node: NetworkNode) => void;
+  settings: {
+    linkDistance: number;
+    chargeStrength: number;
+    collisionRadius: number;
+  };
 }
 
 export const NetworkGraphSimulation = ({
@@ -21,7 +26,8 @@ export const NetworkGraphSimulation = ({
   links,
   tagUsageCount,
   colorScale,
-  onNodeClick
+  onNodeClick,
+  settings
 }: NetworkGraphSimulationProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const { theme } = useTheme();
@@ -55,11 +61,11 @@ export const NetworkGraphSimulation = ({
     const simulation = d3.forceSimulation(nodes)
       .force("link", d3.forceLink(links)
         .id((d: any) => d.id)
-        .distance(isMobile ? 50 : 100))
+        .distance(settings.linkDistance))
       .force("charge", d3.forceManyBody()
-        .strength(isMobile ? -100 : -200))
+        .strength(settings.chargeStrength))
       .force("collision", d3.forceCollide()
-        .radius((d: NetworkNode) => d.value * 5))
+        .radius((d: NetworkNode) => d.value * settings.collisionRadius))
       .force("center", d3.forceCenter(width / 2, height / 2));
 
     // Create links
@@ -76,7 +82,7 @@ export const NetworkGraphSimulation = ({
       .selectAll("circle")
       .data(nodes)
       .join("circle")
-        .attr("r", (d: NetworkNode) => d.value * 5)
+        .attr("r", (d: NetworkNode) => d.value * settings.collisionRadius)
         .attr("fill", (d: NetworkNode) => {
           if (d.type === 'tag') {
             const usageCount = tagUsageCount.get(d.name) || 1;
@@ -133,13 +139,16 @@ export const NetworkGraphSimulation = ({
 
       label
         .attr("x", (d: NetworkNode) => d.x || 0)
-        .attr("y", (d: NetworkNode) => (d.y || 0) - (d.value * 5 + 10));
+        .attr("y", (d: NetworkNode) => (d.y || 0) - (d.value * settings.collisionRadius + 10));
     });
+
+    // Restart simulation when settings change
+    simulation.alpha(0.3).restart();
 
     return () => {
       simulation.stop();
     };
-  }, [width, height, nodes, links, theme, isMobile, tagUsageCount, colorScale, onNodeClick]);
+  }, [width, height, nodes, links, theme, isMobile, tagUsageCount, colorScale, onNodeClick, settings]);
 
   return <svg ref={svgRef} className="w-full h-full" />;
 };
