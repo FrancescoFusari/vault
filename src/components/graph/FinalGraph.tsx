@@ -109,19 +109,45 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
         .attr("stroke-width", d => d.height === 0 ? 1 : 2)
         .attr("stroke-opacity", 0.3);
 
-    // Create labels
-    const label = container.append("g")
+    // Create labels with background
+    const labelGroup = container.append("g")
       .style("font-family", "sans-serif")
       .attr("pointer-events", "none")
       .attr("text-anchor", "middle")
-      .selectAll("text")
+      .selectAll("g")
       .data(packedData.descendants())
-      .join("text")
+      .join("g");
+
+    // Calculate text size and add background
+    labelGroup.each(function(d: d3.HierarchyCircularNode<DataNode>) {
+      const g = d3.select(this);
+      const padding = 4;
+      
+      // Calculate font size based on circle radius
+      const fontSize = Math.min(d.r / 3, d.r * 0.8);
+      
+      const text = g.append("text")
+        .style("font-size", `${fontSize}px`)
+        .style("font-weight", "500")
         .style("fill", theme === 'dark' ? '#e2e8f0' : '#334155')
-        .style("fill-opacity", d => d.parent === packedData ? 1 : 0)
-        .style("display", d => d.parent === packedData ? "inline" : "none")
-        .style("font-size", d => Math.min((d as any).r / 3, 14))
-        .text(d => d.data.name);
+        .style("fill-opacity", d.parent === packedData ? 1 : 0)
+        .style("display", d.parent === packedData ? "inline" : "none")
+        .text(d.data.name);
+
+      // Get text dimensions
+      const bbox = (text.node() as SVGTextElement).getBBox();
+
+      // Add background rectangle
+      g.insert("rect", "text")
+        .attr("x", bbox.x - padding)
+        .attr("y", bbox.y - padding)
+        .attr("width", bbox.width + (padding * 2))
+        .attr("height", bbox.height + (padding * 2))
+        .attr("fill", theme === 'dark' ? 'rgba(30, 41, 59, 0.8)' : 'rgba(248, 250, 252, 0.8)')
+        .style("fill-opacity", d.parent === packedData ? 0.8 : 0)
+        .style("display", d.parent === packedData ? "inline" : "none")
+        .attr("rx", 4);
+    });
 
     // Initialize zoom state
     let focus = packedData;
@@ -131,7 +157,7 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
       const k = width / v[2];
       view = v;
 
-      label.attr("transform", d => {
+      labelGroup.attr("transform", d => {
         const node = d as d3.HierarchyCircularNode<DataNode>;
         return `translate(${(node.x - v[0]) * k},${(node.y - v[1]) * k})`;
       });
@@ -158,21 +184,13 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
           return (t: number) => zoomTo(i(t));
         });
 
-      label
-        .filter(function(d) { 
-          const element = d3.select(this);
-          return d.parent === focus || element.style("display") === "inline"; 
-        })
+      labelGroup.selectAll("text, rect")
         .transition(transition)
-          .style("fill-opacity", d => d.parent === focus ? 1 : 0)
-          .on("start", function(d) { 
-            const element = d3.select(this);
-            if (d.parent === focus) element.style("display", "inline"); 
-          })
-          .on("end", function(d) { 
-            const element = d3.select(this);
-            if (d.parent !== focus) element.style("display", "none"); 
-          });
+        .style("fill-opacity", d => (d as d3.HierarchyCircularNode<DataNode>).parent === focus ? 1 : 0)
+        .style("display", function(d) {
+          const node = d as d3.HierarchyCircularNode<DataNode>;
+          return node.parent === focus || this.style.display === "inline" ? "inline" : "none";
+        });
     };
 
     // Add zoom behavior
