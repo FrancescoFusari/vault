@@ -11,9 +11,6 @@ export type Database = {
     Tables: {
       batch_processing_queue: {
         Row: {
-          analyzed_category: string | null
-          analyzed_tags: string[] | null
-          analyzed_title: string | null
           content: string | null
           created_at: string
           error_message: string | null
@@ -26,9 +23,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          analyzed_category?: string | null
-          analyzed_tags?: string[] | null
-          analyzed_title?: string | null
           content?: string | null
           created_at?: string
           error_message?: string | null
@@ -41,9 +35,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          analyzed_category?: string | null
-          analyzed_tags?: string[] | null
-          analyzed_title?: string | null
           content?: string | null
           created_at?: string
           error_message?: string | null
@@ -134,21 +125,7 @@ export type Database = {
       }
     }
     Views: {
-      combined_notes_view: {
-        Row: {
-          category: string | null
-          content: string | null
-          created_at: string | null
-          id: string | null
-          input_type: string | null
-          source: string | null
-          source_image_path: string | null
-          source_url: string | null
-          tags: string[] | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       rate_limit_check: {
