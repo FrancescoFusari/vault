@@ -7,8 +7,6 @@ export interface NetworkNode {
   type: 'note' | 'tag';
   value: number;
   originalNote?: Note;
-  x?: number;
-  y?: number;
 }
 
 export interface NetworkLink {
@@ -44,7 +42,7 @@ export const processNetworkData = (notes: Note[]) => {
     .range(['#94a3b8', '#ef4444'])
     .interpolate(d3.interpolateHcl);
 
-  // Add tag nodes
+  // Add tag nodes first
   Array.from(allTags).forEach(tag => {
     if (tag && typeof tag === 'string') {
       const tagId = `tag-${tag}`;
@@ -59,7 +57,7 @@ export const processNetworkData = (notes: Note[]) => {
     }
   });
 
-  // Add note nodes and links
+  // Add note nodes and create links
   notes.forEach(note => {
     if (note && note.id) {
       const noteId = `note-${note.id}`;

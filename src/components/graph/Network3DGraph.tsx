@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTheme } from 'next-themes';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
@@ -14,41 +14,47 @@ interface Network3DGraphProps {
 
 export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const graphRef = useRef<any>(null);
   const { theme } = useTheme();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const dimensions = useGraphDimensions(containerRef, isMobile);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [graphData, setGraphData] = useState<any>(null);
 
-  // Process notes to include both regular notes and batch items
-  const processedNotes = notes.filter(note => note && note.content).map(note => ({
-    ...note,
-    category: note.category || note.analyzed_category || 'Uncategorized',
-    tags: (note.tags || note.analyzed_tags || []).filter(Boolean)
-  }));
+  useEffect(() => {
+    // Process notes to include both regular notes and batch items
+    const processedNotes = notes.filter(note => note && note.content).map(note => ({
+      ...note,
+      category: note.category || 'Uncategorized',
+      tags: (note.tags || []).filter(Boolean)
+    }));
 
-  const { nodes, links, tagUsageCount, colorScale } = processNetworkData(processedNotes);
+    const { nodes, links, tagUsageCount, colorScale } = processNetworkData(processedNotes);
 
-  // Create a map of valid node IDs for quick lookup
-  const validNodeIds = new Set(nodes.map(node => node.id));
+    // Create a map of valid node IDs for quick lookup
+    const validNodeIds = new Set(nodes.map(node => node.id));
 
-  // Ensure all nodes and links are properly formatted
-  const graphData = {
-    nodes: nodes.map(node => ({
-      ...node,
-      id: node.id.toString(),
-    })),
-    links: links
-      .filter(link => 
-        validNodeIds.has(link.source.toString()) && 
-        validNodeIds.has(link.target.toString())
-      )
-      .map(link => ({
-        ...link,
-        source: link.source.toString(),
-        target: link.target.toString(),
-      }))
-  };
+    // Ensure all nodes and links are properly formatted
+    const formattedData = {
+      nodes: nodes.map(node => ({
+        ...node,
+        id: node.id.toString(),
+      })),
+      links: links
+        .filter(link => 
+          validNodeIds.has(link.source.toString()) && 
+          validNodeIds.has(link.target.toString())
+        )
+        .map(link => ({
+          ...link,
+          source: link.source.toString(),
+          target: link.target.toString(),
+        }))
+    };
+
+    setGraphData(formattedData);
+  }, [notes]);
 
   const handleNodeClick = (node: NetworkNode) => {
     if (node.type === 'note' && node.originalNote) {
@@ -60,19 +66,24 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     }
   };
 
+  if (!graphData) {
+    return null;
+  }
+
   return (
     <div 
       ref={containerRef} 
       className="absolute inset-0 w-full h-full"
     >
       <ForceGraph3D
+        ref={graphRef}
         width={dimensions.width}
         height={dimensions.height}
         graphData={graphData}
         nodeLabel="name"
         nodeColor={(node: any) => {
           if (node.type === 'tag') {
-            const usageCount = tagUsageCount.get(node.name) ?? 1;
+            const usageCount = tagUsageCount?.get(node.name) ?? 1;
             return colorScale(usageCount);
           }
           return theme === 'dark' ? '#6366f1' : '#818cf8';
