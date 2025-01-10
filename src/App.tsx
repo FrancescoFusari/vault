@@ -3,6 +3,7 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "./components/ui/toaster";
 import { BottomNav } from "./components/BottomNav";
 import { DesktopNav } from "./components/DesktopNav";
+import Index from "./pages/Index";
 import NotesListPage from "./pages/NotesListPage";
 import NotePage from "./pages/NotePage";
 import TagsPage from "./pages/TagsPage";
@@ -49,7 +50,8 @@ function App() {
         <DesktopNav />
         <main className="pb-24 md:ml-64 md:pb-4">
           <Routes>
-            <Route path="/" element={<NotesListPage />} />
+            <Route path="/" element={<Index />} />
+            <Route path="/notes" element={<NotesListPage />} />
             <Route path="/note/:id" element={<NotePage />} />
             <Route path="/tags" element={<TagsPage />} />
             <Route path="/network" element={<NetworkPage />} />
