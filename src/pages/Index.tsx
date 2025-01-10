@@ -1,12 +1,6 @@
 import { useState, useEffect } from "react";
 import { NoteInput } from "@/components/NoteInput";
 import { NoteList } from "@/components/NoteList";
-import { NoteGraph } from "@/components/NoteGraph";
-import { MobileNoteGraph } from "@/components/MobileNoteGraph";
-import { Graph2 } from "@/components/graph/Graph2";
-import { DivGraph } from "@/components/graph/DivGraph";
-import { DivGraph2 } from "@/components/graph/DivGraph2";
-import { FinalGraph } from "@/components/graph/FinalGraph";
 import { NetworkGraph } from "@/components/graph/NetworkGraph";
 import { TagView } from "@/components/TagView";
 import { analyzeNote } from "@/lib/openai";
@@ -100,13 +94,8 @@ const Index = () => {
       <Tabs defaultValue="list" className="w-full">
         <TabsList>
           <TabsTrigger value="list">List View</TabsTrigger>
-          <TabsTrigger value="graph">Graph View</TabsTrigger>
-          <TabsTrigger value="graph2">Graph 2</TabsTrigger>
-          <TabsTrigger value="divgraph">Div Graph</TabsTrigger>
-          <TabsTrigger value="divgraph2">Knowledge Graph</TabsTrigger>
           <TabsTrigger value="tags">Tags View</TabsTrigger>
-          <TabsTrigger value="final">Final</TabsTrigger>
-          <TabsTrigger value="network">Network</TabsTrigger>
+          <TabsTrigger value="network">Network View</TabsTrigger>
         </TabsList>
         
         <TabsContent value="list">
@@ -115,44 +104,10 @@ const Index = () => {
             <NoteList notes={notes} />
           </div>
         </TabsContent>
-        <TabsContent value="graph">
-          <div className="mt-6">
-            <h2 className="text-2xl font-semibold mb-6">Knowledge Graph</h2>
-            {isMobile ? (
-              <MobileNoteGraph notes={notes} />
-            ) : (
-              <NoteGraph notes={notes} />
-            )}
-          </div>
-        </TabsContent>
-        <TabsContent value="graph2">
-          <div className="mt-6">
-            <h2 className="text-2xl font-semibold mb-6">Alternative Graph View</h2>
-            <Graph2 notes={notes} />
-          </div>
-        </TabsContent>
-        <TabsContent value="divgraph">
-          <div className="mt-6">
-            <h2 className="text-2xl font-semibold mb-6">Animated Graph View</h2>
-            <DivGraph notes={notes} />
-          </div>
-        </TabsContent>
-        <TabsContent value="divgraph2">
-          <div className="mt-6">
-            <h2 className="text-2xl font-semibold mb-6">Knowledge Graph</h2>
-            <DivGraph2 notes={notes} />
-          </div>
-        </TabsContent>
         <TabsContent value="tags">
           <div className="mt-6">
             <h2 className="text-2xl font-semibold mb-6">Tags Overview</h2>
             <TagView />
-          </div>
-        </TabsContent>
-        <TabsContent value="final">
-          <div className="mt-6">
-            <h2 className="text-2xl font-semibold mb-6">Bubble Chart View</h2>
-            <FinalGraph notes={notes} />
           </div>
         </TabsContent>
         <TabsContent value="network">
