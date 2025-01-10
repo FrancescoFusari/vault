@@ -1,45 +1,29 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ThemeProvider } from "next-themes";
-import Index from "./pages/Index";
-import TagsPage from "./pages/TagsPage";
-import NetworkPage from "./pages/NetworkPage";
-import Auth from "./pages/Auth";
-import NotePage from "./pages/NotePage";
-import NotesListPage from "./pages/NotesListPage";
-import { DesktopNav } from "./components/DesktopNav";
-
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1,
-    },
-  },
-});
+import { Routes, Route } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+import { DesktopNav } from "@/components/DesktopNav";
+import Index from "@/pages/Index";
+import NotesListPage from "@/pages/NotesListPage";
+import NotePage from "@/pages/NotePage";
+import TagsPage from "@/pages/TagsPage";
+import NetworkPage from "@/pages/NetworkPage";
+import Network3DPage from "@/pages/Network3DPage";
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <Router>
-          <div className="min-h-screen bg-background">
-            <DesktopNav />
-            <main>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/tags" element={<TagsPage />} />
-                <Route path="/network" element={<NetworkPage />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/note/:id" element={<NotePage />} />
-                <Route path="/notes" element={<NotesListPage />} />
-              </Routes>
-            </main>
-          </div>
-        </Router>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <div className="min-h-screen bg-background text-foreground">
+      <DesktopNav />
+      <div className="container mx-auto px-4 pt-20 pb-16">
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/notes" element={<NotesListPage />} />
+          <Route path="/note/:id" element={<NotePage />} />
+          <Route path="/tags" element={<TagsPage />} />
+          <Route path="/network" element={<NetworkPage />} />
+          <Route path="/network3d" element={<Network3DPage />} />
+        </Routes>
+      </div>
+      <Toaster />
+    </div>
   );
 }
 
