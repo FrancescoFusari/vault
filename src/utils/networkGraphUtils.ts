@@ -12,8 +12,8 @@ export interface NetworkNode {
 }
 
 export interface NetworkLink {
-  source: NetworkNode;
-  target: NetworkNode;
+  source: string;
+  target: string;
   value: number;
 }
 
@@ -26,15 +26,17 @@ export const processNetworkData = (notes: Note[]) => {
 
   // First collect all tags and count their usage
   notes.forEach(note => {
-    note.tags.forEach(tag => {
-      allTags.add(tag);
-      tagUsageCount.set(tag, (tagUsageCount.get(tag) || 0) + 1);
+    const noteTags = note.tags || [];
+    noteTags.forEach(tag => {
+      if (tag) {  // Only process non-empty tags
+        allTags.add(tag);
+        tagUsageCount.set(tag, (tagUsageCount.get(tag) || 0) + 1);
+      }
     });
   });
 
   // Find the maximum tag usage (with a minimum of 8 for scaling)
   const maxTagUsage = Math.max(8, ...Array.from(tagUsageCount.values()));
-  console.log('Max tag usage:', maxTagUsage);
 
   // Create color scale for tags
   const colorScale = d3.scaleLinear<string>()
@@ -44,14 +46,16 @@ export const processNetworkData = (notes: Note[]) => {
 
   // Add tag nodes
   Array.from(allTags).forEach(tag => {
-    const tagNode: NetworkNode = {
-      id: `tag-${tag}`,
-      name: tag,
-      type: 'tag',
-      value: 2
-    };
-    nodes.push(tagNode);
-    nodeMap.set(tagNode.id, tagNode);
+    if (tag) {  // Only process non-empty tags
+      const tagNode: NetworkNode = {
+        id: `tag-${tag}`,
+        name: tag,
+        type: 'tag',
+        value: 2
+      };
+      nodes.push(tagNode);
+      nodeMap.set(tagNode.id, tagNode);
+    }
   });
 
   // Add note nodes and links
@@ -59,7 +63,7 @@ export const processNetworkData = (notes: Note[]) => {
     const noteId = `note-${note.id}`;
     const noteNode: NetworkNode = {
       id: noteId,
-      name: note.tags[0] || note.content.split('\n')[0].substring(0, 30) + '...',
+      name: note.tags?.[0] || note.content.split('\n')[0].substring(0, 30) + '...',
       type: 'note',
       value: 2,
       originalNote: note
@@ -68,14 +72,17 @@ export const processNetworkData = (notes: Note[]) => {
     nodeMap.set(noteId, noteNode);
 
     // Create links between notes and their tags
-    note.tags.forEach(tag => {
-      const tagNode = nodeMap.get(`tag-${tag}`);
-      if (tagNode) {
-        links.push({
-          source: noteNode,
-          target: tagNode,
-          value: 1
-        });
+    const noteTags = note.tags || [];
+    noteTags.forEach(tag => {
+      if (tag) {  // Only process non-empty tags
+        const tagNode = nodeMap.get(`tag-${tag}`);
+        if (tagNode) {
+          links.push({
+            source: noteId,
+            target: tagNode.id,
+            value: 1
+          });
+        }
       }
     });
   });

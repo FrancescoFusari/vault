@@ -29,6 +29,23 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
 
   const { nodes, links, tagUsageCount, colorScale } = processNetworkData(processedNotes);
 
+  // Ensure all nodes and links are properly formatted
+  const graphData = {
+    nodes: nodes.map(node => ({
+      ...node,
+      id: node.id.toString(), // Ensure IDs are strings
+    })),
+    links: links.filter(link => 
+      // Only include links where both source and target nodes exist
+      nodes.some(n => n.id === link.source) && 
+      nodes.some(n => n.id === link.target)
+    ).map(link => ({
+      ...link,
+      source: link.source.toString(),
+      target: link.target.toString(),
+    }))
+  };
+
   const handleNodeClick = (node: NetworkNode) => {
     if (node.type === 'note' && node.originalNote) {
       if (isMobile) {
@@ -47,7 +64,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       <ForceGraph3D
         width={dimensions.width}
         height={dimensions.height}
-        graphData={{ nodes, links }}
+        graphData={graphData}
         nodeLabel="name"
         nodeColor={(node: any) => {
           if (node.type === 'tag') {
