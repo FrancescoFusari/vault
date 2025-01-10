@@ -32,7 +32,6 @@ export const NetworkGraphSimulation = ({
   const svgRef = useRef<SVGSVGElement>(null);
   const { theme } = useTheme();
   const isMobile = useIsMobile();
-  const simulationRef = useRef<d3.Simulation<NetworkNode, NetworkLink> | null>(null);
 
   useEffect(() => {
     if (!svgRef.current || !nodes.length) return;
@@ -49,7 +48,7 @@ export const NetworkGraphSimulation = ({
     // Create container for zoom
     const container = svg.append("g");
 
-    // Add zoom behavior with limits
+    // Add zoom behavior
     const zoom = d3.zoom()
       .scaleExtent([0.5, 4])
       .on("zoom", (event) => {
@@ -58,25 +57,16 @@ export const NetworkGraphSimulation = ({
 
     svg.call(zoom as any);
 
-    // Initialize simulation with stable configuration
+    // Initialize simulation
     const simulation = d3.forceSimulation(nodes)
-      .alpha(0.3)
-      .alphaDecay(0.1) // Faster decay for quicker stabilization
-      .velocityDecay(0.6) // Higher damping
       .force("link", d3.forceLink(links)
         .id((d: any) => d.id)
-        .distance(settings.linkDistance)
-        .strength(0.3)) // Reduced link strength
+        .distance(settings.linkDistance))
       .force("charge", d3.forceManyBody()
-        .strength(settings.chargeStrength)
-        .distanceMax(200)) // Limit charge effect range
+        .strength(settings.chargeStrength))
       .force("collision", d3.forceCollide()
-        .radius((d: NetworkNode) => d.value * settings.collisionRadius)
-        .strength(0.8)) // Increased collision strength
-      .force("center", d3.forceCenter(width / 2, height / 2)
-        .strength(0.1)); // Gentle centering force
-
-    simulationRef.current = simulation;
+        .radius((d: NetworkNode) => d.value * settings.collisionRadius))
+      .force("center", d3.forceCenter(width / 2, height / 2));
 
     // Create links
     const link = container.append("g")
@@ -118,12 +108,8 @@ export const NetworkGraphSimulation = ({
             .attr("stroke", theme === 'dark' ? '#1e293b' : '#f8fafc');
         })
         .on("click", (event: any, d: NetworkNode) => {
-          event.stopPropagation();
-          event.preventDefault();
-          
-          // Only visual feedback, no simulation changes
-          const element = d3.select(event.currentTarget);
-          element
+          // Visual feedback on click
+          d3.select(event.currentTarget)
             .transition()
             .duration(100)
             .attr("r", (d: NetworkNode) => d.value * settings.collisionRadius * 1.2)
@@ -134,25 +120,22 @@ export const NetworkGraphSimulation = ({
           onNodeClick(d);
         });
 
-    // Add drag behavior with minimal impact
-    const drag = d3.drag<any, NetworkNode>()
+    // Add drag behavior
+    node.call(d3.drag<any, NetworkNode>()
       .on("start", (event: any) => {
-        event.sourceEvent.stopPropagation();
+        if (!event.active) simulation.alphaTarget(0.3).restart();
         event.subject.fx = event.subject.x;
         event.subject.fy = event.subject.y;
       })
       .on("drag", (event: any) => {
-        event.sourceEvent.stopPropagation();
         event.subject.fx = event.x;
         event.subject.fy = event.y;
       })
       .on("end", (event: any) => {
-        event.sourceEvent.stopPropagation();
+        if (!event.active) simulation.alphaTarget(0);
         event.subject.fx = null;
         event.subject.fy = null;
-      });
-
-    node.call(drag as any);
+      }) as any);
 
     // Add labels
     const label = container.append("g")
@@ -185,11 +168,11 @@ export const NetworkGraphSimulation = ({
         .attr("y", (d: NetworkNode) => (d.y || 0) - (d.value * settings.collisionRadius + 10));
     });
 
-    // Cleanup
+    // Restart simulation when settings change
+    simulation.alpha(0.3).restart();
+
     return () => {
-      if (simulationRef.current) {
-        simulationRef.current.stop();
-      }
+      simulation.stop();
     };
   }, [width, height, nodes, links, theme, isMobile, tagUsageCount, colorScale, onNodeClick, settings]);
 
