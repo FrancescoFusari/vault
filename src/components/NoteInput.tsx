@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Link as LinkIcon, Type } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from '@tanstack/react-query';
 
 interface NoteInputProps {
   onNoteSubmit: (note: string) => Promise<void>;
@@ -16,6 +17,7 @@ export const NoteInput = ({ onNoteSubmit }: NoteInputProps) => {
   const [isUrlMode, setIsUrlMode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleSubmit = async () => {
     if (isUrlMode) {
@@ -29,16 +31,38 @@ export const NoteInput = ({ onNoteSubmit }: NoteInputProps) => {
 
       setIsSubmitting(true);
       try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error('User not authenticated');
+        }
+
         const { data, error } = await supabase.functions.invoke('process-url', {
           body: { url }
         });
 
         if (error) throw error;
 
+        // Create a note directly from the processed URL data
+        const { error: noteError } = await supabase
+          .from('notes')
+          .insert({
+            content: data.queueItem.content,
+            category: data.queueItem.analyzed_category || 'Uncategorized',
+            tags: data.queueItem.analyzed_tags || [],
+            input_type: 'url',
+            source_url: url,
+            user_id: session.user.id
+          });
+
+        if (noteError) throw noteError;
+
+        // Refresh the notes list
+        await queryClient.invalidateQueries({ queryKey: ['notes'] });
+
         setUrl('');
         toast({
-          title: "URL submitted successfully",
-          description: "The content is being processed and will be added to your notes",
+          title: "URL processed successfully",
+          description: "The content has been added to your notes",
         });
       } catch (error) {
         console.error('Error processing URL:', error);
