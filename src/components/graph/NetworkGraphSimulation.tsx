@@ -30,6 +30,7 @@ export const NetworkGraphSimulation = ({
   settings
 }: NetworkGraphSimulationProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
+  const simulationRef = useRef<d3.Simulation<NetworkNode, NetworkLink> | null>(null);
   const { theme } = useTheme();
   const isMobile = useIsMobile();
 
@@ -57,16 +58,19 @@ export const NetworkGraphSimulation = ({
 
     svg.call(zoom as any);
 
-    // Initialize simulation
-    const simulation = d3.forceSimulation(nodes)
+    // Initialize simulation with stable parameters
+    simulationRef.current = d3.forceSimulation(nodes)
       .force("link", d3.forceLink(links)
         .id((d: any) => d.id)
         .distance(settings.linkDistance))
       .force("charge", d3.forceManyBody()
-        .strength(settings.chargeStrength))
+        .strength(settings.chargeStrength)
+        .distanceMax(200)) // Limit the range of charge effect
       .force("collision", d3.forceCollide()
         .radius((d: NetworkNode) => d.value * settings.collisionRadius))
-      .force("center", d3.forceCenter(width / 2, height / 2));
+      .force("center", d3.forceCenter(width / 2, height / 2))
+      .alphaDecay(0.1) // Faster initial stabilization
+      .velocityDecay(0.4); // More damping for stability
 
     // Create links
     const link = container.append("g")
@@ -92,38 +96,48 @@ export const NetworkGraphSimulation = ({
         })
         .attr("stroke", theme === 'dark' ? '#1e293b' : '#f8fafc')
         .attr("stroke-width", 2)
-        .style("cursor", "pointer")
-        .on("mouseover", function() {
-          d3.select(this)
-            .transition()
-            .duration(200)
-            .attr("stroke-width", 3)
-            .attr("stroke", theme === 'dark' ? '#94a3b8' : '#475569');
-        })
-        .on("mouseout", function() {
-          d3.select(this)
-            .transition()
-            .duration(200)
-            .attr("stroke-width", 2)
-            .attr("stroke", theme === 'dark' ? '#1e293b' : '#f8fafc');
-        })
-        .on("click", (event: any, d: NetworkNode) => {
-          // Visual feedback on click
-          d3.select(event.currentTarget)
-            .transition()
-            .duration(100)
-            .attr("r", (d: NetworkNode) => d.value * settings.collisionRadius * 1.2)
-            .transition()
-            .duration(100)
-            .attr("r", (d: NetworkNode) => d.value * settings.collisionRadius);
-          
-          onNodeClick(d);
-        });
+        .style("cursor", "pointer");
 
-    // Add drag behavior
-    node.call(d3.drag<any, NetworkNode>()
+    // Handle node interactions
+    node
+      .on("mouseover", function() {
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr("stroke-width", 3)
+          .attr("stroke", theme === 'dark' ? '#94a3b8' : '#475569');
+      })
+      .on("mouseout", function() {
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr("stroke-width", 2)
+          .attr("stroke", theme === 'dark' ? '#1e293b' : '#f8fafc');
+      })
+      .on("click", (event: any, d: NetworkNode) => {
+        event.stopPropagation(); // Prevent event bubbling
+        
+        // Visual feedback without affecting simulation
+        const clickedNode = d3.select(event.currentTarget);
+        const originalRadius = d.value * settings.collisionRadius;
+        
+        clickedNode
+          .transition()
+          .duration(100)
+          .attr("r", originalRadius * 1.2)
+          .transition()
+          .duration(100)
+          .attr("r", originalRadius);
+        
+        onNodeClick(d);
+      });
+
+    // Add drag behavior with stable parameters
+    const drag = d3.drag<any, NetworkNode>()
       .on("start", (event: any) => {
-        if (!event.active) simulation.alphaTarget(0.3).restart();
+        if (!event.active && simulationRef.current) {
+          simulationRef.current.alphaTarget(0.1).restart();
+        }
         event.subject.fx = event.subject.x;
         event.subject.fy = event.subject.y;
       })
@@ -132,10 +146,14 @@ export const NetworkGraphSimulation = ({
         event.subject.fy = event.y;
       })
       .on("end", (event: any) => {
-        if (!event.active) simulation.alphaTarget(0);
+        if (!event.active && simulationRef.current) {
+          simulationRef.current.alphaTarget(0);
+        }
         event.subject.fx = null;
         event.subject.fy = null;
-      }) as any);
+      });
+
+    node.call(drag as any);
 
     // Add labels
     const label = container.append("g")
@@ -152,27 +170,29 @@ export const NetworkGraphSimulation = ({
         .text((d: NetworkNode) => d.name);
 
     // Update positions on simulation tick
-    simulation.on("tick", () => {
-      link
-        .attr("x1", (d: any) => d.source.x)
-        .attr("y1", (d: any) => d.source.y)
-        .attr("x2", (d: any) => d.target.x)
-        .attr("y2", (d: any) => d.target.y);
+    if (simulationRef.current) {
+      simulationRef.current.on("tick", () => {
+        link
+          .attr("x1", (d: any) => d.source.x)
+          .attr("y1", (d: any) => d.source.y)
+          .attr("x2", (d: any) => d.target.x)
+          .attr("y2", (d: any) => d.target.y);
 
-      node
-        .attr("cx", (d: NetworkNode) => d.x || 0)
-        .attr("cy", (d: NetworkNode) => d.y || 0);
+        node
+          .attr("cx", (d: NetworkNode) => d.x || 0)
+          .attr("cy", (d: NetworkNode) => d.y || 0);
 
-      label
-        .attr("x", (d: NetworkNode) => d.x || 0)
-        .attr("y", (d: NetworkNode) => (d.y || 0) - (d.value * settings.collisionRadius + 10));
-    });
+        label
+          .attr("x", (d: NetworkNode) => d.x || 0)
+          .attr("y", (d: NetworkNode) => (d.y || 0) - (d.value * settings.collisionRadius + 10));
+      });
+    }
 
-    // Restart simulation when settings change
-    simulation.alpha(0.3).restart();
-
+    // Cleanup
     return () => {
-      simulation.stop();
+      if (simulationRef.current) {
+        simulationRef.current.stop();
+      }
     };
   }, [width, height, nodes, links, theme, isMobile, tagUsageCount, colorScale, onNodeClick, settings]);
 
