@@ -20,7 +20,14 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const dimensions = useGraphDimensions(containerRef, isMobile);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
 
-  const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
+  // Process notes to include both regular notes and batch items
+  const processedNotes = notes.map(note => ({
+    ...note,
+    category: note.category || note.analyzed_category || 'Uncategorized',
+    tags: note.tags || note.analyzed_tags || []
+  }));
+
+  const { nodes, links, tagUsageCount, colorScale } = processNetworkData(processedNotes);
 
   const handleNodeClick = (node: NetworkNode) => {
     if (node.type === 'note' && node.originalNote) {
@@ -58,12 +65,9 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         enableNavigationControls={true}
         showNavInfo={true}
         controlType="orbit"
-        // Adjust touch sensitivity through force engine configuration
         forceEngine={isMobile ? "d3" : undefined}
         cooldownTime={isMobile ? 3000 : undefined}
         warmupTicks={isMobile ? 20 : undefined}
-        dagMode={undefined}
-        dagLevelDistance={undefined}
       />
       {selectedNote && (
         <NotePopupWindow

@@ -67,6 +67,46 @@ serve(async (req) => {
     const openAIData = await openAIResponse.json();
     const summary = openAIData.choices[0].message.content;
 
+    // Analyze the content for metadata
+    const analysisResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: `Analyze this content and provide:
+            1. A concise title (2-5 words)
+            2. A category
+            3. 3-5 relevant tags
+            
+            Respond in JSON format:
+            {
+              "title": "string",
+              "category": "string",
+              "tags": ["string"]
+            }`
+          },
+          {
+            role: 'user',
+            content: summary
+          }
+        ],
+      }),
+    });
+
+    if (!analysisResponse.ok) {
+      throw new Error('Failed to analyze content');
+    }
+
+    const analysisData = await analysisResponse.json();
+    const analysis = JSON.parse(analysisData.choices[0].message.content);
+    console.log('Content analysis:', analysis);
+
     // Add to processing queue
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -83,7 +123,10 @@ serve(async (req) => {
         input_type: 'url',
         source_url: url,
         status: 'completed',
-        processed_at: new Date().toISOString()
+        processed_at: new Date().toISOString(),
+        analyzed_title: analysis.title,
+        analyzed_category: analysis.category,
+        analyzed_tags: analysis.tags
       })
       .select()
       .single();

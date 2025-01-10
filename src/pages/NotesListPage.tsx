@@ -7,13 +7,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 
 const NotesListPage = () => {
-  // Fetch both notes and batch items
-  const { data: notes = [], isLoading: notesLoading, error: notesError } = useQuery({
+  const { data: notes = [], isLoading, error } = useQuery({
     queryKey: ['notes'],
     queryFn: async () => {
-      console.log('Fetching notes...');
+      console.log('Fetching notes from combined view...');
       const { data, error } = await supabase
-        .from('notes')
+        .from('combined_notes_view')
         .select('*')
         .order('created_at', { ascending: false });
       
@@ -25,37 +24,6 @@ const NotesListPage = () => {
       return data || [];
     }
   });
-
-  const { data: batchItems = [], isLoading: batchLoading } = useQuery({
-    queryKey: ['batch-items'],
-    queryFn: async () => {
-      console.log('Fetching batch items...');
-      const { data, error } = await supabase
-        .from('batch_processing_queue')
-        .select('*')
-        .eq('status', 'completed')
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching batch items:', error);
-        throw error;
-      }
-      console.log('Fetched batch items:', data);
-      
-      // Convert batch items to note format
-      return (data || []).map(item => ({
-        id: item.id,
-        content: item.content,
-        category: 'URL Content', // Default category for URL content
-        tags: ['url-content'], // Default tag for URL content
-        created_at: item.created_at,
-        input_type: item.input_type,
-        source_url: item.source_url
-      }));
-    }
-  });
-
-  const isLoading = notesLoading || batchLoading;
 
   if (isLoading) {
     return (
@@ -70,7 +38,7 @@ const NotesListPage = () => {
     );
   }
 
-  if (notesError) {
+  if (error) {
     return (
       <div className="container mx-auto py-8">
         <Alert variant="destructive">
@@ -83,13 +51,11 @@ const NotesListPage = () => {
     );
   }
 
-  // Combine notes and processed batch items
-  const allNotes = [...notes, ...batchItems];
-
   return (
     <div className="container mx-auto py-8 space-y-8">
       <h1 className="text-2xl font-semibold">All Notes</h1>
-      <NoteList notes={allNotes} />
+      <NoteList notes={notes} />
+      <BottomNav />
     </div>
   );
 };
