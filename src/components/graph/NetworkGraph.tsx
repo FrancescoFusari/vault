@@ -3,7 +3,6 @@ import { useTheme } from 'next-themes';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
 import { useGraphDimensions } from '@/hooks/useGraphDimensions';
-import { NetworkGraphSettings } from './NetworkGraphSettings';
 import { NotePopupWindow } from './NotePopupWindow';
 import { NetworkGraphSimulation } from './NetworkGraphSimulation';
 import { processNetworkData, NetworkNode } from '@/utils/networkGraphUtils';
@@ -20,11 +19,6 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
   const navigate = useNavigate();
   const dimensions = useGraphDimensions(containerRef, isMobile);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
-  const [settings, setSettings] = useState({
-    linkDistance: 100,
-    chargeStrength: -200,
-    collisionRadius: 5
-  });
 
   const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
 
@@ -38,22 +32,11 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
     }
   };
 
-  const handleSettingChange = (setting: string, value: number) => {
-    setSettings(prev => ({
-      ...prev,
-      [setting]: value
-    }));
-  };
-
   return (
     <div 
       ref={containerRef} 
       className="absolute inset-0 overflow-hidden"
     >
-      <NetworkGraphSettings 
-        settings={settings}
-        onSettingChange={handleSettingChange}
-      />
       <NetworkGraphSimulation
         width={dimensions.width}
         height={dimensions.height}
@@ -62,7 +45,11 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
         tagUsageCount={tagUsageCount}
         colorScale={colorScale}
         onNodeClick={handleNodeClick}
-        settings={settings}
+        settings={{
+          linkDistance: 100,
+          chargeStrength: -200,
+          collisionRadius: 5
+        }}
       />
       {selectedNote && (
         <NotePopupWindow
