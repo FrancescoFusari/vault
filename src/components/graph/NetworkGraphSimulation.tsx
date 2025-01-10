@@ -32,7 +32,7 @@ export const NetworkGraphSimulation = ({
   const svgRef = useRef<SVGSVGElement>(null);
   const { theme } = useTheme();
   const isMobile = useIsMobile();
-
+  
   useEffect(() => {
     if (!svgRef.current || !nodes.length) return;
 
@@ -48,14 +48,20 @@ export const NetworkGraphSimulation = ({
     // Create container for zoom
     const container = svg.append("g");
 
-    // Add zoom behavior
+    // Add zoom behavior with smooth transitions
     const zoom = d3.zoom()
       .scaleExtent([0.5, 4])
       .on("zoom", (event) => {
-        container.attr("transform", event.transform);
+        container.transition()
+          .duration(50) // Short duration for smooth feel
+          .attr("transform", event.transform);
       });
 
     svg.call(zoom as any);
+
+    // Double-tap detection
+    let lastTap = 0;
+    const tapDelay = 300; // milliseconds
 
     // Initialize simulation
     const simulation = d3.forceSimulation(nodes)
@@ -77,7 +83,7 @@ export const NetworkGraphSimulation = ({
         .attr("stroke-opacity", 0.6)
         .attr("stroke-width", (d: NetworkLink) => Math.sqrt(d.value));
 
-    // Create nodes
+    // Create nodes with double-tap handling
     const node = container.append("g")
       .selectAll("circle")
       .data(nodes)
@@ -92,7 +98,30 @@ export const NetworkGraphSimulation = ({
         })
         .attr("stroke", theme === 'dark' ? '#1e293b' : '#f8fafc')
         .attr("stroke-width", 2)
-        .on("click", (event: any, d: NetworkNode) => onNodeClick(d));
+        .on("click", (event: any, d: NetworkNode) => {
+          const currentTime = new Date().getTime();
+          const tapLength = currentTime - lastTap;
+          
+          if (tapLength < tapDelay && tapLength > 0) {
+            // Double tap detected
+            if (d.type === 'note') {
+              onNodeClick(d);
+            }
+          } else {
+            // Single tap - zoom to node
+            const transform = d3.zoomIdentity
+              .scale(2)
+              .translate(
+                width / 2 - (d.x || 0) * 2,
+                height / 2 - (d.y || 0) * 2
+              );
+            
+            svg.transition()
+              .duration(750)
+              .call(zoom.transform as any, transform);
+          }
+          lastTap = currentTime;
+        });
 
     // Add drag behavior
     node.call(d3.drag<any, NetworkNode>()
@@ -142,9 +171,14 @@ export const NetworkGraphSimulation = ({
         .attr("y", (d: NetworkNode) => (d.y || 0) - (d.value * settings.collisionRadius + 10));
     });
 
-    // Restart simulation when settings change
-    simulation.alpha(0.3).restart();
+    // Initial zoom to fit
+    const initialTransform = d3.zoomIdentity
+      .translate(width / 2, height / 2)
+      .scale(0.8);
+    
+    svg.call(zoom.transform as any, initialTransform);
 
+    // Cleanup
     return () => {
       simulation.stop();
     };
