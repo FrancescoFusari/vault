@@ -53,10 +53,10 @@ export const DivGraph2 = ({ notes, highlightedNoteId }: DivGraph2Props) => {
       // Calculate tag positions using a spiral layout
       note.tags.forEach((tag, tagIndex) => {
         if (!newPositions.has(tag)) {
-          const t = tagIndex * 1.618033988749895; // Golden ratio
-          const tagRadius = radius * 0.2;
+          const t = tagIndex * 0.5; // Reduced multiplier for tighter spiral
+          const tagRadius = radius * 0.6; // Increased radius for better visibility
           const spiralAngle = t * 2 * Math.PI;
-          const spiralRadius = Math.min(tagRadius * (t / (2 * Math.PI)), tagRadius);
+          const spiralRadius = tagRadius * (t / (2 * Math.PI));
           
           newPositions.set(tag, {
             x: centerX + spiralRadius * Math.cos(spiralAngle),
@@ -109,15 +109,17 @@ export const DivGraph2 = ({ notes, highlightedNoteId }: DivGraph2Props) => {
                 initial={{ pathLength: 0, opacity: 0 }}
                 animate={{ 
                   pathLength: 1, 
-                  opacity: 0.3,
-                  stroke: theme === 'dark' ? '#334155' : '#cbd5e1'
+                  opacity: hoveredNode ? 
+                    (edge.id.includes(hoveredNode) ? 0.6 : 0.1) : 
+                    0.3,
+                  stroke: theme === 'dark' ? '#475569' : '#94a3b8'
                 }}
                 exit={{ pathLength: 0, opacity: 0 }}
                 x1={edge.from.x}
                 y1={edge.from.y}
                 x2={edge.to.x}
                 y2={edge.to.y}
-                strokeWidth={1}
+                strokeWidth={hoveredNode && edge.id.includes(hoveredNode) ? 2 : 1}
                 transition={{ duration: 0.5 }}
               />
             ))}
@@ -137,8 +139,8 @@ export const DivGraph2 = ({ notes, highlightedNoteId }: DivGraph2Props) => {
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ 
                   scale: 1, 
-                  opacity: 1,
-                  x: position.x - (isNote ? 75 : 30),
+                  opacity: hoveredNode ? (isHovered || edges.some(e => e.id.includes(hoveredNode) && e.id.includes(id)) ? 1 : 0.3) : 1,
+                  x: position.x - (isNote ? 75 : 50),
                   y: position.y - (isNote ? 30 : 15)
                 }}
                 exit={{ scale: 0, opacity: 0 }}
@@ -147,11 +149,11 @@ export const DivGraph2 = ({ notes, highlightedNoteId }: DivGraph2Props) => {
                 className={`absolute cursor-pointer ${
                   isNote 
                     ? 'w-[150px] p-3 rounded-lg shadow-lg' 
-                    : 'w-[60px] h-[30px] rounded-full flex items-center justify-center'
+                    : 'min-w-[100px] h-[30px] rounded-full flex items-center justify-center'
                 } ${
                   isNote
                     ? theme === 'dark' ? 'bg-slate-800' : 'bg-white'
-                    : theme === 'dark' ? 'bg-green-600' : 'bg-green-500'
+                    : theme === 'dark' ? 'bg-green-600/80' : 'bg-green-500/80'
                 } ${
                   isHighlighted ? 'ring-2 ring-rose-500' : ''
                 } ${
@@ -166,7 +168,7 @@ export const DivGraph2 = ({ notes, highlightedNoteId }: DivGraph2Props) => {
                     {note?.tags[0] || note?.content.split('\n')[0].substring(0, 50)}
                   </div>
                 ) : (
-                  <Badge variant="outline" className="bg-transparent">
+                  <Badge variant="outline" className="bg-transparent whitespace-nowrap px-3">
                     {id}
                   </Badge>
                 )}
