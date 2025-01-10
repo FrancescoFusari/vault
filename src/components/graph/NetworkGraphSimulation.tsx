@@ -61,6 +61,7 @@ export const NetworkGraphSimulation = ({
 
     // Double-tap detection
     let lastTap = 0;
+    let isZoomed = false;
     const tapDelay = 300; // milliseconds
 
     // Function to center and zoom to a node
@@ -77,6 +78,8 @@ export const NetworkGraphSimulation = ({
       svg.transition()
         .duration(750)
         .call(zoom.transform as any, transform);
+      
+      isZoomed = true;
     };
 
     // Initialize simulation
@@ -118,13 +121,17 @@ export const NetworkGraphSimulation = ({
           const currentTime = new Date().getTime();
           const tapLength = currentTime - lastTap;
           
-          if (tapLength < tapDelay && tapLength > 0) {
-            // Double tap detected
-            if (d.type === 'note') {
+          if (d.type === 'note') {
+            if (isZoomed && tapLength < tapDelay && tapLength > 0) {
+              // Second click on zoomed note - open popup
               onNodeClick(d);
+              isZoomed = false; // Reset zoom state
+            } else if (!isZoomed) {
+              // First click - zoom to node
+              centerNode(d);
             }
           } else {
-            // Single tap - zoom to node
+            // For tag nodes, just zoom
             centerNode(d);
           }
           lastTap = currentTime;
