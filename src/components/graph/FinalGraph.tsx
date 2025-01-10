@@ -121,14 +121,14 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
     // Calculate text size and add background
     labelGroup.each(function(d: d3.HierarchyCircularNode<DataNode>) {
       const g = d3.select(this);
-      const padding = 8; // Increased padding
+      const padding = 12; // Increased padding further
       
-      // Calculate font size based on circle radius - increased size
-      const fontSize = Math.min(d.r / 2, d.r * 0.9); // Increased from r/3 to r/2
+      // Significantly increased font size calculation
+      const fontSize = Math.min(d.r / 1.5, d.r * 1.2); // Increased from r/2 to r/1.5
       
       const text = g.append("text")
         .style("font-size", `${fontSize}px`)
-        .style("font-weight", "600") // Increased from 500 to 600
+        .style("font-weight", "700") // Increased from 600 to 700
         .style("fill", theme === 'dark' ? '#e2e8f0' : '#334155')
         .style("fill-opacity", d.parent === packedData ? 1 : 0)
         .style("display", d.parent === packedData ? "inline" : "none")
@@ -137,16 +137,16 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
       // Get text dimensions
       const bbox = (text.node() as SVGTextElement).getBBox();
 
-      // Add background rectangle
+      // Add background rectangle with increased padding
       g.insert("rect", "text")
         .attr("x", bbox.x - padding)
         .attr("y", bbox.y - padding)
         .attr("width", bbox.width + (padding * 2))
         .attr("height", bbox.height + (padding * 2))
-        .attr("fill", theme === 'dark' ? 'rgba(30, 41, 59, 0.9)' : 'rgba(248, 250, 252, 0.9)') // Increased opacity
-        .style("fill-opacity", d.parent === packedData ? 0.9 : 0)
+        .attr("fill", theme === 'dark' ? 'rgba(30, 41, 59, 0.95)' : 'rgba(248, 250, 252, 0.95)') // Increased opacity further
+        .style("fill-opacity", d.parent === packedData ? 0.95 : 0)
         .style("display", d.parent === packedData ? "inline" : "none")
-        .attr("rx", 6); // Increased border radius
+        .attr("rx", 8); // Increased border radius further
     });
 
     // Initialize zoom state
