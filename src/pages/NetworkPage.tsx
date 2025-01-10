@@ -18,8 +18,8 @@ const NetworkPage = () => {
   });
 
   return (
-    <div className="fixed inset-0">
-      <div className="h-full">
+    <div className="fixed inset-0 overflow-hidden">
+      <div className="absolute inset-0">
         <NetworkGraph notes={notes} />
       </div>
       <BottomNav />

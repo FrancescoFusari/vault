@@ -56,7 +56,7 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
   return (
     <div 
       ref={containerRef} 
-      className="w-full h-[600px] border rounded-lg overflow-hidden relative"
+      className="absolute inset-0 overflow-hidden"
     >
       <NetworkGraphSettings 
         settings={settings}
