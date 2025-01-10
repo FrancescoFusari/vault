@@ -121,14 +121,14 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
     // Calculate text size and add background
     labelGroup.each(function(d: d3.HierarchyCircularNode<DataNode>) {
       const g = d3.select(this);
-      const padding = 4;
+      const padding = 8; // Increased padding
       
-      // Calculate font size based on circle radius
-      const fontSize = Math.min(d.r / 3, d.r * 0.8);
+      // Calculate font size based on circle radius - increased size
+      const fontSize = Math.min(d.r / 2, d.r * 0.9); // Increased from r/3 to r/2
       
       const text = g.append("text")
         .style("font-size", `${fontSize}px`)
-        .style("font-weight", "500")
+        .style("font-weight", "600") // Increased from 500 to 600
         .style("fill", theme === 'dark' ? '#e2e8f0' : '#334155')
         .style("fill-opacity", d.parent === packedData ? 1 : 0)
         .style("display", d.parent === packedData ? "inline" : "none")
@@ -143,10 +143,10 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
         .attr("y", bbox.y - padding)
         .attr("width", bbox.width + (padding * 2))
         .attr("height", bbox.height + (padding * 2))
-        .attr("fill", theme === 'dark' ? 'rgba(30, 41, 59, 0.8)' : 'rgba(248, 250, 252, 0.8)')
-        .style("fill-opacity", d.parent === packedData ? 0.8 : 0)
+        .attr("fill", theme === 'dark' ? 'rgba(30, 41, 59, 0.9)' : 'rgba(248, 250, 252, 0.9)') // Increased opacity
+        .style("fill-opacity", d.parent === packedData ? 0.9 : 0)
         .style("display", d.parent === packedData ? "inline" : "none")
-        .attr("rx", 4);
+        .attr("rx", 6); // Increased border radius
     });
 
     // Initialize zoom state
@@ -186,10 +186,13 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
 
       labelGroup.selectAll("text, rect")
         .transition(transition)
-        .style("fill-opacity", d => (d as d3.HierarchyCircularNode<DataNode>).parent === focus ? 1 : 0)
-        .style("display", function(d) {
+        .style("fill-opacity", d => {
           const node = d as d3.HierarchyCircularNode<DataNode>;
-          return node.parent === focus || this.style.display === "inline" ? "inline" : "none";
+          return node.parent === focus ? 1 : 0;
+        })
+        .style("display", d => {
+          const node = d as d3.HierarchyCircularNode<DataNode>;
+          return node.parent === focus ? "inline" : "none";
         });
     };
 
