@@ -34,7 +34,6 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [simulation, setSimulation] = useState<d3.Simulation<NetworkNode, NetworkLink> | null>(null);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [graphSettings, setGraphSettings] = useState({
     linkDistance: isMobile ? 50 : 100,
@@ -44,19 +43,6 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
 
   const handleSettingChange = (setting: string, value: number) => {
     setGraphSettings(prev => ({ ...prev, [setting]: value }));
-    
-    if (simulation) {
-      simulation
-        .force("link", d3.forceLink()
-          .id((d: any) => d.id)
-          .distance(setting === 'linkDistance' ? value : graphSettings.linkDistance))
-        .force("charge", d3.forceManyBody()
-          .strength(setting === 'chargeStrength' ? value : graphSettings.chargeStrength))
-        .force("collision", d3.forceCollide()
-          .radius((d: NetworkNode) => d.value * (setting === 'collisionRadius' ? value : graphSettings.collisionRadius)))
-        .alpha(1)
-        .restart();
-    }
   };
 
   useEffect(() => {
@@ -88,7 +74,7 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
       // Create color scale for tags
       const colorScale = d3.scaleLinear<string>()
         .domain([1, maxTagUsage])
-        .range(['#94a3b8', '#ef4444']) // From grey to red
+        .range(['#94a3b8', '#ef4444'])
         .interpolate(d3.interpolateHcl);
 
       // Add tag nodes
@@ -98,7 +84,7 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
           id: `tag-${tag}`,
           name: tag,
           type: 'tag',
-          value: 2 // Fixed size for all tag nodes
+          value: 2
         };
         nodes.push(tagNode);
         nodeMap.set(tagNode.id, tagNode);
@@ -109,7 +95,7 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
         const noteId = `note-${note.id}`;
         const noteNode: NetworkNode = {
           id: noteId,
-          name: note.tags[0] || note.content.split('\n')[0].substring(0, 30) + '...', // Use first tag as title
+          name: note.tags[0] || note.content.split('\n')[0].substring(0, 30) + '...',
           type: 'note',
           value: 2,
           originalNote: note
@@ -156,6 +142,17 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
 
     svg.call(zoom as any);
 
+    // Initialize simulation first
+    const simulation = d3.forceSimulation(nodes)
+      .force("link", d3.forceLink(links)
+        .id((d: any) => d.id)
+        .distance(graphSettings.linkDistance))
+      .force("charge", d3.forceManyBody()
+        .strength(graphSettings.chargeStrength))
+      .force("collision", d3.forceCollide()
+        .radius((d: NetworkNode) => d.value * graphSettings.collisionRadius))
+      .force("center", d3.forceCenter(width / 2, height / 2));
+
     // Create links
     const link = container.append("g")
       .selectAll("line")
@@ -177,7 +174,7 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
             const usageCount = tagUsageCount.get(tagName) || 1;
             return colorScale(usageCount);
           }
-          return theme === 'dark' ? '#6366f1' : '#818cf8'; // Note nodes color
+          return theme === 'dark' ? '#6366f1' : '#818cf8';
         })
         .attr("stroke", theme === 'dark' ? '#1e293b' : '#f8fafc')
         .attr("stroke-width", 2)
@@ -191,13 +188,26 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
               description: `Used ${usageCount} time${usageCount === 1 ? '' : 's'}`,
             });
           }
-        })
-        .call(d3.drag()
-          .on("start", dragstarted)
-          .on("drag", dragged)
-          .on("end", dragended) as any);
+        });
 
-    // Add labels with larger font for note titles
+    // Add drag behavior
+    node.call(d3.drag<any, NetworkNode>()
+      .on("start", (event: any) => {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        event.subject.fx = event.subject.x;
+        event.subject.fy = event.subject.y;
+      })
+      .on("drag", (event: any) => {
+        event.subject.fx = event.x;
+        event.subject.fy = event.y;
+      })
+      .on("end", (event: any) => {
+        if (!event.active) simulation.alphaTarget(0);
+        event.subject.fx = null;
+        event.subject.fy = null;
+      }) as any);
+
+    // Add labels
     const label = container.append("g")
       .selectAll("text")
       .data(nodes)
@@ -228,24 +238,24 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
         .attr("y", (d: NetworkNode) => (d.y || 0) - (d.value * graphSettings.collisionRadius + 10));
     });
 
-    // Drag functions
-    function dragstarted(event: any) {
-      if (!event.active) simulation.alphaTarget(0.3).restart();
-      event.subject.fx = event.subject.x;
-      event.subject.fy = event.subject.y;
+    // Update simulation when settings change
+    if (graphSettings) {
+      simulation
+        .force("link", d3.forceLink(links)
+          .id((d: any) => d.id)
+          .distance(graphSettings.linkDistance))
+        .force("charge", d3.forceManyBody()
+          .strength(graphSettings.chargeStrength))
+        .force("collision", d3.forceCollide()
+          .radius((d: NetworkNode) => d.value * graphSettings.collisionRadius))
+        .alpha(1)
+        .restart();
     }
 
-    function dragged(event: any) {
-      event.subject.fx = event.x;
-      event.subject.fy = event.y;
-    }
-
-    function dragended(event: any) {
-      if (!event.active) simulation.alphaTarget(0);
-      event.subject.fx = null;
-      event.subject.fy = null;
-    }
-
+    // Cleanup
+    return () => {
+      simulation.stop();
+    };
   }, [notes, theme, isMobile, toast, navigate, graphSettings]);
 
   return (
