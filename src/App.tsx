@@ -24,16 +24,18 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <Router>
-          <DesktopNav />
-          <div className="pt-16"> {/* Add padding to account for fixed navbar */}
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/tags" element={<TagsPage />} />
-              <Route path="/network" element={<NetworkPage />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/note/:id" element={<NotePage />} />
-              <Route path="/notes" element={<NotesListPage />} />
-            </Routes>
+          <div className="min-h-screen bg-background">
+            <DesktopNav />
+            <main>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/tags" element={<TagsPage />} />
+                <Route path="/network" element={<NetworkPage />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/note/:id" element={<NotePage />} />
+                <Route path="/notes" element={<NotesListPage />} />
+              </Routes>
+            </main>
           </div>
         </Router>
       </ThemeProvider>

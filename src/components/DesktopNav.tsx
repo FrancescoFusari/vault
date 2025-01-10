@@ -12,32 +12,32 @@ export const DesktopNav = () => {
   const isActive = (path: string) => location.pathname === path;
   
   return (
-    <div className="hidden md:flex fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-b px-6 py-3">
+    <div className="hidden md:flex fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-b px-6 py-3 z-50">
       <div className="flex-1 flex items-center gap-6">
         <button
           onClick={() => navigate('/')}
-          className={`flex items-center gap-2 ${isActive('/') ? 'text-primary' : 'text-muted-foreground'}`}
+          className={`flex items-center gap-2 ${isActive('/') ? 'text-primary' : 'text-muted-foreground'} hover:text-primary transition-colors`}
         >
           <List className="h-5 w-5" />
           <span>Home</span>
         </button>
         <button
           onClick={() => navigate('/notes')}
-          className={`flex items-center gap-2 ${isActive('/notes') ? 'text-primary' : 'text-muted-foreground'}`}
+          className={`flex items-center gap-2 ${isActive('/notes') ? 'text-primary' : 'text-muted-foreground'} hover:text-primary transition-colors`}
         >
           <FileText className="h-5 w-5" />
           <span>Notes</span>
         </button>
         <button
           onClick={() => navigate('/tags')}
-          className={`flex items-center gap-2 ${isActive('/tags') ? 'text-primary' : 'text-muted-foreground'}`}
+          className={`flex items-center gap-2 ${isActive('/tags') ? 'text-primary' : 'text-muted-foreground'} hover:text-primary transition-colors`}
         >
           <Tag className="h-5 w-5" />
           <span>Tags</span>
         </button>
         <button
           onClick={() => navigate('/network')}
-          className={`flex items-center gap-2 ${isActive('/network') ? 'text-primary' : 'text-muted-foreground'}`}
+          className={`flex items-center gap-2 ${isActive('/network') ? 'text-primary' : 'text-muted-foreground'} hover:text-primary transition-colors`}
         >
           <Network className="h-5 w-5" />
           <span>Network</span>
