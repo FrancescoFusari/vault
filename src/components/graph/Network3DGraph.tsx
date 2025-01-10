@@ -4,7 +4,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
 import { useGraphDimensions } from '@/hooks/useGraphDimensions';
 import ForceGraph3D from 'react-force-graph-3d';
-import { NetworkGraphSettings } from './NetworkGraphSettings';
 import { NotePopupWindow } from './NotePopupWindow';
 import { processNetworkData, NetworkNode } from '@/utils/networkGraphUtils';
 import { Note } from '@/types/graph';
@@ -20,11 +19,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const navigate = useNavigate();
   const dimensions = useGraphDimensions(containerRef, isMobile);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
-  const [settings, setSettings] = useState({
-    linkDistance: 100,
-    chargeStrength: -200,
-    collisionRadius: 5
-  });
 
   const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
 
@@ -38,22 +32,11 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     }
   };
 
-  const handleSettingChange = (setting: string, value: number) => {
-    setSettings(prev => ({
-      ...prev,
-      [setting]: value
-    }));
-  };
-
   return (
     <div 
       ref={containerRef} 
       className="absolute inset-0 w-full h-full"
     >
-      <NetworkGraphSettings 
-        settings={settings}
-        onSettingChange={handleSettingChange}
-      />
       <ForceGraph3D
         width={dimensions.width}
         height={dimensions.height}
