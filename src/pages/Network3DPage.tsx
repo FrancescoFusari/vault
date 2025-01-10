@@ -18,8 +18,8 @@ const Network3DPage = () => {
   });
 
   return (
-    <div className="fixed inset-0 overflow-hidden">
-      <div className="absolute inset-0">
+    <div className="fixed inset-0 flex flex-col">
+      <div className="flex-1 relative">
         <Network3DGraph notes={notes} />
       </div>
       <BottomNav />
