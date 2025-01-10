@@ -32,6 +32,7 @@ export const NetworkGraphSimulation = ({
   const svgRef = useRef<SVGSVGElement>(null);
   const { theme } = useTheme();
   const isMobile = useIsMobile();
+  const simulationRef = useRef<d3.Simulation<NetworkNode, NetworkLink> | null>(null);
 
   useEffect(() => {
     if (!svgRef.current || !nodes.length) return;
@@ -48,7 +49,7 @@ export const NetworkGraphSimulation = ({
     // Create container for zoom
     const container = svg.append("g");
 
-    // Add zoom behavior
+    // Add zoom behavior with limits
     const zoom = d3.zoom()
       .scaleExtent([0.5, 4])
       .on("zoom", (event) => {
@@ -57,19 +58,25 @@ export const NetworkGraphSimulation = ({
 
     svg.call(zoom as any);
 
-    // Initialize simulation with lower alpha and higher decay
+    // Initialize simulation with stable configuration
     const simulation = d3.forceSimulation(nodes)
       .alpha(0.3)
-      .alphaDecay(0.05) // Increased decay for faster stabilization
-      .velocityDecay(0.4)
+      .alphaDecay(0.1) // Faster decay for quicker stabilization
+      .velocityDecay(0.6) // Higher damping
       .force("link", d3.forceLink(links)
         .id((d: any) => d.id)
-        .distance(settings.linkDistance))
+        .distance(settings.linkDistance)
+        .strength(0.3)) // Reduced link strength
       .force("charge", d3.forceManyBody()
-        .strength(settings.chargeStrength))
+        .strength(settings.chargeStrength)
+        .distanceMax(200)) // Limit charge effect range
       .force("collision", d3.forceCollide()
-        .radius((d: NetworkNode) => d.value * settings.collisionRadius))
-      .force("center", d3.forceCenter(width / 2, height / 2));
+        .radius((d: NetworkNode) => d.value * settings.collisionRadius)
+        .strength(0.8)) // Increased collision strength
+      .force("center", d3.forceCenter(width / 2, height / 2)
+        .strength(0.1)); // Gentle centering force
+
+    simulationRef.current = simulation;
 
     // Create links
     const link = container.append("g")
@@ -111,11 +118,12 @@ export const NetworkGraphSimulation = ({
             .attr("stroke", theme === 'dark' ? '#1e293b' : '#f8fafc');
         })
         .on("click", (event: any, d: NetworkNode) => {
-          // Prevent simulation restart
           event.stopPropagation();
+          event.preventDefault();
           
-          // Visual feedback without affecting simulation
-          d3.select(event.currentTarget)
+          // Only visual feedback, no simulation changes
+          const element = d3.select(event.currentTarget);
+          element
             .transition()
             .duration(100)
             .attr("r", (d: NetworkNode) => d.value * settings.collisionRadius * 1.2)
@@ -126,22 +134,25 @@ export const NetworkGraphSimulation = ({
           onNodeClick(d);
         });
 
-    // Add drag behavior with minimal simulation impact
-    node.call(d3.drag<any, NetworkNode>()
+    // Add drag behavior with minimal impact
+    const drag = d3.drag<any, NetworkNode>()
       .on("start", (event: any) => {
-        if (!event.active) simulation.alphaTarget(0.05).restart();
+        event.sourceEvent.stopPropagation();
         event.subject.fx = event.subject.x;
         event.subject.fy = event.subject.y;
       })
       .on("drag", (event: any) => {
+        event.sourceEvent.stopPropagation();
         event.subject.fx = event.x;
         event.subject.fy = event.y;
       })
       .on("end", (event: any) => {
-        if (!event.active) simulation.alphaTarget(0);
+        event.sourceEvent.stopPropagation();
         event.subject.fx = null;
         event.subject.fy = null;
-      }) as any);
+      });
+
+    node.call(drag as any);
 
     // Add labels
     const label = container.append("g")
@@ -174,8 +185,11 @@ export const NetworkGraphSimulation = ({
         .attr("y", (d: NetworkNode) => (d.y || 0) - (d.value * settings.collisionRadius + 10));
     });
 
+    // Cleanup
     return () => {
-      simulation.stop();
+      if (simulationRef.current) {
+        simulationRef.current.stop();
+      }
     };
   }, [width, height, nodes, links, theme, isMobile, tagUsageCount, colorScale, onNodeClick, settings]);
 
