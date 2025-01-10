@@ -54,6 +54,27 @@ export type Database = {
         }
         Relationships: []
       }
+      tag_categories: {
+        Row: {
+          categories: Json
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          categories: Json
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          categories?: Json
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

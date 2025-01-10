@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -21,8 +21,8 @@ interface Categories {
 export const TagView = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const [categories, setCategories] = useState<Categories | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
   const { data: notes = [] } = useQuery({
@@ -35,6 +35,32 @@ export const TagView = () => {
       
       if (error) throw error;
       return data as Note[];
+    }
+  });
+
+  const { data: savedCategories } = useQuery({
+    queryKey: ['tag-categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tag_categories')
+        .select('categories')
+        .single();
+      
+      if (error && error.code !== 'PGRST116') throw error;
+      return data?.categories as Categories | null;
+    }
+  });
+
+  const saveCategoriesMutation = useMutation({
+    mutationFn: async (categories: Categories) => {
+      const { error } = await supabase
+        .from('tag_categories')
+        .upsert({ categories }, { onConflict: 'user_id' });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tag-categories'] });
     }
   });
 
@@ -67,10 +93,13 @@ export const TagView = () => {
       });
 
       if (error) throw error;
-      setCategories(data);
+      
+      // Save categories to database
+      await saveCategoriesMutation.mutateAsync(data);
+      
       toast({
         title: "Tags categorized",
-        description: "Your tags have been organized into categories",
+        description: "Your tags have been organized and saved",
       });
     } catch (error) {
       console.error('Error categorizing tags:', error);
@@ -82,6 +111,14 @@ export const TagView = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Check if we need to show the categorize button
+  const shouldShowCategorizeButton = () => {
+    if (!savedCategories) return true;
+    const currentTags = Array.from(tagMap.keys());
+    const savedTags = Object.values(savedCategories).flat();
+    return currentTags.some(tag => !savedTags.includes(tag));
   };
 
   if (sortedTags.length === 0) {
@@ -131,21 +168,23 @@ export const TagView = () => {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <Button 
-          onClick={categorizeTags} 
-          disabled={isLoading}
-          variant="outline"
-        >
-          {isLoading ? "Categorizing..." : "Categorize Tags"}
-        </Button>
-      </div>
+      {shouldShowCategorizeButton() && (
+        <div className="flex justify-between items-center">
+          <Button 
+            onClick={categorizeTags} 
+            disabled={isLoading}
+            variant="outline"
+          >
+            {isLoading ? "Categorizing..." : "Categorize Tags"}
+          </Button>
+        </div>
+      )}
 
-      {categories && (
+      {savedCategories && (
         <div className="space-y-6">
           <h2 className="text-lg font-semibold">Categories</h2>
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {Object.entries(categories).map(([category, tags]) => (
+            {Object.entries(savedCategories).map(([category, tags]) => (
               <Card key={category}>
                 <CardHeader>
                   <h3 className="font-medium">{category}</h3>
@@ -167,24 +206,26 @@ export const TagView = () => {
         </div>
       )}
 
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {sortedTags.map(([tag, tagNotes]) => (
-          <Card 
-            key={tag}
-            className="cursor-pointer hover:bg-accent transition-colors"
-            onClick={() => setSelectedTag(tag)}
-          >
-            <CardHeader className="space-y-2">
-              <Badge variant="secondary" className="text-sm inline-block">
-                {tag}
-              </Badge>
-              <p className="text-sm text-muted-foreground">
-                {tagNotes.length} note{tagNotes.length !== 1 ? 's' : ''}
-              </p>
-            </CardHeader>
-          </Card>
-        ))}
-      </div>
+      {(!savedCategories || shouldShowCategorizeButton()) && (
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {sortedTags.map(([tag, tagNotes]) => (
+            <Card 
+              key={tag}
+              className="cursor-pointer hover:bg-accent transition-colors"
+              onClick={() => setSelectedTag(tag)}
+            >
+              <CardHeader className="space-y-2">
+                <Badge variant="secondary" className="text-sm inline-block">
+                  {tag}
+                </Badge>
+                <p className="text-sm text-muted-foreground">
+                  {tagNotes.length} note{tagNotes.length !== 1 ? 's' : ''}
+                </p>
+              </CardHeader>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
