@@ -42,8 +42,7 @@ export const NetworkGraphSimulation = ({
     const svg = d3.select(svgRef.current)
       .attr("viewBox", [0, 0, width, height])
       .attr("width", width)
-      .attr("height", height)
-      .style("background-color", theme === 'dark' ? '#1e293b' : '#f8fafc');
+      .attr("height", height);
 
     const container = svg.append("g");
 
@@ -162,5 +161,5 @@ export const NetworkGraphSimulation = ({
     };
   }, [width, height, nodes, links, theme, isMobile, tagUsageCount, colorScale, onNodeClick, settings]);
 
-  return <svg ref={svgRef} className="w-full h-full" />;
+  return <svg ref={svgRef} className="w-full h-full bg-background" />;
 };
