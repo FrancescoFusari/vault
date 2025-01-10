@@ -6,6 +6,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { NetworkGraphSettings } from './NetworkGraphSettings';
+import { NotePopupWindow } from './NotePopupWindow';
 
 interface NetworkGraphProps {
   notes: Note[];
@@ -16,6 +17,7 @@ interface NetworkNode {
   name: string;
   type: 'note' | 'tag';
   value: number;
+  originalNote?: Note;
   x?: number;
   y?: number;
 }
@@ -33,6 +35,7 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [simulation, setSimulation] = useState<d3.Simulation<NetworkNode, NetworkLink> | null>(null);
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [graphSettings, setGraphSettings] = useState({
     linkDistance: isMobile ? 50 : 100,
     chargeStrength: isMobile ? -100 : -200,
@@ -93,7 +96,8 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
           id: noteId,
           name: note.content.split('\n')[0].substring(0, 30) + '...',
           type: 'note',
-          value: 1
+          value: 2, // Increased size for note nodes
+          originalNote: note // Store the original note data
         };
         nodes.push(noteNode);
         nodeMap.set(noteNode.id, noteNode);
@@ -159,12 +163,18 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
         .attr("stroke-opacity", 0.6)
         .attr("stroke-width", (d: NetworkLink) => Math.sqrt(d.value));
 
-    // Create nodes
+    // Create nodes with larger size for notes
     const node = container.append("g")
       .selectAll("circle")
       .data(data.nodes)
       .join("circle")
-        .attr("r", (d: NetworkNode) => d.value * graphSettings.collisionRadius)
+        .attr("r", (d: NetworkNode) => {
+          // Make note nodes significantly larger
+          if (d.type === 'note') {
+            return d.value * graphSettings.collisionRadius * 3;
+          }
+          return d.value * graphSettings.collisionRadius;
+        })
         .attr("fill", (d: NetworkNode) => {
           if (d.type === 'tag') {
             return theme === 'dark' ? '#0ea5e9' : '#38bdf8';
@@ -174,10 +184,9 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
         .attr("stroke", theme === 'dark' ? '#1e293b' : '#f8fafc')
         .attr("stroke-width", 2)
         .on("click", (event: any, d: NetworkNode) => {
-          if (d.type === 'note') {
-            const noteId = d.id.replace('note-', '');
-            navigate(`/note/${noteId}`);
-          } else {
+          if (d.type === 'note' && d.originalNote) {
+            setSelectedNote(d.originalNote);
+          } else if (d.type === 'tag') {
             toast({
               title: `Tag: ${d.name}`,
               description: `Connected to ${
@@ -193,16 +202,18 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
           .on("drag", dragged)
           .on("end", dragended) as any);
 
-    // Add labels
+    // Add labels with larger font for note titles
     const label = container.append("g")
       .selectAll("text")
       .data(data.nodes)
       .join("text")
-        .style("font-size", isMobile ? "8px" : "10px")
+        .style("font-size", (d: NetworkNode) => 
+          d.type === 'note' ? (isMobile ? "10px" : "12px") : (isMobile ? "8px" : "10px")
+        )
         .style("fill", theme === 'dark' ? '#e2e8f0' : '#334155')
         .style("pointer-events", "none")
         .style("text-anchor", "middle")
-        .style("font-weight", "600")
+        .style("font-weight", (d: NetworkNode) => d.type === 'note' ? "600" : "400")
         .text((d: NetworkNode) => d.name);
 
     // Update positions on simulation tick
@@ -249,6 +260,12 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
         onSettingChange={handleSettingChange}
       />
       <svg ref={svgRef} className="w-full h-full" />
+      {selectedNote && (
+        <NotePopupWindow
+          note={selectedNote}
+          onClose={() => setSelectedNote(null)}
+        />
+      )}
     </div>
   );
 };
