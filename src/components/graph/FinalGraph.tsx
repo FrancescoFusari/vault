@@ -109,7 +109,14 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
         .attr("stroke-width", d => d.height === 0 ? 1 : 2)
         .attr("stroke-opacity", 0.3);
 
-    // Create labels
+    // Calculate optimal font size based on circle radius with padding
+    const calculateFontSize = (radius: number) => {
+      const padding = 10; // Padding in pixels
+      const maxWidth = (radius * 2) - (padding * 2); // Available width with padding
+      return Math.min(maxWidth / 4, radius * 0.8); // Limit font size to 80% of radius
+    };
+
+    // Create labels with improved text sizing
     const label = container.append("g")
       .style("font-family", "sans-serif")
       .attr("pointer-events", "none")
@@ -120,7 +127,8 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
         .style("fill", theme === 'dark' ? '#e2e8f0' : '#334155')
         .style("fill-opacity", d => d.parent === packedData ? 1 : 0)
         .style("display", d => d.parent === packedData ? "inline" : "none")
-        .style("font-size", d => Math.min((d as any).r / 3, 14))
+        .style("font-weight", "600")
+        .style("font-size", d => `${calculateFontSize((d as any).r)}px`)
         .text(d => d.data.name);
 
     // Initialize zoom state
@@ -144,6 +152,12 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
       node.attr("r", d => {
         const node = d as d3.HierarchyCircularNode<DataNode>;
         return node.r * k;
+      });
+
+      // Update font sizes after zoom
+      label.style("font-size", d => {
+        const node = d as d3.HierarchyCircularNode<DataNode>;
+        return `${calculateFontSize(node.r * k)}px`;
       });
     };
 
