@@ -73,17 +73,26 @@ export const NetworkGraphSimulation = ({
       if (pressedNode) {
         const connectedNodeIds = getConnectedNodes(pressedNode);
         
+        // Fix the position of the pressed node
+        pressedNode.fx = pressedNode.x;
+        pressedNode.fy = pressedNode.y;
+        
         // Apply magnetic forces
         simulationRef.current
           .force("magnetic", d3.forceManyBody()
             .strength((d: NetworkNode) => {
               if (d === pressedNode) return 0;
-              return connectedNodeIds.has(d.id) ? 100 : -300; // Attract connected, repel others
+              return connectedNodeIds.has(d.id) ? 100 : -300;
             })
             .distanceMax(300)
           );
       } else {
-        // Reset to default forces
+        // Reset to default forces and unfix the previously pressed node
+        nodes.forEach(node => {
+          node.fx = null;
+          node.fy = null;
+        });
+        
         simulationRef.current
           .force("charge", d3.forceManyBody()
             .strength(settings.chargeStrength)
@@ -136,9 +145,12 @@ export const NetworkGraphSimulation = ({
     const handlePointerDown = (event: any, d: NetworkNode) => {
       event.preventDefault();
       pressedNodeRef.current = d;
+      // Fix the node position immediately on press
+      d.fx = d.x;
+      d.fy = d.y;
       pressTimerRef.current = window.setTimeout(() => {
         updateForces(d);
-      }, 200); // Start magnetic effect after 200ms press
+      }, 200);
     };
 
     const handlePointerUp = (event: any) => {
@@ -149,19 +161,17 @@ export const NetworkGraphSimulation = ({
       }
       if (pressedNodeRef.current) {
         const node = pressedNodeRef.current;
+        // Unfix the node position
+        node.fx = null;
+        node.fy = null;
         pressedNodeRef.current = null;
         updateForces(null);
         
-        // Handle click for note nodes
         if (node.type === 'note') {
           onNodeClick(node);
         }
       }
     };
-
-    node.on("pointerdown", handlePointerDown)
-       .on("pointerup", handlePointerUp)
-       .on("pointerout", handlePointerUp);
 
     const drag = d3.drag<any, NetworkNode>()
       .on("start", (event: any) => {
@@ -230,6 +240,11 @@ export const NetworkGraphSimulation = ({
       if (pressTimerRef.current) {
         clearTimeout(pressTimerRef.current);
       }
+      // Make sure to unfix any fixed nodes when unmounting
+      nodes.forEach(node => {
+        node.fx = null;
+        node.fy = null;
+      });
     };
   }, [width, height, nodes, links, theme, isMobile, tagUsageCount, colorScale, onNodeClick, settings]);
 
