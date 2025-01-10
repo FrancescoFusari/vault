@@ -37,7 +37,6 @@ export const NetworkGraphSimulation = ({
   useEffect(() => {
     if (!svgRef.current || !nodes.length) return;
 
-    // Clear previous content
     d3.select(svgRef.current).selectAll("*").remove();
 
     const svg = d3.select(svgRef.current)
@@ -46,10 +45,8 @@ export const NetworkGraphSimulation = ({
       .attr("height", height)
       .style("background-color", theme === 'dark' ? '#1e293b' : '#f8fafc');
 
-    // Create container for zoom
     const container = svg.append("g");
 
-    // Add zoom behavior
     const zoom = d3.zoom()
       .scaleExtent([0.5, 4])
       .on("zoom", (event) => {
@@ -58,7 +55,6 @@ export const NetworkGraphSimulation = ({
 
     svg.call(zoom as any);
 
-    // Initialize simulation with stable parameters
     simulationRef.current = d3.forceSimulation(nodes)
       .force("link", d3.forceLink(links)
         .id((d: any) => d.id)
@@ -72,7 +68,6 @@ export const NetworkGraphSimulation = ({
       .alphaDecay(0.1)
       .velocityDecay(0.4);
 
-    // Create links
     const link = container.append("g")
       .selectAll("line")
       .data(links)
@@ -81,7 +76,6 @@ export const NetworkGraphSimulation = ({
         .attr("stroke-opacity", 0.6)
         .attr("stroke-width", (d: NetworkLink) => Math.sqrt(d.value));
 
-    // Create nodes with hover and click effects
     const node = container.append("g")
       .selectAll("circle")
       .data(nodes)
@@ -96,45 +90,15 @@ export const NetworkGraphSimulation = ({
         })
         .attr("stroke", theme === 'dark' ? '#1e293b' : '#f8fafc')
         .attr("stroke-width", 2)
-        .style("cursor", "pointer");
+        .style("cursor", (d: NetworkNode) => d.type === 'note' ? "pointer" : "default");
 
-    // Handle node interactions with improved event handling
-    node
-      .on("mouseover", function() {
-        d3.select(this)
-          .transition()
-          .duration(200)
-          .attr("stroke-width", 3)
-          .attr("stroke", theme === 'dark' ? '#94a3b8' : '#475569');
-      })
-      .on("mouseout", function() {
-        d3.select(this)
-          .transition()
-          .duration(200)
-          .attr("stroke-width", 2)
-          .attr("stroke", theme === 'dark' ? '#1e293b' : '#f8fafc');
-      })
+    node.filter((d: NetworkNode) => d.type === 'note')
       .on("click", (event: any, d: NetworkNode) => {
-        // Prevent event propagation to stop simulation restart
         event.preventDefault();
         event.stopPropagation();
-        
-        // Visual feedback without affecting simulation
-        const clickedNode = d3.select(event.currentTarget);
-        const originalRadius = d.value * settings.collisionRadius;
-        
-        clickedNode
-          .transition()
-          .duration(100)
-          .attr("r", originalRadius * 1.2)
-          .transition()
-          .duration(100)
-          .attr("r", originalRadius);
-        
         onNodeClick(d);
       });
 
-    // Add drag behavior with improved stability
     const drag = d3.drag<any, NetworkNode>()
       .on("start", (event: any) => {
         event.sourceEvent.stopPropagation();
@@ -160,7 +124,6 @@ export const NetworkGraphSimulation = ({
 
     node.call(drag as any);
 
-    // Add labels
     const label = container.append("g")
       .selectAll("text")
       .data(nodes)
@@ -174,7 +137,6 @@ export const NetworkGraphSimulation = ({
         .style("font-weight", (d: NetworkNode) => d.type === 'note' ? "600" : "400")
         .text((d: NetworkNode) => d.name);
 
-    // Update positions on simulation tick
     if (simulationRef.current) {
       simulationRef.current.on("tick", () => {
         link
@@ -193,7 +155,6 @@ export const NetworkGraphSimulation = ({
       });
     }
 
-    // Cleanup
     return () => {
       if (simulationRef.current) {
         simulationRef.current.stop();

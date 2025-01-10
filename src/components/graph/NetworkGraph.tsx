@@ -2,7 +2,6 @@ import { useState, useRef } from 'react';
 import { useTheme } from 'next-themes';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
 import { useGraphDimensions } from '@/hooks/useGraphDimensions';
 import { NetworkGraphSettings } from './NetworkGraphSettings';
 import { NotePopupWindow } from './NotePopupWindow';
@@ -18,7 +17,6 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
   const isMobile = useIsMobile();
-  const { toast } = useToast();
   const navigate = useNavigate();
   const dimensions = useGraphDimensions(containerRef, isMobile);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -37,17 +35,6 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
       } else {
         navigate(`/note/${node.originalNote.id}`);
       }
-    } else if (node.type === 'tag') {
-      // Safely get tag usage count with fallback to 0
-      const usageCount = tagUsageCount.get(node.name) ?? 0;
-      console.log(`Tag ${node.name} clicked. Usage count: ${usageCount}`);
-      
-      // Show toast with more detailed information
-      toast({
-        title: `Tag: ${node.name}`,
-        description: `This tag is used in ${usageCount} note${usageCount === 1 ? '' : 's'}`,
-        duration: 3000, // Set a specific duration
-      });
     }
   };
 
