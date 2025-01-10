@@ -15,17 +15,15 @@ interface Network3DGraphProps {
 
 interface GraphState {
   graphData: {
-    nodes: any[];
-    links: any[];
+    nodes: NetworkNode[];
+    links: {
+      source: string;
+      target: string;
+      value: number;
+    }[];
   };
   tagUsageCount: Map<string, number>;
   colorScale: d3.ScaleLinear<string, string>;
-}
-
-interface GraphLink {
-  source: string | { id: string };
-  target: string | { id: string };
-  value?: number;
 }
 
 export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
@@ -68,29 +66,20 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     const formattedData = {
       nodes: nodes.map(node => ({
         ...node,
-        id: node.id.toString(),
+        id: String(node.id),
       })),
       links: links
-        .filter((link: GraphLink) => {
+        .filter(link => {
           if (!link || !link.source || !link.target) return false;
-          // Ensure both source and target exist and are valid
-          const sourceId = typeof link.source === 'object' && link.source !== null ? link.source.id : link.source;
-          const targetId = typeof link.target === 'object' && link.target !== null ? link.target.id : link.target;
-          return sourceId && targetId && 
-                 validNodeIds.has(String(sourceId)) && 
-                 validNodeIds.has(String(targetId));
+          const sourceId = String(typeof link.source === 'object' ? link.source.id : link.source);
+          const targetId = String(typeof link.target === 'object' ? link.target.id : link.target);
+          return validNodeIds.has(sourceId) && validNodeIds.has(targetId);
         })
-        .map((link: GraphLink) => {
-          if (!link || !link.source || !link.target) return null;
-          const sourceId = typeof link.source === 'object' && link.source !== null ? link.source.id : link.source;
-          const targetId = typeof link.target === 'object' && link.target !== null ? link.target.id : link.target;
-          return {
-            source: String(sourceId),
-            target: String(targetId),
-            value: link.value || 1
-          };
-        })
-        .filter((link): link is NonNullable<typeof link> => link !== null)
+        .map(link => ({
+          source: String(typeof link.source === 'object' ? link.source.id : link.source),
+          target: String(typeof link.target === 'object' ? link.target.id : link.target),
+          value: 1
+        }))
     };
 
     setGraphState({
