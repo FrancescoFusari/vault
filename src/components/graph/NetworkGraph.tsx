@@ -20,8 +20,8 @@ interface NetworkNode {
 }
 
 interface NetworkLink {
-  source: string;
-  target: string;
+  source: NetworkNode;
+  target: NetworkNode;
   value: number;
 }
 
@@ -43,6 +43,7 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
       const nodes: NetworkNode[] = [];
       const links: NetworkLink[] = [];
       const allTags = new Set<string>();
+      const nodeMap = new Map<string, NetworkNode>();
 
       // First collect all tags
       notes.forEach(note => {
@@ -51,31 +52,38 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
 
       // Add tag nodes
       Array.from(allTags).forEach(tag => {
-        nodes.push({
+        const tagNode: NetworkNode = {
           id: `tag-${tag}`,
           name: tag,
           type: 'tag',
           value: notes.filter(note => note.tags.includes(tag)).length * 2
-        });
+        };
+        nodes.push(tagNode);
+        nodeMap.set(tagNode.id, tagNode);
       });
 
       // Add note nodes and links
       notes.forEach(note => {
         const noteId = `note-${note.id}`;
-        nodes.push({
+        const noteNode: NetworkNode = {
           id: noteId,
           name: note.content.split('\n')[0].substring(0, 30) + '...',
           type: 'note',
           value: 1
-        });
+        };
+        nodes.push(noteNode);
+        nodeMap.set(noteNode.id, noteNode);
 
         // Create links between notes and their tags
         note.tags.forEach(tag => {
-          links.push({
-            source: noteId,
-            target: `tag-${tag}`,
-            value: 1
-          });
+          const tagNode = nodeMap.get(`tag-${tag}`);
+          if (tagNode) {
+            links.push({
+              source: noteNode,
+              target: tagNode,
+              value: 1
+            });
+          }
         });
       });
 
@@ -94,16 +102,15 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
       .style("background-color", theme === 'dark' ? '#1e293b' : '#f8fafc');
 
     // Create force simulation
-    const simulation = d3.forceSimulation(data.nodes as any)
+    const simulation = d3.forceSimulation(data.nodes)
       .force("link", d3.forceLink(data.links)
         .id((d: any) => d.id)
         .distance(isMobile ? 50 : 100))
       .force("charge", d3.forceManyBody().strength(isMobile ? -100 : -200))
       .force("center", d3.forceCenter(width / 2, height / 2))
-      // Add forces to create a brain-like shape
       .force("x", d3.forceX(width / 2).strength(0.1))
       .force("y", d3.forceY(height / 2).strength(0.1))
-      .force("collision", d3.forceCollide().radius((d: any) => d.value * 5));
+      .force("collision", d3.forceCollide().radius((d: NetworkNode) => d.value * 5));
 
     // Create container for zoom
     const container = svg.append("g");
@@ -124,15 +131,15 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
       .join("line")
         .attr("stroke", theme === 'dark' ? '#475569' : '#94a3b8')
         .attr("stroke-opacity", 0.6)
-        .attr("stroke-width", (d: any) => Math.sqrt(d.value));
+        .attr("stroke-width", (d: NetworkLink) => Math.sqrt(d.value));
 
     // Create nodes
     const node = container.append("g")
       .selectAll("circle")
       .data(data.nodes)
       .join("circle")
-        .attr("r", (d: any) => d.value * 5)
-        .attr("fill", (d: any) => {
+        .attr("r", (d: NetworkNode) => d.value * 5)
+        .attr("fill", (d: NetworkNode) => {
           if (d.type === 'tag') {
             return theme === 'dark' ? '#0ea5e9' : '#38bdf8';
           }
@@ -140,7 +147,7 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
         })
         .attr("stroke", theme === 'dark' ? '#1e293b' : '#f8fafc')
         .attr("stroke-width", 2)
-        .on("click", (event: any, d: any) => {
+        .on("click", (event: any, d: NetworkNode) => {
           if (d.type === 'note') {
             const noteId = d.id.replace('note-', '');
             navigate(`/note/${noteId}`);
@@ -155,11 +162,11 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
             });
           }
         })
-        .on("mouseover", (event: any, d: any) => {
+        .on("mouseover", (event: any, d: NetworkNode) => {
           d3.select(event.currentTarget)
             .transition()
             .duration(200)
-            .attr("r", (d: any) => d.value * 6);
+            .attr("r", (d: NetworkNode) => d.value * 6);
 
           // Show tooltip
           const tooltip = svg.append("g")
@@ -177,7 +184,7 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
           d3.select(event.currentTarget)
             .transition()
             .duration(200)
-            .attr("r", (d: any) => d.value * 5);
+            .attr("r", (d: NetworkNode) => d.value * 5);
 
           svg.selectAll(".tooltip").remove();
         })
@@ -196,7 +203,7 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
         .style("pointer-events", "none")
         .style("text-anchor", "middle")
         .style("font-weight", "600")
-        .text((d: any) => d.name);
+        .text((d: NetworkNode) => d.name);
 
     // Update positions on simulation tick
     simulation.on("tick", () => {
@@ -207,12 +214,12 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
         .attr("y2", (d: any) => d.target.y);
 
       node
-        .attr("cx", (d: any) => d.x)
-        .attr("cy", (d: any) => d.y);
+        .attr("cx", (d: NetworkNode) => d.x || 0)
+        .attr("cy", (d: NetworkNode) => d.y || 0);
 
       label
-        .attr("x", (d: any) => d.x)
-        .attr("y", (d: any) => d.y - (d.value * 5 + 10));
+        .attr("x", (d: NetworkNode) => d.x || 0)
+        .attr("y", (d: NetworkNode) => (d.y || 0) - (d.value * 5 + 10));
     });
 
     // Drag functions
