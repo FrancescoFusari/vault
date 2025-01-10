@@ -1,4 +1,3 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -8,6 +7,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -19,20 +19,19 @@ serve(async (req) => {
     // Fetch the content from the URL
     const response = await fetch(url);
     if (!response.ok) {
-      throw new Error(`Failed to fetch URL: ${response.statusText}`);
+      throw new Error('Failed to fetch URL content');
     }
 
-    const html = await response.text();
-    
-    // Basic HTML to text conversion
-    const text = html
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+    const content = await response.text();
+    console.log('Content fetched, length:', content.length);
 
-    // Initialize OpenAI API
+    // Convert HTML to plain text (basic conversion)
+    const plainText = content
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .trim()
+      .substring(0, 8000); // Limit length for OpenAI
+
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
       throw new Error('OpenAI API key not configured');
@@ -46,17 +45,18 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-3.5-turbo',
         messages: [
           {
             role: 'system',
-            content: 'Summarize the main points of this webpage content in a clear and concise way. Focus on the key information and maintain the original meaning.'
+            content: 'You are a helpful assistant that summarizes web content. Provide a clear, concise summary that captures the main points.'
           },
           {
             role: 'user',
-            content: text.substring(0, 8000) // Limit content length
+            content: plainText
           }
         ],
+        max_tokens: 500
       }),
     });
 
@@ -75,7 +75,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-3.5-turbo',
         messages: [
           {
             role: 'system',
@@ -112,9 +112,10 @@ serve(async (req) => {
 
     // Add to processing queue
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Get the user from the auth header
     const { data: { user } } = await supabase.auth.getUser(req.headers.get('Authorization')?.split(' ')[1] ?? '');
     if (!user) throw new Error('Not authenticated');
 
@@ -125,7 +126,7 @@ serve(async (req) => {
         user_id: user.id,
         content: summary,
         category: analysis.category,
-        tags: analysis.tags,
+        tags: [analysis.title, ...analysis.tags],
         input_type: 'url',
         source_url: url
       })
@@ -141,12 +142,13 @@ serve(async (req) => {
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+
   } catch (error) {
-    console.error('Error processing URL:', error);
+    console.error('Error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        status: 500,
+        status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
