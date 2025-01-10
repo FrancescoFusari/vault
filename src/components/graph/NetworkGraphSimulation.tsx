@@ -65,12 +65,12 @@ export const NetworkGraphSimulation = ({
         .distance(settings.linkDistance))
       .force("charge", d3.forceManyBody()
         .strength(settings.chargeStrength)
-        .distanceMax(200)) // Limit the range of charge effect
+        .distanceMax(200))
       .force("collision", d3.forceCollide()
         .radius((d: NetworkNode) => d.value * settings.collisionRadius))
       .force("center", d3.forceCenter(width / 2, height / 2))
-      .alphaDecay(0.1) // Faster initial stabilization
-      .velocityDecay(0.4); // More damping for stability
+      .alphaDecay(0.1)
+      .velocityDecay(0.4);
 
     // Create links
     const link = container.append("g")
@@ -98,7 +98,7 @@ export const NetworkGraphSimulation = ({
         .attr("stroke-width", 2)
         .style("cursor", "pointer");
 
-    // Handle node interactions
+    // Handle node interactions with improved event handling
     node
       .on("mouseover", function() {
         d3.select(this)
@@ -115,7 +115,9 @@ export const NetworkGraphSimulation = ({
           .attr("stroke", theme === 'dark' ? '#1e293b' : '#f8fafc');
       })
       .on("click", (event: any, d: NetworkNode) => {
-        event.stopPropagation(); // Prevent event bubbling
+        // Prevent event propagation to stop simulation restart
+        event.preventDefault();
+        event.stopPropagation();
         
         // Visual feedback without affecting simulation
         const clickedNode = d3.select(event.currentTarget);
@@ -132,9 +134,10 @@ export const NetworkGraphSimulation = ({
         onNodeClick(d);
       });
 
-    // Add drag behavior with stable parameters
+    // Add drag behavior with improved stability
     const drag = d3.drag<any, NetworkNode>()
       .on("start", (event: any) => {
+        event.sourceEvent.stopPropagation();
         if (!event.active && simulationRef.current) {
           simulationRef.current.alphaTarget(0.1).restart();
         }
@@ -142,10 +145,12 @@ export const NetworkGraphSimulation = ({
         event.subject.fy = event.subject.y;
       })
       .on("drag", (event: any) => {
+        event.sourceEvent.stopPropagation();
         event.subject.fx = event.x;
         event.subject.fy = event.y;
       })
       .on("end", (event: any) => {
+        event.sourceEvent.stopPropagation();
         if (!event.active && simulationRef.current) {
           simulationRef.current.alphaTarget(0);
         }
