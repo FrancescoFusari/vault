@@ -128,7 +128,7 @@ export const NetworkGraphSimulation = ({
         .style("font-size", (d: NetworkNode) => 
           d.type === 'note' ? (isMobile ? "10px" : "12px") : (isMobile ? "8px" : "10px")
         )
-        .style("fill", theme === 'dark' ? '#e2e8f0' : '#334155')
+        .style("fill", theme === 'dark' ? '#f8fafc' : '#1e293b')
         .style("pointer-events", "none")
         .style("text-anchor", "middle")
         .style("font-weight", (d: NetworkNode) => d.type === 'note' ? "600" : "400")
