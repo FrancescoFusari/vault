@@ -23,5 +23,8 @@ export interface Note {
   content: string;
   category: string;
   tags: string[];
-  created_at: string;  // Added this property
+  created_at: string;
+  input_type?: string;  // Added this property
+  source_url?: string;  // Added this for completeness
+  source_image_path?: string;  // Added this for completeness
 }
