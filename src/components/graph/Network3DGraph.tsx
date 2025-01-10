@@ -58,12 +58,12 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         enableNavigationControls={true}
         showNavInfo={true}
         controlType="orbit"
-        // Adjust touch sensitivity through ForceEngine parameters
-        d3Force={isMobile ? {
-          gravity: -100,
-          charge: -120,
-          velocityDecay: 0.4  // This will make movements more dampened
-        } : undefined}
+        // Adjust touch sensitivity through force engine configuration
+        forceEngine={isMobile ? "d3" : undefined}
+        cooldownTime={isMobile ? 3000 : undefined}
+        warmupTicks={isMobile ? 20 : undefined}
+        dagMode={undefined}
+        dagLevelDistance={undefined}
       />
       {selectedNote && (
         <NotePopupWindow
