@@ -121,14 +121,14 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
     // Calculate text size and add background
     labelGroup.each(function(d: d3.HierarchyCircularNode<DataNode>) {
       const g = d3.select(this);
-      const padding = 12; // Increased padding further
+      const padding = 16; // Further increased padding
       
-      // Significantly increased font size calculation
-      const fontSize = Math.min(d.r / 1.5, d.r * 1.2); // Increased from r/2 to r/1.5
+      // Removed size constraints to let text scale more freely with circle size
+      const fontSize = d.r * 0.8; // Allow text to be up to 80% of circle radius
       
       const text = g.append("text")
         .style("font-size", `${fontSize}px`)
-        .style("font-weight", "700") // Increased from 600 to 700
+        .style("font-weight", "700")
         .style("fill", theme === 'dark' ? '#e2e8f0' : '#334155')
         .style("fill-opacity", d.parent === packedData ? 1 : 0)
         .style("display", d.parent === packedData ? "inline" : "none")
@@ -143,10 +143,11 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
         .attr("y", bbox.y - padding)
         .attr("width", bbox.width + (padding * 2))
         .attr("height", bbox.height + (padding * 2))
-        .attr("fill", theme === 'dark' ? 'rgba(30, 41, 59, 0.95)' : 'rgba(248, 250, 252, 0.95)') // Increased opacity further
+        .attr("fill", theme === 'dark' ? 'rgba(30, 41, 59, 0.95)' : 'rgba(248, 250, 252, 0.95)')
         .style("fill-opacity", d.parent === packedData ? 0.95 : 0)
         .style("display", d.parent === packedData ? "inline" : "none")
-        .attr("rx", 8); // Increased border radius further
+        .attr("rx", 10); // Further increased border radius
+
     });
 
     // Initialize zoom state
