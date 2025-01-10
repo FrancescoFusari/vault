@@ -1,4 +1,4 @@
-import { List, Tag, Network, FileText } from "lucide-react";
+import { List, Tag, Network, FileText, Settings, Square } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 export const BottomNav = () => {
@@ -8,7 +8,7 @@ export const BottomNav = () => {
   const isActive = (path: string) => location.pathname === path;
   
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-lg rounded-full border shadow-lg px-6 py-3 flex items-center gap-8 md:hidden">
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-lg rounded-full border shadow-lg px-6 py-3 flex items-center gap-6 md:hidden">
       <button
         onClick={() => navigate('/')}
         className={`flex flex-col items-center ${isActive('/') ? 'text-primary' : 'text-muted-foreground'}`}
@@ -36,6 +36,20 @@ export const BottomNav = () => {
       >
         <Network className="h-5 w-5" />
         <span className="text-xs mt-1">Network</span>
+      </button>
+      <button
+        onClick={() => navigate('/network3d')}
+        className={`flex flex-col items-center ${isActive('/network3d') ? 'text-primary' : 'text-muted-foreground'}`}
+      >
+        <Square className="h-5 w-5" />
+        <span className="text-xs mt-1">3D</span>
+      </button>
+      <button
+        onClick={() => navigate('/settings')}
+        className={`flex flex-col items-center ${isActive('/settings') ? 'text-primary' : 'text-muted-foreground'}`}
+      >
+        <Settings className="h-5 w-5" />
+        <span className="text-xs mt-1">Settings</span>
       </button>
     </div>
   );

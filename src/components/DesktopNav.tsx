@@ -1,4 +1,4 @@
-import { List, Tag, Network, FileText, Square } from "lucide-react";
+import { List, Tag, Network, FileText, Square, Settings } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { Button } from "./ui/button";
@@ -48,6 +48,13 @@ export const DesktopNav = () => {
         >
           <Square className="h-5 w-5" />
           <span>Network 3D</span>
+        </button>
+        <button
+          onClick={() => navigate('/settings')}
+          className={`flex items-center gap-2 ${isActive('/settings') ? 'text-primary' : 'text-muted-foreground'} hover:text-primary transition-colors`}
+        >
+          <Settings className="h-5 w-5" />
+          <span>Settings</span>
         </button>
       </div>
       <Button
