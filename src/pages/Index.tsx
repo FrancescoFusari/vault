@@ -50,15 +50,23 @@ const Index = () => {
   };
 
   return (
-    <div className="container mx-auto min-h-screen flex flex-col">
+    <div className="container mx-auto min-h-screen flex flex-col bg-background">
       <div className="flex justify-end p-4">
-        <Button variant="outline" onClick={handleSignOut}>Sign Out</Button>
+        <Button 
+          variant="ghost" 
+          onClick={handleSignOut}
+          className="text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Sign Out
+        </Button>
       </div>
       
-      <div className="flex-1 flex flex-col items-center justify-center -mt-20">
-        <div className="text-center space-y-4 mb-8">
-          <h1 className="text-4xl font-bold text-primary">Smart Notes</h1>
-          <p className="text-muted-foreground">
+      <div className="flex-1 flex flex-col items-center justify-center -mt-20 px-4">
+        <div className="text-center space-y-4 mb-12">
+          <h1 className="text-4xl font-light tracking-tight text-foreground">
+            Smart Notes
+          </h1>
+          <p className="text-muted-foreground text-lg">
             Write notes and let AI categorize them for you
           </p>
         </div>

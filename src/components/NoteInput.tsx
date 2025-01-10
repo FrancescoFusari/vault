@@ -42,16 +42,16 @@ export const NoteInput = ({ onNoteSubmit }: NoteInputProps) => {
   };
 
   return (
-    <div className="space-y-4 w-full max-w-2xl mx-auto p-4">
+    <div className="space-y-6 w-full max-w-2xl mx-auto p-6 rounded-lg border border-border bg-card shadow-sm">
       <Textarea
         placeholder="Write your note here..."
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        className="min-h-[150px] text-lg"
+        className="min-h-[200px] text-lg bg-background resize-none focus:ring-1 focus:ring-primary/20 transition-all"
       />
       <Button 
         onClick={handleSubmit} 
-        className="w-full"
+        className="w-full h-12 text-base font-normal"
         disabled={isSubmitting}
       >
         {isSubmitting ? (
