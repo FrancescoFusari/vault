@@ -57,8 +57,11 @@ export const NetworkGraphSimulation = ({
 
     svg.call(zoom as any);
 
-    // Initialize simulation
+    // Initialize simulation with lower alpha
     const simulation = d3.forceSimulation(nodes)
+      .alpha(0.3) // Reduced from default 1
+      .alphaDecay(0.02) // Slower decay
+      .velocityDecay(0.4) // Added damping
       .force("link", d3.forceLink(links)
         .id((d: any) => d.id)
         .distance(settings.linkDistance))
@@ -108,6 +111,9 @@ export const NetworkGraphSimulation = ({
             .attr("stroke", theme === 'dark' ? '#1e293b' : '#f8fafc');
         })
         .on("click", (event: any, d: NetworkNode) => {
+          // Stop forces temporarily
+          simulation.stop();
+          
           // Visual feedback on click
           d3.select(event.currentTarget)
             .transition()
@@ -115,7 +121,11 @@ export const NetworkGraphSimulation = ({
             .attr("r", (d: NetworkNode) => d.value * settings.collisionRadius * 1.2)
             .transition()
             .duration(100)
-            .attr("r", (d: NetworkNode) => d.value * settings.collisionRadius);
+            .attr("r", (d: NetworkNode) => d.value * settings.collisionRadius)
+            .on("end", () => {
+              // Resume simulation with very low alpha to prevent major reorganization
+              simulation.alpha(0.01).restart();
+            });
           
           onNodeClick(d);
         });
@@ -123,7 +133,7 @@ export const NetworkGraphSimulation = ({
     // Add drag behavior
     node.call(d3.drag<any, NetworkNode>()
       .on("start", (event: any) => {
-        if (!event.active) simulation.alphaTarget(0.3).restart();
+        if (!event.active) simulation.alphaTarget(0.1).restart();
         event.subject.fx = event.subject.x;
         event.subject.fy = event.subject.y;
       })
@@ -167,9 +177,6 @@ export const NetworkGraphSimulation = ({
         .attr("x", (d: NetworkNode) => d.x || 0)
         .attr("y", (d: NetworkNode) => (d.y || 0) - (d.value * settings.collisionRadius + 10));
     });
-
-    // Restart simulation when settings change
-    simulation.alpha(0.3).restart();
 
     return () => {
       simulation.stop();
