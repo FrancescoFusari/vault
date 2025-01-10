@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useTheme } from 'next-themes';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { useGraphDimensions } from '@/hooks/useGraphDimensions';
 import { NetworkGraphSettings } from './NetworkGraphSettings';
 import { NotePopupWindow } from './NotePopupWindow';
@@ -38,10 +38,15 @@ export const NetworkGraph = ({ notes }: NetworkGraphProps) => {
         navigate(`/note/${node.originalNote.id}`);
       }
     } else if (node.type === 'tag') {
-      const usageCount = tagUsageCount.get(node.name) || 0;
+      // Safely get tag usage count with fallback to 0
+      const usageCount = tagUsageCount.get(node.name) ?? 0;
+      console.log(`Tag ${node.name} clicked. Usage count: ${usageCount}`);
+      
+      // Show toast with more detailed information
       toast({
         title: `Tag: ${node.name}`,
-        description: `Used ${usageCount} time${usageCount === 1 ? '' : 's'}`,
+        description: `This tag is used in ${usageCount} note${usageCount === 1 ? '' : 's'}`,
+        duration: 3000, // Set a specific duration
       });
     }
   };

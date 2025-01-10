@@ -77,7 +77,7 @@ export const NetworkGraphSimulation = ({
         .attr("stroke-opacity", 0.6)
         .attr("stroke-width", (d: NetworkLink) => Math.sqrt(d.value));
 
-    // Create nodes
+    // Create nodes with hover and click effects
     const node = container.append("g")
       .selectAll("circle")
       .data(nodes)
@@ -85,14 +85,40 @@ export const NetworkGraphSimulation = ({
         .attr("r", (d: NetworkNode) => d.value * settings.collisionRadius)
         .attr("fill", (d: NetworkNode) => {
           if (d.type === 'tag') {
-            const usageCount = tagUsageCount.get(d.name) || 1;
+            const usageCount = tagUsageCount.get(d.name) ?? 1;
             return colorScale(usageCount);
           }
           return theme === 'dark' ? '#6366f1' : '#818cf8';
         })
         .attr("stroke", theme === 'dark' ? '#1e293b' : '#f8fafc')
         .attr("stroke-width", 2)
-        .on("click", (event: any, d: NetworkNode) => onNodeClick(d));
+        .style("cursor", "pointer")
+        .on("mouseover", function() {
+          d3.select(this)
+            .transition()
+            .duration(200)
+            .attr("stroke-width", 3)
+            .attr("stroke", theme === 'dark' ? '#94a3b8' : '#475569');
+        })
+        .on("mouseout", function() {
+          d3.select(this)
+            .transition()
+            .duration(200)
+            .attr("stroke-width", 2)
+            .attr("stroke", theme === 'dark' ? '#1e293b' : '#f8fafc');
+        })
+        .on("click", (event: any, d: NetworkNode) => {
+          // Visual feedback on click
+          d3.select(event.currentTarget)
+            .transition()
+            .duration(100)
+            .attr("r", (d: NetworkNode) => d.value * settings.collisionRadius * 1.2)
+            .transition()
+            .duration(100)
+            .attr("r", (d: NetworkNode) => d.value * settings.collisionRadius);
+          
+          onNodeClick(d);
+        });
 
     // Add drag behavior
     node.call(d3.drag<any, NetworkNode>()
