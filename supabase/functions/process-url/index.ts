@@ -38,8 +38,8 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    // Summarize the content using OpenAI
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    // First, get a summary of the content
+    const summaryResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
@@ -60,12 +60,55 @@ serve(async (req) => {
       }),
     });
 
-    if (!openAIResponse.ok) {
+    if (!summaryResponse.ok) {
       throw new Error('Failed to summarize content');
     }
 
-    const openAIData = await openAIResponse.json();
-    const summary = openAIData.choices[0].message.content;
+    const summaryData = await summaryResponse.json();
+    const summary = summaryData.choices[0].message.content;
+
+    // Then, analyze for category and tags
+    const analysisResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: `Analyze the following content and provide a category, title, and relevant tags. 
+            Respond with a JSON object containing:
+            - "category" (string): A broad category for the content
+            - "title" (string): A concise, descriptive title (2-5 words)
+            - "tags" (array of strings): 3-5 relevant tags
+            
+            Do not include any markdown formatting or code blocks in your response.`
+          },
+          {
+            role: 'user',
+            content: summary
+          }
+        ],
+      }),
+    });
+
+    if (!analysisResponse.ok) {
+      throw new Error('Failed to analyze content');
+    }
+
+    const analysisData = await analysisResponse.json();
+    console.log('Analysis response:', analysisData);
+
+    let analysis;
+    try {
+      analysis = JSON.parse(analysisData.choices[0].message.content);
+    } catch (error) {
+      console.error('Failed to parse analysis:', error);
+      throw new Error('Invalid analysis format');
+    }
 
     // Add to processing queue
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -75,25 +118,26 @@ serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser(req.headers.get('Authorization')?.split(' ')[1] ?? '');
     if (!user) throw new Error('Not authenticated');
 
-    const { data: queueItem, error: queueError } = await supabase
-      .from('batch_processing_queue')
+    // Create the note directly
+    const { data: note, error: noteError } = await supabase
+      .from('notes')
       .insert({
         user_id: user.id,
         content: summary,
+        category: analysis.category,
+        tags: analysis.tags,
         input_type: 'url',
-        source_url: url,
-        status: 'completed',
-        processed_at: new Date().toISOString()
+        source_url: url
       })
       .select()
       .single();
 
-    if (queueError) throw queueError;
+    if (noteError) throw noteError;
 
     return new Response(
       JSON.stringify({ 
         message: 'URL processed successfully',
-        queueItem 
+        note
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

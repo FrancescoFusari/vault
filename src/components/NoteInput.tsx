@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Link as LinkIcon, Type } from "lucide-react";
+import { Loader2, Link2Icon, Type } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface NoteInputProps {
@@ -37,8 +37,8 @@ export const NoteInput = ({ onNoteSubmit }: NoteInputProps) => {
 
         setUrl('');
         toast({
-          title: "URL submitted successfully",
-          description: "The content is being processed and will be added to your notes",
+          title: "URL processed successfully",
+          description: "The content has been added to your notes",
         });
       } catch (error) {
         console.error('Error processing URL:', error);
@@ -95,7 +95,7 @@ export const NoteInput = ({ onNoteSubmit }: NoteInputProps) => {
           onClick={() => setIsUrlMode(true)}
           className="flex-1"
         >
-          <LinkIcon className="w-4 h-4 mr-2" />
+          <Link2Icon className="w-4 h-4 mr-2" />
           URL
         </Button>
       </div>
