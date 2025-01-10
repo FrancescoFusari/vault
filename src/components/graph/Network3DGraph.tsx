@@ -7,9 +7,16 @@ import ForceGraph3D from 'react-force-graph-3d';
 import { NotePopupWindow } from './NotePopupWindow';
 import { processNetworkData, NetworkNode } from '@/utils/networkGraphUtils';
 import { Note } from '@/types/graph';
+import * as d3 from 'd3';
 
 interface Network3DGraphProps {
   notes: Note[];
+}
+
+interface GraphState {
+  graphData: any;
+  tagUsageCount: Map<string, number>;
+  colorScale: d3.ScaleLinear<string, string>;
 }
 
 export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
@@ -20,15 +27,21 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const navigate = useNavigate();
   const dimensions = useGraphDimensions(containerRef, isMobile);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
-  const [graphData, setGraphData] = useState<any>(null);
+  const [graphState, setGraphState] = useState<GraphState | null>(null);
 
   useEffect(() => {
+    if (!notes || notes.length === 0) {
+      return;
+    }
+
     // Process notes to include both regular notes and batch items
-    const processedNotes = notes.filter(note => note && note.content).map(note => ({
-      ...note,
-      category: note.category || 'Uncategorized',
-      tags: (note.tags || []).filter(Boolean)
-    }));
+    const processedNotes = notes
+      .filter(note => note && note.content)
+      .map(note => ({
+        ...note,
+        category: note.category || 'Uncategorized',
+        tags: (note.tags || []).filter(Boolean)
+      }));
 
     const { nodes, links, tagUsageCount, colorScale } = processNetworkData(processedNotes);
 
@@ -43,8 +56,8 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       })),
       links: links
         .filter(link => 
-          validNodeIds.has(link.source.toString()) && 
-          validNodeIds.has(link.target.toString())
+          validNodeIds.has(link.source?.toString()) && 
+          validNodeIds.has(link.target?.toString())
         )
         .map(link => ({
           ...link,
@@ -53,7 +66,11 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         }))
     };
 
-    setGraphData(formattedData);
+    setGraphState({
+      graphData: formattedData,
+      tagUsageCount,
+      colorScale
+    });
   }, [notes]);
 
   const handleNodeClick = (node: NetworkNode) => {
@@ -66,7 +83,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     }
   };
 
-  if (!graphData) {
+  if (!graphState) {
     return null;
   }
 
@@ -79,12 +96,12 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         ref={graphRef}
         width={dimensions.width}
         height={dimensions.height}
-        graphData={graphData}
+        graphData={graphState.graphData}
         nodeLabel="name"
         nodeColor={(node: any) => {
           if (node.type === 'tag') {
-            const usageCount = tagUsageCount?.get(node.name) ?? 1;
-            return colorScale(usageCount);
+            const usageCount = graphState.tagUsageCount.get(node.name) ?? 1;
+            return graphState.colorScale(usageCount);
           }
           return theme === 'dark' ? '#6366f1' : '#818cf8';
         }}
