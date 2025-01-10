@@ -17,6 +17,14 @@ interface NoteCardProps {
 
 export const NoteCard = ({ note }: NoteCardProps) => {
   const navigate = useNavigate();
+  
+  // Get first 18 words of content
+  const truncatedContent = note.content
+    .split(' ')
+    .slice(0, 18)
+    .join(' ') + (note.content.split(' ').length > 18 ? '...' : '');
+
+  // Use first tag as title, or first line of content if no tags
   const title = note.tags[0] || note.content.split('\n')[0].substring(0, 50) + (note.content.length > 50 ? '...' : '');
 
   return (
@@ -32,8 +40,9 @@ export const NoteCard = ({ note }: NoteCardProps) => {
             {new Date(note.created_at).toLocaleDateString()}
           </div>
         </div>
+        <p className="text-sm text-muted-foreground">{truncatedContent}</p>
         <div className="flex flex-wrap gap-1">
-          {note.tags.slice(1).map(tag => (
+          {note.tags.slice(1, 4).map(tag => (
             <Badge 
               key={tag}
               variant="outline"
