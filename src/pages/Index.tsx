@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { NoteInput } from "@/components/NoteInput";
 import { NoteList } from "@/components/NoteList";
 import { NoteGraph } from "@/components/NoteGraph";
@@ -6,6 +6,7 @@ import { MobileNoteGraph } from "@/components/MobileNoteGraph";
 import { Graph2 } from "@/components/graph/Graph2";
 import { DivGraph } from "@/components/graph/DivGraph";
 import { DivGraph2 } from "@/components/graph/DivGraph2";
+import { FinalGraph } from "@/components/graph/FinalGraph";
 import { TagView } from "@/components/TagView";
 import { analyzeNote } from "@/lib/openai";
 import { Button } from "@/components/ui/button";
@@ -103,7 +104,9 @@ const Index = () => {
           <TabsTrigger value="divgraph">Div Graph</TabsTrigger>
           <TabsTrigger value="divgraph2">Knowledge Graph</TabsTrigger>
           <TabsTrigger value="tags">Tags View</TabsTrigger>
+          <TabsTrigger value="final">Final</TabsTrigger>
         </TabsList>
+        
         <TabsContent value="list">
           <div className="mt-6">
             <h2 className="text-2xl font-semibold mb-6">Your Notes</h2>
@@ -142,6 +145,13 @@ const Index = () => {
           <div className="mt-6">
             <h2 className="text-2xl font-semibold mb-6">Tags Overview</h2>
             <TagView />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="final">
+          <div className="mt-6">
+            <h2 className="text-2xl font-semibold mb-6">Bubble Chart View</h2>
+            <FinalGraph notes={notes} />
           </div>
         </TabsContent>
       </Tabs>
