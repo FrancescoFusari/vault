@@ -14,7 +14,10 @@ interface Network3DGraphProps {
 }
 
 interface GraphState {
-  graphData: any;
+  graphData: {
+    nodes: any[];
+    links: any[];
+  };
   tagUsageCount: Map<string, number>;
   colorScale: d3.ScaleLinear<string, string>;
 }
@@ -31,6 +34,13 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
 
   useEffect(() => {
     if (!notes || notes.length === 0) {
+      setGraphState({
+        graphData: { nodes: [], links: [] },
+        tagUsageCount: new Map(),
+        colorScale: d3.scaleLinear<string>()
+          .domain([0, 1])
+          .range(['#94a3b8', '#ef4444'])
+      });
       return;
     }
 
@@ -48,21 +58,23 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     // Create a map of valid node IDs for quick lookup
     const validNodeIds = new Set(nodes.map(node => node.id));
 
-    // Ensure all nodes and links are properly formatted
+    // Format data and ensure all IDs are strings
     const formattedData = {
       nodes: nodes.map(node => ({
         ...node,
         id: node.id.toString(),
       })),
       links: links
-        .filter(link => 
-          validNodeIds.has(link.source?.toString()) && 
-          validNodeIds.has(link.target?.toString())
-        )
+        .filter(link => {
+          // Ensure both source and target exist and are valid
+          const source = typeof link.source === 'object' ? link.source?.id : link.source;
+          const target = typeof link.target === 'object' ? link.target?.id : link.target;
+          return source && target && validNodeIds.has(source.toString()) && validNodeIds.has(target.toString());
+        })
         .map(link => ({
-          ...link,
-          source: link.source.toString(),
-          target: link.target.toString(),
+          source: typeof link.source === 'object' ? link.source.id.toString() : link.source.toString(),
+          target: typeof link.target === 'object' ? link.target.id.toString() : link.target.toString(),
+          value: link.value || 1
         }))
     };
 
