@@ -25,6 +25,7 @@ serve(async (req) => {
 
     const { content, noteId, type } = await req.json();
     console.log(`Regenerating ${type} for note:`, noteId);
+    console.log('Content:', content);
 
     // First, generate analysis using OpenAI
     const analysisResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -39,7 +40,7 @@ serve(async (req) => {
           {
             role: 'system',
             content: type === 'tags' 
-              ? 'Generate 3-5 relevant tags for the following note. Return only a JSON array of strings, nothing else.'
+              ? 'Generate 3-5 relevant tags for the following note. Return only a JSON array of strings, nothing else. Example: ["tag1", "tag2", "tag3"]'
               : 'Generate a concise, descriptive title (2-5 words) for the following note. Return only the title as a string, nothing else.'
           },
           {
@@ -51,19 +52,39 @@ serve(async (req) => {
     });
 
     if (!analysisResponse.ok) {
+      console.error('OpenAI API error:', await analysisResponse.text());
       throw new Error(`OpenAI API error: ${analysisResponse.statusText}`);
     }
 
     const analysisData = await analysisResponse.json();
+    console.log('OpenAI response:', analysisData);
+    
     const generatedContent = analysisData.choices[0]?.message?.content;
+    console.log('Generated content:', generatedContent);
     
     let parsedContent;
-    try {
-      parsedContent = type === 'tags' ? JSON.parse(generatedContent) : generatedContent;
-    } catch (error) {
-      console.error('Failed to parse OpenAI response:', error);
-      throw new Error('Invalid response format from OpenAI');
+    if (type === 'tags') {
+      try {
+        // For tags, try to parse as JSON array
+        parsedContent = JSON.parse(generatedContent);
+        if (!Array.isArray(parsedContent)) {
+          throw new Error('Tags must be an array');
+        }
+      } catch (error) {
+        console.error('Failed to parse tags:', error);
+        // Fallback: split by commas and clean up
+        parsedContent = generatedContent
+          .replace(/[\[\]"]/g, '') // Remove brackets and quotes
+          .split(',')
+          .map(tag => tag.trim())
+          .filter(tag => tag.length > 0);
+      }
+    } else {
+      // For title/category, use as is
+      parsedContent = generatedContent.trim();
     }
+
+    console.log('Parsed content:', parsedContent);
 
     // Update the note in Supabase
     const updateData = type === 'tags' 
