@@ -9,6 +9,9 @@ export interface NetworkNode {
   originalNote?: Note;
   x?: number;
   y?: number;
+  // Add these properties for D3 force simulation fixed positions
+  fx: number | null;
+  fy: number | null;
 }
 
 export interface NetworkLink {
@@ -48,7 +51,9 @@ export const processNetworkData = (notes: Note[]) => {
       id: `tag-${tag}`,
       name: tag,
       type: 'tag',
-      value: 2
+      value: 2,
+      fx: null,
+      fy: null
     };
     nodes.push(tagNode);
     nodeMap.set(tagNode.id, tagNode);
@@ -62,7 +67,9 @@ export const processNetworkData = (notes: Note[]) => {
       name: note.tags[0] || note.content.split('\n')[0].substring(0, 30) + '...',
       type: 'note',
       value: 2,
-      originalNote: note
+      originalNote: note,
+      fx: null,
+      fy: null
     };
     nodes.push(noteNode);
     nodeMap.set(noteId, noteNode);
