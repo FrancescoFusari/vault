@@ -58,10 +58,12 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         enableNavigationControls={true}
         showNavInfo={true}
         controlType="orbit"
-        // Add touch sensitivity controls
-        touchMoveRatio={0.3} // Reduce touch movement sensitivity (default is 1)
-        touchRotateRatio={0.3} // Reduce touch rotation sensitivity
-        touchZoomRatio={0.2} // Reduce touch zoom sensitivity
+        // Adjust touch sensitivity through ForceEngine parameters
+        d3Force={isMobile ? {
+          gravity: -100,
+          charge: -120,
+          velocityDecay: 0.4  // This will make movements more dampened
+        } : undefined}
       />
       {selectedNote && (
         <NotePopupWindow
