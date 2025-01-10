@@ -18,9 +18,11 @@ const NetworkPage = () => {
   });
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
-      <h1 className="text-2xl font-semibold">Network View</h1>
-      <NetworkGraph notes={notes} />
+    <div className="min-h-screen md:container md:mx-auto md:py-8 md:space-y-8">
+      <h1 className="text-2xl font-semibold p-4 md:p-0">Network View</h1>
+      <div className="h-[calc(100vh-8rem)] md:h-[600px]">
+        <NetworkGraph notes={notes} />
+      </div>
       <BottomNav />
     </div>
   );
