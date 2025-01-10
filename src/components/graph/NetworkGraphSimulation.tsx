@@ -32,7 +32,7 @@ export const NetworkGraphSimulation = ({
   const svgRef = useRef<SVGSVGElement>(null);
   const { theme } = useTheme();
   const isMobile = useIsMobile();
-  
+
   useEffect(() => {
     if (!svgRef.current || !nodes.length) return;
 
@@ -48,39 +48,14 @@ export const NetworkGraphSimulation = ({
     // Create container for zoom
     const container = svg.append("g");
 
-    // Add zoom behavior with smooth transitions
+    // Add zoom behavior
     const zoom = d3.zoom()
       .scaleExtent([0.5, 4])
       .on("zoom", (event) => {
-        container.transition()
-          .duration(50) // Short duration for smooth feel
-          .attr("transform", event.transform);
+        container.attr("transform", event.transform);
       });
 
     svg.call(zoom as any);
-
-    // Double-tap detection
-    let lastTap = 0;
-    let isZoomed = false;
-    const tapDelay = 300; // milliseconds
-
-    // Function to center and zoom to a node
-    const centerNode = (d: NetworkNode) => {
-      const scale = 2;
-      // Calculate the translation needed to center the node
-      const dx = width / 2 - (d.x || 0) * scale;
-      const dy = height / 2 - (d.y || 0) * scale;
-      
-      const transform = d3.zoomIdentity
-        .translate(dx, dy)
-        .scale(scale);
-      
-      svg.transition()
-        .duration(750)
-        .call(zoom.transform as any, transform);
-      
-      isZoomed = true;
-    };
 
     // Initialize simulation
     const simulation = d3.forceSimulation(nodes)
@@ -102,7 +77,7 @@ export const NetworkGraphSimulation = ({
         .attr("stroke-opacity", 0.6)
         .attr("stroke-width", (d: NetworkLink) => Math.sqrt(d.value));
 
-    // Create nodes with double-tap handling
+    // Create nodes
     const node = container.append("g")
       .selectAll("circle")
       .data(nodes)
@@ -117,25 +92,7 @@ export const NetworkGraphSimulation = ({
         })
         .attr("stroke", theme === 'dark' ? '#1e293b' : '#f8fafc')
         .attr("stroke-width", 2)
-        .on("click", (event: any, d: NetworkNode) => {
-          const currentTime = new Date().getTime();
-          const tapLength = currentTime - lastTap;
-          
-          if (d.type === 'note') {
-            if (isZoomed && tapLength < tapDelay && tapLength > 0) {
-              // Second click on zoomed note - open popup
-              onNodeClick(d);
-              isZoomed = false; // Reset zoom state
-            } else if (!isZoomed) {
-              // First click - zoom to node
-              centerNode(d);
-            }
-          } else {
-            // For tag nodes, just zoom
-            centerNode(d);
-          }
-          lastTap = currentTime;
-        });
+        .on("click", (event: any, d: NetworkNode) => onNodeClick(d));
 
     // Add drag behavior
     node.call(d3.drag<any, NetworkNode>()
@@ -185,14 +142,9 @@ export const NetworkGraphSimulation = ({
         .attr("y", (d: NetworkNode) => (d.y || 0) - (d.value * settings.collisionRadius + 10));
     });
 
-    // Initial zoom to fit
-    const initialTransform = d3.zoomIdentity
-      .translate(width / 2, height / 2)
-      .scale(0.8);
-    
-    svg.call(zoom.transform as any, initialTransform);
+    // Restart simulation when settings change
+    simulation.alpha(0.3).restart();
 
-    // Cleanup
     return () => {
       simulation.stop();
     };
