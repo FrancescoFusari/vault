@@ -63,6 +63,22 @@ export const NetworkGraphSimulation = ({
     let lastTap = 0;
     const tapDelay = 300; // milliseconds
 
+    // Function to center and zoom to a node
+    const centerNode = (d: NetworkNode) => {
+      const scale = 2;
+      // Calculate the translation needed to center the node
+      const dx = width / 2 - (d.x || 0) * scale;
+      const dy = height / 2 - (d.y || 0) * scale;
+      
+      const transform = d3.zoomIdentity
+        .translate(dx, dy)
+        .scale(scale);
+      
+      svg.transition()
+        .duration(750)
+        .call(zoom.transform as any, transform);
+    };
+
     // Initialize simulation
     const simulation = d3.forceSimulation(nodes)
       .force("link", d3.forceLink(links)
@@ -109,16 +125,7 @@ export const NetworkGraphSimulation = ({
             }
           } else {
             // Single tap - zoom to node
-            const transform = d3.zoomIdentity
-              .scale(2)
-              .translate(
-                width / 2 - (d.x || 0) * 2,
-                height / 2 - (d.y || 0) * 2
-              );
-            
-            svg.transition()
-              .duration(750)
-              .call(zoom.transform as any, transform);
+            centerNode(d);
           }
           lastTap = currentTime;
         });
