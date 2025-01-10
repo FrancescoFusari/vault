@@ -67,7 +67,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           return theme === 'dark' ? '#6366f1' : '#818cf8';
         }}
         linkColor={() => theme === 'dark' ? '#475569' : '#94a3b8'}
-        backgroundColor={theme === 'dark' ? '#1e293b' : '#f8fafc'}
+        backgroundColor={theme === 'dark' ? 'hsl(229 19% 12%)' : 'hsl(40 33% 98%)'}
         onNodeClick={handleNodeClick}
         nodeRelSize={6}
         linkWidth={1}
