@@ -87,8 +87,6 @@ export const NetworkGraphSimulation = ({
           }
           return theme === 'dark' ? '#6366f1' : '#818cf8';
         })
-        .attr("stroke", theme === 'dark' ? '#1e293b' : '#f8fafc')
-        .attr("stroke-width", 2)
         .style("cursor", (d: NetworkNode) => d.type === 'note' ? "pointer" : "default");
 
     node.filter((d: NetworkNode) => d.type === 'note')
