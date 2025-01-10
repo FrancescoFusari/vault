@@ -1,5 +1,6 @@
 import { Card, CardHeader } from "@/components/ui/card";
-import { CalendarIcon, Link as LinkIcon } from "@radix-ui/react-icons";
+import { CalendarIcon } from "@radix-ui/react-icons";
+import { Link2Icon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 
@@ -46,7 +47,7 @@ export const NoteCard = ({ note }: NoteCardProps) => {
               variant="secondary"
               className="text-xs flex items-center gap-1"
             >
-              <LinkIcon className="h-3 w-3" />
+              <Link2Icon className="h-3 w-3" />
               URL
             </Badge>
           )}
