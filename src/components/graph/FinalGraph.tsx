@@ -77,25 +77,6 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
       .style("background-color", theme === 'dark' ? '#1e293b' : '#f8fafc')
       .style("cursor", "pointer");
 
-    // Create gradient definitions
-    const defs = svg.append("defs");
-    const gradient = defs.append("radialGradient")
-      .attr("id", "bubble-gradient")
-      .attr("gradientUnits", "userSpaceOnUse")
-      .attr("cx", "50%")
-      .attr("cy", "50%")
-      .attr("r", "50%");
-
-    gradient.append("stop")
-      .attr("offset", "0%")
-      .attr("stop-color", theme === 'dark' ? '#0ea5e9' : '#7dd3fc')
-      .attr("stop-opacity", 0.3);
-
-    gradient.append("stop")
-      .attr("offset", "100%")
-      .attr("stop-color", theme === 'dark' ? '#0369a1' : '#38bdf8')
-      .attr("stop-opacity", 0.1);
-
     // Create container for nodes and labels
     const container = svg.append("g");
 
@@ -109,7 +90,28 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
         .attr("stroke-width", d => d.height === 0 ? 1 : 2)
         .attr("stroke-opacity", 0.3);
 
-    // Create labels
+    // Create text background for better readability
+    const textBackground = container.append("g")
+      .selectAll("rect")
+      .data(packedData.descendants())
+      .join("rect")
+        .attr("fill", theme === 'dark' ? 'rgba(15, 23, 42, 0.7)' : 'rgba(248, 250, 252, 0.7)')
+        .attr("rx", 4)
+        .attr("ry", 4)
+        .style("display", d => d.parent === packedData ? "inline" : "none")
+        .attr("width", d => {
+          const node = d as d3.HierarchyCircularNode<DataNode>;
+          return Math.min(node.r * 2, d.data.name.length * 8 + 16);
+        })
+        .attr("height", 24)
+        .attr("x", d => {
+          const node = d as d3.HierarchyCircularNode<DataNode>;
+          const width = Math.min(node.r * 2, d.data.name.length * 8 + 16);
+          return -width / 2;
+        })
+        .attr("y", -12);
+
+    // Create labels with improved readability
     const label = container.append("g")
       .style("font-family", "sans-serif")
       .attr("pointer-events", "none")
@@ -118,9 +120,13 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
       .data(packedData.descendants())
       .join("text")
         .style("fill", theme === 'dark' ? '#e2e8f0' : '#334155')
+        .style("font-weight", "500")
         .style("fill-opacity", d => d.parent === packedData ? 1 : 0)
         .style("display", d => d.parent === packedData ? "inline" : "none")
-        .style("font-size", d => Math.min((d as any).r / 3, 14))
+        .style("font-size", d => {
+          const node = d as d3.HierarchyCircularNode<DataNode>;
+          return `${Math.min(node.r / 3, 14)}px`;
+        })
         .text(d => d.data.name);
 
     // Initialize zoom state
@@ -131,9 +137,11 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
       const k = width / v[2];
       view = v;
 
-      label.attr("transform", d => {
-        const node = d as d3.HierarchyCircularNode<DataNode>;
-        return `translate(${(node.x - v[0]) * k},${(node.y - v[1]) * k})`;
+      [label, textBackground].forEach(selection => {
+        selection.attr("transform", d => {
+          const node = d as d3.HierarchyCircularNode<DataNode>;
+          return `translate(${(node.x - v[0]) * k},${(node.y - v[1]) * k})`;
+        });
       });
       
       node.attr("transform", d => {
@@ -158,21 +166,23 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
           return (t: number) => zoomTo(i(t));
         });
 
-      label
-        .filter(function(d) { 
-          const element = d3.select(this);
-          return d.parent === focus || element.style("display") === "inline"; 
-        })
-        .transition(transition)
-          .style("fill-opacity", d => d.parent === focus ? 1 : 0)
-          .on("start", function(d) { 
+      [label, textBackground].forEach(selection => {
+        selection
+          .filter(function(d) { 
             const element = d3.select(this);
-            if (d.parent === focus) element.style("display", "inline"); 
+            return d.parent === focus || element.style("display") === "inline"; 
           })
-          .on("end", function(d) { 
-            const element = d3.select(this);
-            if (d.parent !== focus) element.style("display", "none"); 
-          });
+          .transition(transition)
+            .style("fill-opacity", d => d.parent === focus ? 1 : 0)
+            .on("start", function(d) { 
+              const element = d3.select(this);
+              if (d.parent === focus) element.style("display", "inline"); 
+            })
+            .on("end", function(d) { 
+              const element = d3.select(this);
+              if (d.parent !== focus) element.style("display", "none"); 
+            });
+      });
     };
 
     // Add zoom behavior
@@ -187,21 +197,6 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
 
     // Initialize view
     zoomTo([packedData.x, packedData.y, packedData.r * 2]);
-
-    // Add hover effects
-    node
-      .on("mouseover", function() {
-        d3.select(this)
-          .transition()
-          .duration(200)
-          .style("opacity", 0.8);
-      })
-      .on("mouseout", function() {
-        d3.select(this)
-          .transition()
-          .duration(200)
-          .style("opacity", 1);
-      });
 
   }, [notes, theme]);
 
