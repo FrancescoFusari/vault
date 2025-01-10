@@ -7,6 +7,7 @@ import ForceGraph3D from 'react-force-graph-3d';
 import { NotePopupWindow } from './NotePopupWindow';
 import { processNetworkData, NetworkNode } from '@/utils/networkGraphUtils';
 import { Note } from '@/types/graph';
+import { Link2Icon } from 'lucide-react';
 
 interface Network3DGraphProps {
   notes: Note[];
@@ -40,7 +41,29 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
 
   const getLinkColor = (link: NetworkLink) => {
     if (!link.source || !link.target) return theme === 'dark' ? '#475569' : '#94a3b8';
-    return theme === 'dark' ? '#475569' : '#94a3b8';
+    
+    // Check if either node is a URL-based note
+    const isUrlLink = 
+      (link.source as NetworkNode).originalNote?.input_type === 'url' || 
+      (link.target as NetworkNode).originalNote?.input_type === 'url';
+    
+    return isUrlLink 
+      ? theme === 'dark' ? '#60a5fa' : '#3b82f6' // Blue for URL links
+      : theme === 'dark' ? '#475569' : '#94a3b8'; // Default color for other links
+  };
+
+  const getNodeColor = (node: NetworkNode) => {
+    if (node.type === 'tag') {
+      const usageCount = tagUsageCount.get(node.name) ?? 1;
+      return colorScale(usageCount);
+    }
+    
+    // Special color for URL-based notes
+    if (node.type === 'note' && node.originalNote?.input_type === 'url') {
+      return theme === 'dark' ? '#60a5fa' : '#3b82f6'; // Blue for URL nodes
+    }
+    
+    return theme === 'dark' ? '#6366f1' : '#818cf8'; // Default color
   };
 
   return (
@@ -52,14 +75,14 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         width={dimensions.width}
         height={dimensions.height}
         graphData={{ nodes, links }}
-        nodeLabel="name"
-        nodeColor={(node: any) => {
-          if (node.type === 'tag') {
-            const usageCount = tagUsageCount.get(node.name) ?? 1;
-            return colorScale(usageCount);
+        nodeLabel={(node: any) => {
+          const n = node as NetworkNode;
+          if (n.type === 'note' && n.originalNote?.input_type === 'url') {
+            return `🔗 ${n.name}`;
           }
-          return theme === 'dark' ? '#6366f1' : '#818cf8';
+          return n.name;
         }}
+        nodeColor={getNodeColor}
         linkColor={getLinkColor}
         backgroundColor={theme === 'dark' ? 'hsl(229 19% 12%)' : 'hsl(40 33% 98%)'}
         onNodeClick={handleNodeClick}
@@ -72,8 +95,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         forceEngine={isMobile ? "d3" : undefined}
         cooldownTime={isMobile ? 3000 : undefined}
         warmupTicks={isMobile ? 20 : undefined}
-        dagMode={undefined}
-        dagLevelDistance={undefined}
       />
       {selectedNote && (
         <NotePopupWindow
