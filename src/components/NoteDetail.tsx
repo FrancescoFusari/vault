@@ -79,7 +79,7 @@ export const NoteDetail = ({ note, allNotes }: NoteDetailProps) => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <div className="flex items-center space-x-2">
-            <Badge variant="outline" className="text-primary">
+            <Badge variant="outline" className="text-primary text-lg font-semibold">
               {note.category}
             </Badge>
             <Button 

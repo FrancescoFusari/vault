@@ -68,7 +68,7 @@ serve(async (req) => {
     // Update the note in Supabase
     const updateData = type === 'tags' 
       ? { tags: parsedContent }
-      : { tags: (existingNote: any) => [parsedContent, ...existingNote.tags.slice(1)] };
+      : { category: parsedContent };
 
     const { data: updatedNote, error: updateError } = await supabase
       .from('notes')
