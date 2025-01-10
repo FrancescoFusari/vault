@@ -21,10 +21,10 @@ export const NotePopupWindow = ({ note, onClose }: NotePopupWindowProps) => {
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-xl font-semibold">
-          {note.content.split('\n')[0]}
+          {note.tags[0] || note.content.split('\n')[0]}
         </h2>
         <div className="flex flex-wrap gap-2">
-          {note.tags.map((tag) => (
+          {note.tags.slice(1).map((tag) => (
             <Badge key={tag} variant="outline">
               {tag}
             </Badge>
