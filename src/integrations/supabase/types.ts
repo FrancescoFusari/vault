@@ -59,7 +59,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      rate_limit_check: {
+        Args: {
+          check_user_id: string
+          requests_limit?: number
+          window_minutes?: number
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
