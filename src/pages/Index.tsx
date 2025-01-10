@@ -149,14 +149,12 @@ const Index = () => {
             <TagView />
           </div>
         </TabsContent>
-
         <TabsContent value="final">
           <div className="mt-6">
             <h2 className="text-2xl font-semibold mb-6">Bubble Chart View</h2>
             <FinalGraph notes={notes} />
           </div>
         </TabsContent>
-
         <TabsContent value="network">
           <div className="mt-6">
             <h2 className="text-2xl font-semibold mb-6">Network View</h2>
