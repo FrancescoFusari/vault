@@ -22,6 +22,12 @@ interface GraphState {
   colorScale: d3.ScaleLinear<string, string>;
 }
 
+interface GraphLink {
+  source: string | { id: string };
+  target: string | { id: string };
+  value?: number;
+}
+
 export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<any>(null);
@@ -65,20 +71,22 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         id: node.id.toString(),
       })),
       links: links
-        .filter(link => {
-          if (!link.source || !link.target) return false;
+        .filter((link: GraphLink) => {
+          if (!link || !link.source || !link.target) return false;
           // Ensure both source and target exist and are valid
-          const sourceId = typeof link.source === 'object' ? link.source.id : link.source;
-          const targetId = typeof link.target === 'object' ? link.target.id : link.target;
+          const sourceId = typeof link.source === 'object' && link.source !== null ? link.source.id : link.source;
+          const targetId = typeof link.target === 'object' && link.target !== null ? link.target.id : link.target;
           return sourceId && targetId && 
                  validNodeIds.has(String(sourceId)) && 
                  validNodeIds.has(String(targetId));
         })
-        .map(link => {
-          if (!link.source || !link.target) return null;
+        .map((link: GraphLink) => {
+          if (!link || !link.source || !link.target) return null;
+          const sourceId = typeof link.source === 'object' && link.source !== null ? link.source.id : link.source;
+          const targetId = typeof link.target === 'object' && link.target !== null ? link.target.id : link.target;
           return {
-            source: typeof link.source === 'object' ? String(link.source.id) : String(link.source),
-            target: typeof link.target === 'object' ? String(link.target.id) : String(link.target),
+            source: String(sourceId),
+            target: String(targetId),
             value: link.value || 1
           };
         })
