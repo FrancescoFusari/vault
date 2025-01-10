@@ -57,11 +57,11 @@ export const NetworkGraphSimulation = ({
 
     svg.call(zoom as any);
 
-    // Initialize simulation with lower alpha
+    // Initialize simulation with lower alpha and higher decay
     const simulation = d3.forceSimulation(nodes)
-      .alpha(0.3) // Reduced from default 1
-      .alphaDecay(0.02) // Slower decay
-      .velocityDecay(0.4) // Added damping
+      .alpha(0.3)
+      .alphaDecay(0.05) // Increased decay for faster stabilization
+      .velocityDecay(0.4)
       .force("link", d3.forceLink(links)
         .id((d: any) => d.id)
         .distance(settings.linkDistance))
@@ -111,29 +111,25 @@ export const NetworkGraphSimulation = ({
             .attr("stroke", theme === 'dark' ? '#1e293b' : '#f8fafc');
         })
         .on("click", (event: any, d: NetworkNode) => {
-          // Stop forces temporarily
-          simulation.stop();
+          // Prevent simulation restart
+          event.stopPropagation();
           
-          // Visual feedback on click
+          // Visual feedback without affecting simulation
           d3.select(event.currentTarget)
             .transition()
             .duration(100)
             .attr("r", (d: NetworkNode) => d.value * settings.collisionRadius * 1.2)
             .transition()
             .duration(100)
-            .attr("r", (d: NetworkNode) => d.value * settings.collisionRadius)
-            .on("end", () => {
-              // Resume simulation with very low alpha to prevent major reorganization
-              simulation.alpha(0.01).restart();
-            });
+            .attr("r", (d: NetworkNode) => d.value * settings.collisionRadius);
           
           onNodeClick(d);
         });
 
-    // Add drag behavior
+    // Add drag behavior with minimal simulation impact
     node.call(d3.drag<any, NetworkNode>()
       .on("start", (event: any) => {
-        if (!event.active) simulation.alphaTarget(0.1).restart();
+        if (!event.active) simulation.alphaTarget(0.05).restart();
         event.subject.fx = event.subject.x;
         event.subject.fy = event.subject.y;
       })
