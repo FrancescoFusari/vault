@@ -9,12 +9,54 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      batch_processing_queue: {
+        Row: {
+          content: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          input_type: string
+          processed_at: string | null
+          source_image_path: string | null
+          source_url: string | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          input_type: string
+          processed_at?: string | null
+          source_image_path?: string | null
+          source_url?: string | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          input_type?: string
+          processed_at?: string | null
+          source_image_path?: string | null
+          source_url?: string | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       notes: {
         Row: {
           category: string
           content: string
           created_at: string
           id: string
+          input_type: string | null
+          source_image_path: string | null
+          source_url: string | null
           tags: string[]
           user_id: string
         }
@@ -23,6 +65,9 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          input_type?: string | null
+          source_image_path?: string | null
+          source_url?: string | null
           tags?: string[]
           user_id: string
         }
@@ -31,6 +76,9 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          input_type?: string | null
+          source_image_path?: string | null
+          source_url?: string | null
           tags?: string[]
           user_id?: string
         }
