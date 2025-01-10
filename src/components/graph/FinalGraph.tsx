@@ -7,6 +7,12 @@ interface FinalGraphProps {
   notes: Note[];
 }
 
+interface DataNode {
+  name: string;
+  children?: DataNode[];
+  value?: number;
+}
+
 export const FinalGraph = ({ notes }: FinalGraphProps) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const { theme } = useTheme();
@@ -18,12 +24,12 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
     d3.select(svgRef.current).selectAll("*").remove();
 
     // Process data to create hierarchical structure
-    const processData = () => {
+    const processData = (): DataNode => {
       const categories = Array.from(new Set(notes.map(note => note.category)));
       const allTags = Array.from(new Set(notes.flatMap(note => note.tags)));
       
       // Create hierarchical data structure
-      const root = {
+      const root: DataNode = {
         name: "root",
         children: categories.map(category => {
           const categoryNotes = notes.filter(note => note.category === category);
@@ -52,13 +58,13 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
       .interpolate(d3.interpolateHcl);
 
     // Create pack layout
-    const pack = d3.pack()
+    const pack = d3.pack<DataNode>()
       .size([width, height])
       .padding(3);
 
     // Create hierarchy and calculate layout
     const rootNode = d3.hierarchy(processData())
-      .sum(d => (d as any).value || 0)
+      .sum(d => d.value || 0)
       .sort((a, b) => (b.value || 0) - (a.value || 0));
 
     const packedData = pack(rootNode);
@@ -114,8 +120,8 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
         .style("fill", theme === 'dark' ? '#e2e8f0' : '#334155')
         .style("fill-opacity", d => d.parent === packedData ? 1 : 0)
         .style("display", d => d.parent === packedData ? "inline" : "none")
-        .style("font-size", d => Math.min(d.r / 3, 14))
-        .text(d => (d.data as any).name);
+        .style("font-size", d => Math.min((d as any).r / 3, 14))
+        .text(d => d.data.name);
 
     // Initialize zoom state
     let focus = packedData;
@@ -125,12 +131,23 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
       const k = width / v[2];
       view = v;
 
-      label.attr("transform", d => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`);
-      node.attr("transform", d => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`);
-      node.attr("r", d => d.r * k);
+      label.attr("transform", d => {
+        const node = d as d3.HierarchyCircularNode<DataNode>;
+        return `translate(${(node.x - v[0]) * k},${(node.y - v[1]) * k})`;
+      });
+      
+      node.attr("transform", d => {
+        const node = d as d3.HierarchyCircularNode<DataNode>;
+        return `translate(${(node.x - v[0]) * k},${(node.y - v[1]) * k})`;
+      });
+      
+      node.attr("r", d => {
+        const node = d as d3.HierarchyCircularNode<DataNode>;
+        return node.r * k;
+      });
     };
 
-    const zoom = (event: any, d: d3.HierarchyNode<unknown>) => {
+    const zoom = (event: any, d: d3.HierarchyCircularNode<DataNode>) => {
       const focus0 = focus;
       focus = d;
 
@@ -161,8 +178,9 @@ export const FinalGraph = ({ notes }: FinalGraphProps) => {
     // Add zoom behavior
     svg.on("click", (event) => zoom(event, packedData));
     node.on("click", (event, d) => {
-      if (focus !== d) {
-        zoom(event, d);
+      const circularNode = d as d3.HierarchyCircularNode<DataNode>;
+      if (focus !== circularNode) {
+        zoom(event, circularNode);
         event.stopPropagation();
       }
     });
