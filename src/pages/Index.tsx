@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { NoteInput } from "@/components/NoteInput";
 import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
@@ -8,16 +7,6 @@ import { analyzeNote } from "@/lib/openai";
 
 const Index = () => {
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate('/auth');
-      }
-    };
-    checkAuth();
-  }, [navigate]);
 
   const handleNoteSubmit = async (content: string) => {
     try {
