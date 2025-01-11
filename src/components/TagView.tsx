@@ -24,6 +24,7 @@ export const TagView = () => {
   const queryClient = useQueryClient();
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCategorizing, setIsCategorizing] = useState(false);
   
   const { data: notes = [] } = useQuery({
     queryKey: ['notes'],
@@ -102,7 +103,6 @@ export const TagView = () => {
 
       if (error) throw error;
       
-      // Save categories to database
       await saveCategoriesMutation.mutateAsync(data);
       
       toast({
@@ -118,6 +118,35 @@ export const TagView = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const categorizeCategories = async () => {
+    if (!savedCategories) return;
+    
+    setIsCategorizing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('categorize-categories', {
+        body: { categories: savedCategories }
+      });
+
+      if (error) throw error;
+      
+      await saveCategoriesMutation.mutateAsync(data);
+      
+      toast({
+        title: "Categories organized",
+        description: "Your categories have been organized into life sections",
+      });
+    } catch (error) {
+      console.error('Error categorizing categories:', error);
+      toast({
+        title: "Error",
+        description: "Failed to organize categories. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCategorizing(false);
     }
   };
 
@@ -176,8 +205,8 @@ export const TagView = () => {
 
   return (
     <div className="space-y-8">
-      {shouldShowCategorizeButton() && (
-        <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-4">
+        {shouldShowCategorizeButton() && (
           <Button 
             onClick={categorizeTags} 
             disabled={isLoading}
@@ -185,8 +214,17 @@ export const TagView = () => {
           >
             {isLoading ? "Categorizing..." : "Categorize Tags"}
           </Button>
-        </div>
-      )}
+        )}
+        {savedCategories && (
+          <Button
+            onClick={categorizeCategories}
+            disabled={isCategorizing}
+            variant="outline"
+          >
+            {isCategorizing ? "Organizing..." : "Categorize Categories :)"}
+          </Button>
+        )}
+      </div>
 
       {savedCategories && (
         <div className="space-y-6">
