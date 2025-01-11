@@ -5,7 +5,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { useState } from "react";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 const TagsPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -20,8 +20,13 @@ const TagsPage = () => {
 
         {/* Mobile Sidebar Sheet */}
         <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-          <SheetContent side="left" className="p-0 w-[280px] pt-16">
-            <TagsSidebar />
+          <SheetContent side="left" className="w-[280px] p-0">
+            <SheetHeader className="px-4 py-3 border-b">
+              <SheetTitle>Tags Overview</SheetTitle>
+            </SheetHeader>
+            <div className="overflow-y-auto h-[calc(100vh-4rem)]">
+              <TagsSidebar />
+            </div>
           </SheetContent>
         </Sheet>
 

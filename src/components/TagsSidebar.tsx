@@ -112,7 +112,7 @@ export const TagsSidebar = () => {
 
   return (
     <Sidebar>
-      <SidebarContent className="pt-16">
+      <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Life Sections</SidebarGroupLabel>
           <SidebarGroupContent>
