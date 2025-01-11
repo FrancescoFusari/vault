@@ -21,7 +21,7 @@ export const BottomNav = () => {
         className={`flex flex-col items-center ${isActive('/notes') ? 'text-primary' : 'text-muted-foreground'}`}
       >
         <FileText className="h-5 w-5" />
-        <span className="text-xs mt-1">Notes</span>
+        <span className="text-xs mt-1">Vault</span>
       </button>
       <button
         onClick={() => navigate('/tags')}

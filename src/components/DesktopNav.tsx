@@ -26,7 +26,7 @@ export const DesktopNav = () => {
           className={`flex items-center gap-2 ${isActive('/notes') ? 'text-primary' : 'text-muted-foreground'} hover:text-primary transition-colors`}
         >
           <FileText className="h-5 w-5" />
-          <span>Notes</span>
+          <span>Vault</span>
         </button>
         <button
           onClick={() => navigate('/tags')}
