@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ChevronRight, FolderClosed, Hash, Menu, StickyNote, X } from "lucide-react";
 import {
   Sidebar,
-  SidebarContent,
+  SidebarContent as BaseSidebarContent,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -31,7 +31,7 @@ interface Categories {
   [key: string]: string[];
 }
 
-const SidebarContent = () => {
+const SidebarContentComponent = () => {
   const navigate = useNavigate();
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
@@ -113,7 +113,7 @@ const SidebarContent = () => {
   };
 
   return (
-    <SidebarContent className="pt-4">
+    <BaseSidebarContent className="pt-4">
       <SidebarGroup>
         <SidebarGroupLabel>Life Sections</SidebarGroupLabel>
         <SidebarGroupContent>
@@ -183,7 +183,7 @@ const SidebarContent = () => {
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
-    </SidebarContent>
+    </BaseSidebarContent>
   );
 };
 
@@ -195,7 +195,7 @@ export const TagsSidebar = () => {
       {/* Desktop Sidebar */}
       <div className="hidden md:block">
         <Sidebar>
-          <SidebarContent />
+          <SidebarContentComponent />
         </Sidebar>
       </div>
 
@@ -213,7 +213,7 @@ export const TagsSidebar = () => {
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <SidebarContent />
+            <SidebarContentComponent />
           </SheetContent>
         </Sheet>
       </div>
