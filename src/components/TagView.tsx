@@ -166,6 +166,21 @@ export const TagView = () => {
     );
   }
 
+  // Extract life sections from category names
+  const getLifeSections = () => {
+    if (!savedCategories) return {};
+    
+    const sections: Record<string, string[]> = {};
+    Object.entries(savedCategories).forEach(([category, tags]) => {
+      const [section, name] = category.split(': ');
+      if (!sections[section]) {
+        sections[section] = [];
+      }
+      sections[section].push(name);
+    });
+    return sections;
+  };
+
   if (selectedTag) {
     const tagNotes = tagMap.get(selectedTag) || [];
     return (
@@ -203,6 +218,8 @@ export const TagView = () => {
     );
   }
 
+  const lifeSections = getLifeSections();
+
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center gap-4">
@@ -226,14 +243,40 @@ export const TagView = () => {
         )}
       </div>
 
+      {Object.keys(lifeSections).length > 0 && (
+        <div className="space-y-6">
+          <h2 className="text-lg font-semibold">Life Sections</h2>
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {Object.entries(lifeSections).map(([section, categories]) => (
+              <Card key={section}>
+                <CardHeader>
+                  <h3 className="font-medium capitalize">{section}</h3>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {categories.map(category => (
+                      <Badge 
+                        key={category}
+                        variant="secondary"
+                        className="capitalize"
+                      >
+                        {category}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
       {savedCategories && (
         <div className="space-y-6">
-          <h2 className="text-lg font-semibold">Categories</h2>
+          <h2 className="text-lg font-semibold">Categories and Tags</h2>
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {Object.entries(savedCategories).map(([category, tags]) => (
               <Card key={category}>
                 <CardHeader>
-                  <h3 className="font-medium">{category}</h3>
+                  <h3 className="font-medium capitalize">{category.split(': ')[1]}</h3>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {tags.map(tag => (
                       <Badge 
