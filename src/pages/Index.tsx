@@ -64,10 +64,10 @@ const Index = () => {
       <div className="flex-1 flex flex-col items-center justify-center -mt-20 px-4">
         <div className="text-center space-y-4 mb-12">
           <h1 className="text-4xl font-light tracking-tight text-foreground">
-            Smart Notes
+            Entrance to the vault
           </h1>
           <p className="text-muted-foreground text-lg">
-            Write notes and let AI categorize them for you
+            Drop anything, we'll add tags and categorize it
           </p>
         </div>
         
