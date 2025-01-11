@@ -17,7 +17,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import { useState } from "react";
-import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { Button } from "./ui/button";
 
 interface Note {
@@ -199,23 +198,42 @@ export const TagsSidebar = () => {
         </Sidebar>
       </div>
 
-      {/* Mobile Sidebar */}
-      <div className="md:hidden fixed top-4 left-4 z-50">
-        <Sheet open={open} onOpenChange={setOpen}>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="icon">
-              <Menu className="h-4 w-4" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-[300px] p-0">
-            <div className="flex justify-end p-4">
-              <Button variant="ghost" size="icon" onClick={() => setOpen(false)}>
-                <X className="h-4 w-4" />
-              </Button>
+      {/* Mobile Layout */}
+      <div className="md:hidden">
+        {/* Mobile Toggle Button */}
+        <Button
+          variant="outline"
+          size="icon"
+          className="fixed top-4 left-4 z-50"
+          onClick={() => setOpen(!open)}
+        >
+          {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+        </Button>
+
+        {/* Mobile Sidebar and Content Container */}
+        <div className="flex min-h-screen w-full">
+          {/* Sidebar */}
+          <div
+            className={`fixed inset-y-0 left-0 w-[300px] bg-background transform transition-transform duration-300 ease-in-out ${
+              open ? 'translate-x-0' : '-translate-x-full'
+            }`}
+          >
+            <div className="h-full overflow-y-auto pt-16">
+              <SidebarContentComponent />
             </div>
-            <SidebarContentComponent />
-          </SheetContent>
-        </Sheet>
+          </div>
+
+          {/* Main Content */}
+          <div
+            className={`min-h-screen w-full transform transition-transform duration-300 ease-in-out ${
+              open ? 'translate-x-[300px]' : 'translate-x-0'
+            }`}
+          >
+            <div className="p-4">
+              {/* This is where the page content will be rendered */}
+            </div>
+          </div>
+        </div>
       </div>
     </>
   );
