@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight, FolderClosed, Hash, StickyNote } from "lucide-react";
+import { ChevronRight, FolderClosed, Hash, Menu, StickyNote, X } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -17,6 +17,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import { useState } from "react";
+import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { Button } from "./ui/button";
 
 interface Note {
   id: string;
@@ -29,7 +31,7 @@ interface Categories {
   [key: string]: string[];
 }
 
-export const TagsSidebar = () => {
+const SidebarContent = () => {
   const navigate = useNavigate();
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
@@ -111,78 +113,110 @@ export const TagsSidebar = () => {
   };
 
   return (
-    <Sidebar>
-      <SidebarContent className="pt-16">
-        <SidebarGroup>
-          <SidebarGroupLabel>Life Sections</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {Object.entries(lifeSections).map(([section, categories]) => (
-                <Collapsible
-                  key={section}
-                  open={openSections[section]}
-                  onOpenChange={() => toggleSection(section)}
-                >
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton className="w-full">
-                      <ChevronRight className={`h-4 w-4 transition-transform ${openSections[section] ? 'rotate-90' : ''}`} />
-                      <span className="capitalize">{section}</span>
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {categories.map(category => (
-                        <Collapsible
-                          key={category}
-                          open={openCategories[`${section}:${category}`]}
-                          onOpenChange={() => toggleCategory(`${section}:${category}`)}
-                        >
-                          <CollapsibleTrigger asChild>
-                            <SidebarMenuSubButton className="pl-6">
-                              <FolderClosed className="h-4 w-4" />
-                              <span className="capitalize">{category}</span>
-                            </SidebarMenuSubButton>
-                          </CollapsibleTrigger>
-                          <CollapsibleContent>
-                            {savedCategories && savedCategories[`${section}: ${category}`]?.map(tag => (
-                              <Collapsible
-                                key={tag}
-                                open={openTags[tag]}
-                                onOpenChange={() => toggleTag(tag)}
-                              >
-                                <CollapsibleTrigger asChild>
-                                  <SidebarMenuSubButton className="pl-10">
-                                    <Hash className="h-4 w-4" />
-                                    <span>{tag}</span>
-                                  </SidebarMenuSubButton>
-                                </CollapsibleTrigger>
-                                <CollapsibleContent>
-                                  {tagMap.get(tag)?.map(note => (
-                                    <SidebarMenuSubItem key={note.id}>
-                                      <SidebarMenuSubButton 
-                                        onClick={() => navigate(`/note/${note.id}`)}
-                                        size="sm"
-                                        className="pl-14"
-                                      >
-                                        <StickyNote className="h-3 w-3" />
-                                        <span className="truncate">{note.content.split('\n')[0].substring(0, 30)}</span>
-                                      </SidebarMenuSubButton>
-                                    </SidebarMenuSubItem>
-                                  ))}
-                                </CollapsibleContent>
-                              </Collapsible>
-                            ))}
-                          </CollapsibleContent>
-                        </Collapsible>
-                      ))}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </Collapsible>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
+    <SidebarContent className="pt-4">
+      <SidebarGroup>
+        <SidebarGroupLabel>Life Sections</SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {Object.entries(lifeSections).map(([section, categories]) => (
+              <Collapsible
+                key={section}
+                open={openSections[section]}
+                onOpenChange={() => toggleSection(section)}
+              >
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuButton className="w-full">
+                    <ChevronRight className={`h-4 w-4 transition-transform ${openSections[section] ? 'rotate-90' : ''}`} />
+                    <span className="capitalize">{section}</span>
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    {categories.map(category => (
+                      <Collapsible
+                        key={category}
+                        open={openCategories[`${section}:${category}`]}
+                        onOpenChange={() => toggleCategory(`${section}:${category}`)}
+                      >
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuSubButton className="pl-6">
+                            <FolderClosed className="h-4 w-4" />
+                            <span className="capitalize">{category}</span>
+                          </SidebarMenuSubButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          {savedCategories && savedCategories[`${section}: ${category}`]?.map(tag => (
+                            <Collapsible
+                              key={tag}
+                              open={openTags[tag]}
+                              onOpenChange={() => toggleTag(tag)}
+                            >
+                              <CollapsibleTrigger asChild>
+                                <SidebarMenuSubButton className="pl-10">
+                                  <Hash className="h-4 w-4" />
+                                  <span>{tag}</span>
+                                </SidebarMenuSubButton>
+                              </CollapsibleTrigger>
+                              <CollapsibleContent>
+                                {tagMap.get(tag)?.map(note => (
+                                  <SidebarMenuSubItem key={note.id}>
+                                    <SidebarMenuSubButton 
+                                      onClick={() => navigate(`/note/${note.id}`)}
+                                      size="sm"
+                                      className="pl-14"
+                                    >
+                                      <StickyNote className="h-3 w-3" />
+                                      <span className="truncate">{note.content.split('\n')[0].substring(0, 30)}</span>
+                                    </SidebarMenuSubButton>
+                                  </SidebarMenuSubItem>
+                                ))}
+                              </CollapsibleContent>
+                            </Collapsible>
+                          ))}
+                        </CollapsibleContent>
+                      </Collapsible>
+                    ))}
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </Collapsible>
+            ))}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    </SidebarContent>
+  );
+};
+
+export const TagsSidebar = () => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <div className="hidden md:block">
+        <Sidebar>
+          <SidebarContent />
+        </Sidebar>
+      </div>
+
+      {/* Mobile Sidebar */}
+      <div className="md:hidden fixed top-4 left-4 z-50">
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon">
+              <Menu className="h-4 w-4" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[300px] p-0">
+            <div className="flex justify-end p-4">
+              <Button variant="ghost" size="icon" onClick={() => setOpen(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <SidebarContent />
+          </SheetContent>
+        </Sheet>
+      </div>
+    </>
   );
 };

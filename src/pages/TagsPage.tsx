@@ -9,7 +9,7 @@ const TagsPage = () => {
       <div className="flex min-h-screen w-full">
         <TagsSidebar />
         <div className="flex-1">
-          <div className="container mx-auto py-8 space-y-8">
+          <div className="container mx-auto py-8 px-4 md:px-8 space-y-8">
             <h1 className="text-2xl font-semibold">Tags Overview</h1>
             <TagView />
             <BottomNav />
