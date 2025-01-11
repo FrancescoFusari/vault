@@ -111,8 +111,8 @@ export const TagsSidebar = () => {
   };
 
   return (
-    <Sidebar className="h-full">
-      <SidebarContent>
+    <Sidebar>
+      <SidebarContent className="pt-16">
         <SidebarGroup>
           <SidebarGroupLabel>Life Sections</SidebarGroupLabel>
           <SidebarGroupContent>
