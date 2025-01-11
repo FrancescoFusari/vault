@@ -5,8 +5,12 @@ import { BottomNav } from "@/components/BottomNav";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
 
 const NotesListPage = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+
   // Fetch both notes and batch items
   const { data: notes = [], isLoading: notesLoading, error: notesError } = useQuery({
     queryKey: ['notes'],
@@ -86,10 +90,29 @@ const NotesListPage = () => {
   // Combine notes and processed batch items
   const allNotes = [...notes, ...batchItems];
 
+  // Filter notes based on search query
+  const filteredNotes = allNotes.filter(note => {
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      note.content.toLowerCase().includes(searchLower) ||
+      note.category.toLowerCase().includes(searchLower) ||
+      note.tags.some(tag => tag.toLowerCase().includes(searchLower))
+    );
+  });
+
   return (
     <div className="container mx-auto py-8 space-y-8">
-      <h1 className="text-2xl font-semibold">All Notes</h1>
-      <NoteList notes={allNotes} />
+      <div className="space-y-4">
+        <h1 className="text-2xl font-semibold">All Notes</h1>
+        <Input
+          type="search"
+          placeholder="Search notes by content, category, or tags..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="max-w-xl"
+        />
+      </div>
+      <NoteList notes={filteredNotes} />
     </div>
   );
 };
