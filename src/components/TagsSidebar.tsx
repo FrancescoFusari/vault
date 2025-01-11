@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ChevronRight, FolderClosed, Hash, Menu, StickyNote } from "lucide-react";
 import {
   Sidebar,
-  SidebarContent,
+  SidebarContent as BaseSidebarContent,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -32,7 +32,7 @@ interface Categories {
   [key: string]: string[];
 }
 
-const SidebarContent = () => {
+const SidebarContentComponent = () => {
   const navigate = useNavigate();
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
@@ -203,7 +203,7 @@ export const TagsSidebar = () => {
           <SheetHeader className="px-6 py-4">
             <SheetTitle>Tags Overview</SheetTitle>
           </SheetHeader>
-          <SidebarContent />
+          <SidebarContentComponent />
         </SheetContent>
       </Sheet>
     );
@@ -211,9 +211,9 @@ export const TagsSidebar = () => {
 
   return (
     <Sidebar>
-      <SidebarContent className="pt-16">
-        <SidebarContent />
-      </SidebarContent>
+      <BaseSidebarContent className="pt-16">
+        <SidebarContentComponent />
+      </BaseSidebarContent>
     </Sidebar>
   );
 };
