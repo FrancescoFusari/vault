@@ -20,7 +20,7 @@ const TagsPage = () => {
 
         {/* Mobile Sidebar Sheet */}
         <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-          <SheetContent side="left" className="p-0 w-[280px]">
+          <SheetContent side="left" className="p-0 w-[280px] pt-16">
             <TagsSidebar />
           </SheetContent>
         </Sheet>
