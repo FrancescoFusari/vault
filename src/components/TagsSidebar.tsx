@@ -15,6 +15,8 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 import { useNavigate } from "react-router-dom";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
+import { useState } from "react";
 
 interface Note {
   id: string;
@@ -29,6 +31,9 @@ interface Categories {
 
 export const TagsSidebar = () => {
   const navigate = useNavigate();
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
+  const [openTags, setOpenTags] = useState<Record<string, boolean>>({});
   
   const { data: notes = [] } = useQuery({
     queryKey: ['notes'],
@@ -84,51 +89,95 @@ export const TagsSidebar = () => {
 
   const lifeSections = getLifeSections();
 
+  const toggleSection = (section: string) => {
+    setOpenSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const toggleCategory = (category: string) => {
+    setOpenCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
+
+  const toggleTag = (tag: string) => {
+    setOpenTags(prev => ({
+      ...prev,
+      [tag]: !prev[tag]
+    }));
+  };
+
   return (
     <Sidebar>
-      <SidebarContent>
+      <SidebarContent className="pt-16">
         <SidebarGroup>
           <SidebarGroupLabel>Life Sections</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {Object.entries(lifeSections).map(([section, categories]) => (
-                <SidebarMenuItem key={section}>
-                  <SidebarMenuButton>
-                    <ChevronRight className="h-4 w-4" />
-                    <span className="capitalize">{section}</span>
-                  </SidebarMenuButton>
-                  <SidebarMenuSub>
-                    {categories.map(category => (
-                      <SidebarMenuSubItem key={category}>
-                        <SidebarMenuSubButton>
-                          <FolderClosed className="h-4 w-4" />
-                          <span className="capitalize">{category}</span>
-                        </SidebarMenuSubButton>
-                        {savedCategories && savedCategories[`${section}: ${category}`]?.map(tag => (
-                          <SidebarMenuSub key={tag}>
-                            <SidebarMenuSubItem>
-                              <SidebarMenuSubButton>
-                                <Hash className="h-4 w-4" />
-                                <span>{tag}</span>
-                              </SidebarMenuSubButton>
-                              {tagMap.get(tag)?.map(note => (
-                                <SidebarMenuSubItem key={note.id}>
-                                  <SidebarMenuSubButton 
-                                    onClick={() => navigate(`/note/${note.id}`)}
-                                    size="sm"
-                                  >
-                                    <StickyNote className="h-3 w-3" />
-                                    <span>{note.content.split('\n')[0].substring(0, 30)}</span>
+                <Collapsible
+                  key={section}
+                  open={openSections[section]}
+                  onOpenChange={() => toggleSection(section)}
+                >
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton className="w-full">
+                      <ChevronRight className={`h-4 w-4 transition-transform ${openSections[section] ? 'rotate-90' : ''}`} />
+                      <span className="capitalize">{section}</span>
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {categories.map(category => (
+                        <Collapsible
+                          key={category}
+                          open={openCategories[`${section}:${category}`]}
+                          onOpenChange={() => toggleCategory(`${section}:${category}`)}
+                        >
+                          <CollapsibleTrigger asChild>
+                            <SidebarMenuSubButton className="pl-6">
+                              <FolderClosed className="h-4 w-4" />
+                              <span className="capitalize">{category}</span>
+                            </SidebarMenuSubButton>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            {savedCategories && savedCategories[`${section}: ${category}`]?.map(tag => (
+                              <Collapsible
+                                key={tag}
+                                open={openTags[tag]}
+                                onOpenChange={() => toggleTag(tag)}
+                              >
+                                <CollapsibleTrigger asChild>
+                                  <SidebarMenuSubButton className="pl-10">
+                                    <Hash className="h-4 w-4" />
+                                    <span>{tag}</span>
                                   </SidebarMenuSubButton>
-                                </SidebarMenuSubItem>
-                              ))}
-                            </SidebarMenuSubItem>
-                          </SidebarMenuSub>
-                        ))}
-                      </SidebarMenuSubItem>
-                    ))}
-                  </SidebarMenuSub>
-                </SidebarMenuItem>
+                                </CollapsibleTrigger>
+                                <CollapsibleContent>
+                                  {tagMap.get(tag)?.map(note => (
+                                    <SidebarMenuSubItem key={note.id}>
+                                      <SidebarMenuSubButton 
+                                        onClick={() => navigate(`/note/${note.id}`)}
+                                        size="sm"
+                                        className="pl-14"
+                                      >
+                                        <StickyNote className="h-3 w-3" />
+                                        <span className="truncate">{note.content.split('\n')[0].substring(0, 30)}</span>
+                                      </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                  ))}
+                                </CollapsibleContent>
+                              </Collapsible>
+                            ))}
+                          </CollapsibleContent>
+                        </Collapsible>
+                      ))}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </Collapsible>
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
