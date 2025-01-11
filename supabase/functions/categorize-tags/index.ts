@@ -27,13 +27,14 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',
             content: `You are a tag categorization assistant. Given a list of tags, group them into 3-5 broad categories.
-            Return a JSON object where each key is a category and its value is an array of tags that belong to that category.
-            Keep categories simple and intuitive. Example response format:
+            Return ONLY a valid JSON object where each key is a category and its value is an array of tags that belong to that category.
+            Do not include any explanations or additional text, just the JSON object.
+            Example format:
             {
               "Work": ["meeting", "project", "deadline"],
               "Personal": ["family", "health", "hobby"],
@@ -45,21 +46,43 @@ serve(async (req) => {
             content: `Please categorize these tags: ${JSON.stringify(tags)}`
           }
         ],
+        temperature: 0.7,
+        max_tokens: 1000
       }),
     });
 
     if (!response.ok) {
+      console.error('OpenAI API error:', response.statusText);
       throw new Error(`OpenAI API error: ${response.statusText}`);
     }
 
     const data = await response.json();
     console.log('OpenAI response:', data);
 
+    if (!data.choices?.[0]?.message?.content) {
+      console.error('Unexpected OpenAI response format:', data);
+      throw new Error('Unexpected response format from OpenAI');
+    }
+
     let categories;
     try {
-      categories = JSON.parse(data.choices[0].message.content);
+      const content = data.choices[0].message.content.trim();
+      categories = JSON.parse(content);
+      
+      // Validate the response format
+      if (typeof categories !== 'object' || Array.isArray(categories)) {
+        throw new Error('Response is not an object');
+      }
+      
+      // Validate that each value is an array
+      for (const [key, value] of Object.entries(categories)) {
+        if (!Array.isArray(value)) {
+          throw new Error(`Category "${key}" value is not an array`);
+        }
+      }
     } catch (error) {
       console.error('Failed to parse OpenAI response:', error);
+      console.error('Raw content:', data.choices[0].message.content);
       throw new Error('Invalid response format from OpenAI');
     }
 
