@@ -24,8 +24,10 @@ const TagsPage = () => {
             <SheetHeader className="px-4 py-3 border-b">
               <SheetTitle>Tags Overview</SheetTitle>
             </SheetHeader>
-            <div className="overflow-y-auto h-[calc(100vh-4rem)]">
-              <TagsSidebar />
+            <div className="h-[calc(100vh-4rem)] overflow-y-auto">
+              <div className="p-4">
+                <TagsSidebar />
+              </div>
             </div>
           </SheetContent>
         </Sheet>
