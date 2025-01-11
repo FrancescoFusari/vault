@@ -4,10 +4,12 @@ import { CalendarIcon } from "@radix-ui/react-icons";
 import { NoteGraph } from "./NoteGraph";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, RefreshCw } from "lucide-react";
+import { ArrowLeft, Plus, RefreshCw, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "./ui/use-toast";
 import { useState } from "react";
+import { Input } from "./ui/input";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface NoteDetailProps {
   note: {
@@ -29,8 +31,63 @@ interface NoteDetailProps {
 export const NoteDetail = ({ note, allNotes }: NoteDetailProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isRegeneratingTitle, setIsRegeneratingTitle] = useState(false);
   const [isRegeneratingTags, setIsRegeneratingTags] = useState(false);
+  const [newTag, setNewTag] = useState("");
+  const [editingTag, setEditingTag] = useState<{ original: string; new: string } | null>(null);
+
+  const updateNoteMutation = useMutation({
+    mutationFn: async (tags: string[]) => {
+      const { error } = await supabase
+        .from('notes')
+        .update({ tags })
+        .eq('id', note.id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
+      toast({
+        title: "Tags updated",
+        description: "The note's tags have been updated successfully.",
+      });
+    },
+    onError: (error) => {
+      console.error('Error updating tags:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update tags. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleAddTag = () => {
+    if (!newTag.trim()) return;
+    
+    const updatedTags = [...note.tags, newTag.trim()];
+    updateNoteMutation.mutate(updatedTags);
+    setNewTag("");
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    const updatedTags = note.tags.filter(tag => tag !== tagToRemove);
+    updateNoteMutation.mutate(updatedTags);
+  };
+
+  const handleRenameTag = (originalTag: string) => {
+    if (!editingTag || !editingTag.new.trim() || editingTag.new === originalTag) {
+      setEditingTag(null);
+      return;
+    }
+
+    const updatedTags = note.tags.map(tag => 
+      tag === originalTag ? editingTag.new.trim() : tag
+    );
+    updateNoteMutation.mutate(updatedTags);
+    setEditingTag(null);
+  };
 
   const regenerateMetadata = async (type: 'tags' | 'title') => {
     try {
@@ -98,22 +155,81 @@ export const NoteDetail = ({ note, allNotes }: NoteDetailProps) => {
         </CardHeader>
         <CardContent>
           <p className="whitespace-pre-wrap mb-4">{note.content}</p>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 flex-wrap">
-              {note.tags.map((tag) => (
-                <Badge key={tag} variant="secondary">
-                  {tag}
-                </Badge>
-              ))}
+          
+          {/* Tag Management Section */}
+          <div className="space-y-4">
+            {/* Add New Tag */}
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="Add new tag"
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
+                className="max-w-[200px]"
+              />
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={handleAddTag}
+                disabled={!newTag.trim()}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
             </div>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => regenerateMetadata('tags')}
-              disabled={isRegeneratingTags}
-            >
-              <RefreshCw className={`h-4 w-4 ${isRegeneratingTags ? 'animate-spin' : ''}`} />
-            </Button>
+
+            {/* Tags List */}
+            <div className="flex flex-wrap gap-2">
+              {note.tags.map((tag) => (
+                <div key={tag} className="flex items-center">
+                  {editingTag?.original === tag ? (
+                    <div className="flex items-center gap-1">
+                      <Input
+                        value={editingTag.new}
+                        onChange={(e) => setEditingTag({ ...editingTag, new: e.target.value })}
+                        onKeyDown={(e) => e.key === 'Enter' && handleRenameTag(tag)}
+                        className="h-7 w-[150px]"
+                        autoFocus
+                      />
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleRenameTag(tag)}
+                      >
+                        Save
+                      </Button>
+                    </div>
+                  ) : (
+                    <Badge 
+                      variant="secondary"
+                      className="pr-1"
+                    >
+                      <span 
+                        className="cursor-pointer mr-2"
+                        onClick={() => setEditingTag({ original: tag, new: tag })}
+                      >
+                        {tag}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-4 w-4 hover:bg-destructive hover:text-destructive-foreground"
+                        onClick={() => handleRemoveTag(tag)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </Badge>
+                  )}
+                </div>
+              ))}
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => regenerateMetadata('tags')}
+                disabled={isRegeneratingTags}
+              >
+                <RefreshCw className={`h-4 w-4 ${isRegeneratingTags ? 'animate-spin' : ''}`} />
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
