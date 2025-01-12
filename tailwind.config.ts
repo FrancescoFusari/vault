@@ -13,8 +13,8 @@ export default {
 		container: {
 			center: true,
 			padding: {
-				DEFAULT: "1rem",  // Smaller padding for mobile
-				md: "2rem",      // Original padding for medium screens and up
+				DEFAULT: "0.5rem",  // Reduced from 1rem to 0.5rem for mobile
+				md: "1rem",        // Reduced from 2rem to 1rem for medium screens
 			},
 			screens: {
 				'2xl': '1400px'

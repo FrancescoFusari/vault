@@ -1,33 +1,41 @@
-import { useParams, Navigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { NoteDetail } from "@/components/NoteDetail";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const NotePage = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams();
 
-  const { data: notes = [] } = useQuery({
-    queryKey: ['notes'],
+  const { data: note, isLoading } = useQuery({
+    queryKey: ['note', id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('notes')
         .select('*')
-        .order('created_at', { ascending: false });
+        .eq('id', id)
+        .single();
       
       if (error) throw error;
       return data;
     }
   });
 
-  const note = notes.find(n => n.id === id);
+  if (isLoading) {
+    return (
+      <div className="container">
+        <Skeleton className="h-[400px] w-full" />
+      </div>
+    );
+  }
 
   if (!note) {
-    return <Navigate to="/" replace />;
+    return <div className="container">Note not found</div>;
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <NoteDetail note={note} allNotes={notes} />
+    <div className="container">
+      <NoteDetail note={note} />
     </div>
   );
 };
