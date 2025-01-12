@@ -13,11 +13,10 @@ serve(async (req) => {
   }
 
   try {
-    const formData = await req.formData();
-    const file = formData.get('file');
+    const { image, filename, contentType } = await req.json();
 
-    if (!file) {
-      throw new Error('No file uploaded');
+    if (!image) {
+      throw new Error('No image data provided');
     }
 
     // Initialize Supabase client
@@ -30,14 +29,23 @@ serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser(authHeader ?? '');
     if (!user) throw new Error('Not authenticated');
 
+    // Convert base64 to Blob
+    const base64Data = image.split(',')[1];
+    const byteString = atob(base64Data);
+    const byteArray = new Uint8Array(byteString.length);
+    for (let i = 0; i < byteString.length; i++) {
+      byteArray[i] = byteString.charCodeAt(i);
+    }
+    const blob = new Blob([byteArray], { type: contentType });
+
     // Upload file to storage
-    const fileExt = file.name.split('.').pop();
+    const fileExt = filename.split('.').pop();
     const filePath = `${crypto.randomUUID()}.${fileExt}`;
 
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('note_images')
-      .upload(filePath, file, {
-        contentType: file.type,
+      .upload(filePath, blob, {
+        contentType,
         upsert: false
       });
 
@@ -47,6 +55,8 @@ serve(async (req) => {
     const { data: { publicUrl } } = supabase.storage
       .from('note_images')
       .getPublicUrl(filePath);
+
+    console.log('Image uploaded successfully, analyzing with OpenAI...');
 
     // Analyze image with OpenAI
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -83,6 +93,8 @@ serve(async (req) => {
 
     const analysisData = await response.json();
     const analysis = JSON.parse(analysisData.choices[0].message.content);
+
+    console.log('OpenAI analysis complete:', analysis);
 
     // Create note with image analysis
     const { data: note, error: noteError } = await supabase

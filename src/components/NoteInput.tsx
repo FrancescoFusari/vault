@@ -91,14 +91,21 @@ export const NoteInput = ({ onNoteSubmit }: NoteInputProps) => {
 
     setIsSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
+      // Convert file to base64
+      const reader = new FileReader();
+      const base64Promise = new Promise((resolve, reject) => {
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+      });
+      reader.readAsDataURL(file);
+      const base64Data = await base64Promise;
 
       const { data, error } = await supabase.functions.invoke('process-image', {
-        body: formData,
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        body: {
+          image: base64Data,
+          filename: file.name,
+          contentType: file.type
+        }
       });
 
       if (error) throw error;
