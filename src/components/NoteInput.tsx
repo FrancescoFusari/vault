@@ -94,21 +94,14 @@ export const NoteInput = ({ onNoteSubmit }: NoteInputProps) => {
       const formData = new FormData();
       formData.append('file', file);
 
-      const { data: { session } } = await supabase.auth.getSession();
-      const response = await fetch('/functions/v1/process-image', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session?.access_token}`,
-        },
+      const { data, error } = await supabase.functions.invoke('process-image', {
         body: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to process image');
-      }
-
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
+      if (error) throw error;
 
       toast({
         title: "Image processed successfully",
