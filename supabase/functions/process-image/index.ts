@@ -78,19 +78,7 @@ serve(async (req) => {
           },
           {
             role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: 'Please analyze this image and provide a detailed description, relevant tags, and a category.'
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: publicUrl,
-                  detail: 'auto'
-                }
-              }
-            ]
+            content: `Please analyze this image at ${publicUrl} and provide a detailed description, relevant tags, and a category.`
           }
         ],
         max_tokens: 500
