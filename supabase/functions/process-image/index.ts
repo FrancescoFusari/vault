@@ -62,14 +62,14 @@ serve(async (req) => {
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) throw new Error('OpenAI API key not configured');
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4-vision-preview',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -87,13 +87,19 @@ serve(async (req) => {
       }),
     });
 
-    if (!response.ok) {
-      throw new Error('Failed to analyze image with OpenAI');
+    if (!openAIResponse.ok) {
+      console.error('OpenAI API Error:', await openAIResponse.text());
+      throw new Error(`OpenAI API error: ${openAIResponse.status}`);
     }
 
-    const analysisData = await response.json();
-    const analysis = JSON.parse(analysisData.choices[0].message.content);
+    const analysisData = await openAIResponse.json();
+    
+    if (!analysisData.choices?.[0]?.message?.content) {
+      console.error('Unexpected OpenAI response format:', analysisData);
+      throw new Error('Invalid response from OpenAI');
+    }
 
+    const analysis = JSON.parse(analysisData.choices[0].message.content);
     console.log('OpenAI analysis complete:', analysis);
 
     // Create note with image analysis
