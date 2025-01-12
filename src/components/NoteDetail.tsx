@@ -1,7 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { CalendarIcon } from "@radix-ui/react-icons";
-import { NoteGraph } from "./NoteGraph";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Plus, RefreshCw, X } from "lucide-react";
@@ -19,16 +18,9 @@ interface NoteDetailProps {
     tags: string[];
     created_at: string;
   };
-  allNotes: Array<{
-    id: string;
-    content: string;
-    category: string;
-    tags: string[];
-    created_at: string;
-  }>;
 }
 
-export const NoteDetail = ({ note, allNotes }: NoteDetailProps) => {
+export const NoteDetail = ({ note }: NoteDetailProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -233,11 +225,6 @@ export const NoteDetail = ({ note, allNotes }: NoteDetailProps) => {
           </div>
         </CardContent>
       </Card>
-
-      <div className="mt-8">
-        <h2 className="text-2xl font-semibold mb-6">Knowledge Graph</h2>
-        <NoteGraph notes={allNotes} highlightedNoteId={note.id} />
-      </div>
     </div>
   );
 };
