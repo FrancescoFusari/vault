@@ -1,3 +1,4 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -78,12 +79,21 @@ serve(async (req) => {
           {
             role: 'user',
             content: [
-              { type: 'text', text: 'Analyze this image and provide a description, relevant tags, and a category.' },
-              { type: 'image_url', image_url: publicUrl }
+              {
+                type: 'text',
+                text: 'Please analyze this image and provide a detailed description, relevant tags, and a category.'
+              },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: publicUrl,
+                  detail: 'auto'
+                }
+              }
             ]
           }
         ],
-        max_tokens: 500,
+        max_tokens: 500
       }),
     });
 
