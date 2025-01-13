@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { analyzeNote } from "@/lib/openai";
-import { Github, Mail, Twitter, Linkedin, Facebook, Instagram, Youtube } from "lucide-react";
+import { Github, Mail, Twitter, Linkedin, Facebook, Instagram, Youtube, MessageSquare, X } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -97,9 +97,18 @@ const Index = () => {
                 variant="ghost"
                 size="icon"
                 className="aspect-square rounded-xl hover:bg-secondary"
-                onClick={() => handleServiceClick('twitter')}
+                onClick={() => handleServiceClick('x')}
               >
-                <Twitter className="h-6 w-6" />
+                <X className="h-6 w-6" />
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="icon"
+                className="aspect-square rounded-xl hover:bg-secondary"
+                onClick={() => handleServiceClick('threads')}
+              >
+                <MessageSquare className="h-6 w-6" />
               </Button>
               
               <Button
