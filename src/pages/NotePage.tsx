@@ -5,6 +5,8 @@ import { NoteDetail } from "@/components/NoteDetail";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChatInterface } from "@/components/ChatInterface";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { TagsSidebar } from "@/components/TagsSidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 type NoteMetadata = {
   technical_details?: string;
@@ -39,7 +41,6 @@ const NotePage = () => {
       
       if (error) throw error;
 
-      // Transform the data to match the expected type
       const transformedNote: Note = {
         id: data.id,
         content: data.content,
@@ -67,19 +68,26 @@ const NotePage = () => {
   }
 
   return (
-    <div className="container">
-      <div className="flex flex-col md:flex-row md:gap-6">
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        <TagsSidebar />
         <div className="flex-1">
-          <NoteDetail note={note} />
-        </div>
-        {!isMobile && (
-          <div className="w-[400px] shrink-0">
-            <ChatInterface noteContent={note.content} />
+          <div className="container">
+            <div className="flex flex-col md:flex-row md:gap-6">
+              <div className="flex-1">
+                <NoteDetail note={note} />
+              </div>
+              {!isMobile && (
+                <div className="w-[400px] shrink-0">
+                  <ChatInterface noteContent={note.content} />
+                </div>
+              )}
+            </div>
+            {isMobile && <ChatInterface noteContent={note.content} />}
           </div>
-        )}
+        </div>
       </div>
-      {isMobile && <ChatInterface noteContent={note.content} />}
-    </div>
+    </SidebarProvider>
   );
 };
 

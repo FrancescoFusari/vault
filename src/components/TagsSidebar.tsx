@@ -30,6 +30,48 @@ interface Categories {
   [key: string]: string[];
 }
 
+export const TagsSidebar = () => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <div className="hidden md:block">
+        <Sidebar variant="floating">
+          <SidebarContentComponent />
+        </Sidebar>
+      </div>
+
+      {/* Mobile Layout */}
+      <div className="md:hidden">
+        {/* Mobile Toggle Button */}
+        <Button
+          variant="outline"
+          size="icon"
+          className="fixed top-4 left-4 z-50"
+          onClick={() => setOpen(!open)}
+        >
+          {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+        </Button>
+
+        {/* Mobile Sidebar and Content Container */}
+        <div className="flex min-h-screen w-full">
+          {/* Sidebar */}
+          <div
+            className={`fixed inset-y-0 left-0 w-[300px] bg-background/80 backdrop-blur-sm transform transition-transform duration-300 ease-in-out ${
+              open ? 'translate-x-0' : '-translate-x-full'
+            }`}
+          >
+            <div className="h-full overflow-y-auto pt-16">
+              <SidebarContentComponent />
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
 const SidebarContentComponent = () => {
   const navigate = useNavigate();
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
@@ -183,58 +225,5 @@ const SidebarContentComponent = () => {
         </SidebarGroupContent>
       </SidebarGroup>
     </BaseSidebarContent>
-  );
-};
-
-export const TagsSidebar = () => {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <>
-      {/* Desktop Sidebar */}
-      <div className="hidden md:block">
-        <Sidebar>
-          <SidebarContentComponent />
-        </Sidebar>
-      </div>
-
-      {/* Mobile Layout */}
-      <div className="md:hidden">
-        {/* Mobile Toggle Button */}
-        <Button
-          variant="outline"
-          size="icon"
-          className="fixed top-4 left-4 z-50"
-          onClick={() => setOpen(!open)}
-        >
-          {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-        </Button>
-
-        {/* Mobile Sidebar and Content Container */}
-        <div className="flex min-h-screen w-full">
-          {/* Sidebar */}
-          <div
-            className={`fixed inset-y-0 left-0 w-[300px] bg-background transform transition-transform duration-300 ease-in-out ${
-              open ? 'translate-x-0' : '-translate-x-full'
-            }`}
-          >
-            <div className="h-full overflow-y-auto pt-16">
-              <SidebarContentComponent />
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <div
-            className={`min-h-screen w-full transform transition-transform duration-300 ease-in-out ${
-              open ? 'translate-x-[300px]' : 'translate-x-0'
-            }`}
-          >
-            <div className="p-4">
-              {/* This is where the page content will be rendered */}
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
   );
 };
