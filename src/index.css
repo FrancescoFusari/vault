@@ -24,6 +24,7 @@
     --input: 229 19% 25%;
     --ring: 40 33% 98%;
     --sidebar: 229 19% 15%;
+    --radius: 1rem;
   }
 }
  
@@ -37,7 +38,7 @@
 }
 
 .note-card {
-  @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-1;
+  @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-1 rounded-2xl;
 }
 
 .tag {
@@ -53,7 +54,7 @@
 }
 
 .floating-sidebar {
-  @apply fixed top-4 left-4 h-[calc(100vh-2rem)] w-60 bg-[#1A1F2C]/90 backdrop-blur-xl rounded-xl border border-border/10 shadow-xl overflow-hidden;
+  @apply fixed top-4 left-4 h-[calc(100vh-2rem)] w-60 bg-[#1A1F2C]/90 backdrop-blur-xl rounded-2xl border border-border/10 shadow-xl overflow-hidden;
 }
 
 .page-title {
@@ -73,5 +74,5 @@
 }
 
 .category-card {
-  @apply p-4 rounded-xl bg-secondary/50 border border-border/10 hover:bg-secondary/70 transition-all;
+  @apply p-4 rounded-2xl bg-secondary/50 border border-border/10 hover:bg-secondary/70 transition-all;
 }
