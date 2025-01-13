@@ -64,6 +64,7 @@ export type Database = {
           created_at: string
           id: string
           input_type: string | null
+          metadata: Json | null
           source_image_path: string | null
           source_url: string | null
           tags: string[]
@@ -75,6 +76,7 @@ export type Database = {
           created_at?: string
           id?: string
           input_type?: string | null
+          metadata?: Json | null
           source_image_path?: string | null
           source_url?: string | null
           tags?: string[]
@@ -86,6 +88,7 @@ export type Database = {
           created_at?: string
           id?: string
           input_type?: string | null
+          metadata?: Json | null
           source_image_path?: string | null
           source_url?: string | null
           tags?: string[]
