@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -22,17 +21,14 @@ serve(async (req) => {
 
     console.log('Processing image:', filename);
 
-    // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get user from auth header
     const authHeader = req.headers.get('Authorization')?.split(' ')[1];
     const { data: { user } } = await supabase.auth.getUser(authHeader ?? '');
     if (!user) throw new Error('Not authenticated');
 
-    // Convert base64 to Blob
     const base64Data = image.split(',')[1];
     const byteString = atob(base64Data);
     const byteArray = new Uint8Array(byteString.length);
@@ -41,7 +37,6 @@ serve(async (req) => {
     }
     const blob = new Blob([byteArray], { type: contentType });
 
-    // Upload file to storage
     const fileExt = filename.split('.').pop();
     const filePath = `${crypto.randomUUID()}.${fileExt}`;
 
@@ -56,14 +51,12 @@ serve(async (req) => {
 
     if (uploadError) throw uploadError;
 
-    // Get public URL for the uploaded image
     const { data: { publicUrl } } = supabase.storage
       .from('note_images')
       .getPublicUrl(filePath);
 
     console.log('Image uploaded successfully, analyzing with OpenAI...');
 
-    // Analyze image with OpenAI
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) throw new Error('OpenAI API key not configured');
 
@@ -78,14 +71,14 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are an AI that analyzes images and provides detailed descriptions with relevant tags and categories. Return ONLY raw JSON without any markdown formatting or code blocks. The JSON should contain three fields: "description" (string), "tags" (array of strings), and "category" (string). Example: {"description": "A scenic mountain landscape", "tags": ["nature", "mountains", "landscape"], "category": "Nature"}'
+            content: 'You are an AI that analyzes images and provides detailed descriptions with relevant tags, categories, and metadata. Return ONLY raw JSON without any markdown formatting or code blocks. The JSON should contain: "description" (string), "tags" (array of strings), "category" (string), "metadata" (object with technical_details, visual_elements, color_palette, composition_notes, and estimated_date_or_period). Example: {"description": "A scenic mountain landscape", "tags": ["nature", "mountains"], "category": "Nature", "metadata": {"technical_details": "High contrast photo with dramatic lighting", "visual_elements": ["Snow-capped peaks", "Cloudy sky"], "color_palette": ["White", "Blue", "Gray"], "composition_notes": "Rule of thirds with mountain peak as focal point", "estimated_date_or_period": "Contemporary"}}'
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: 'Analyze this image and provide a detailed description, relevant tags, and a category. Return ONLY raw JSON.'
+                text: 'Analyze this image and provide a detailed description, relevant tags, category, and detailed metadata. Return ONLY raw JSON.'
               },
               {
                 type: 'image_url',
@@ -114,17 +107,15 @@ serve(async (req) => {
 
     let analysis;
     try {
-      // Clean up the response content by removing any markdown formatting
       const content = analysisData.choices[0].message.content.trim()
-        .replace(/```json\n?/g, '') // Remove ```json
-        .replace(/```\n?/g, '')     // Remove closing ```
+        .replace(/```json\n?/g, '')
+        .replace(/```\n?/g, '')
         .trim();
       
       console.log('Cleaned content for parsing:', content);
       analysis = JSON.parse(content);
       
-      // Validate the required fields
-      if (!analysis.description || !Array.isArray(analysis.tags) || !analysis.category) {
+      if (!analysis.description || !Array.isArray(analysis.tags) || !analysis.category || !analysis.metadata) {
         console.error('Invalid analysis structure:', analysis);
         throw new Error('Missing required fields in analysis');
       }
@@ -136,7 +127,6 @@ serve(async (req) => {
       throw new Error(`Failed to parse OpenAI response: ${parseError.message}`);
     }
 
-    // Create note with image analysis
     const { data: note, error: noteError } = await supabase
       .from('notes')
       .insert({
@@ -145,7 +135,8 @@ serve(async (req) => {
         category: analysis.category,
         tags: analysis.tags,
         input_type: 'image',
-        source_image_path: filePath
+        source_image_path: filePath,
+        metadata: analysis.metadata
       })
       .select()
       .single();

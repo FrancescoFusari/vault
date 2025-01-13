@@ -18,6 +18,13 @@ interface NoteDetailProps {
     tags: string[];
     created_at: string;
     source_image_path?: string;
+    metadata?: {
+      technical_details?: string;
+      visual_elements?: string[];
+      color_palette?: string[];
+      composition_notes?: string;
+      estimated_date_or_period?: string;
+    };
   };
 }
 
@@ -30,7 +37,6 @@ export const NoteDetail = ({ note }: NoteDetailProps) => {
   const [newTag, setNewTag] = useState("");
   const [editingTag, setEditingTag] = useState<{ original: string; new: string } | null>(null);
 
-  // Get the public URL for the image if it exists
   const imageUrl = note.source_image_path 
     ? supabase.storage.from('note_images').getPublicUrl(note.source_image_path).data.publicUrl
     : null;
@@ -161,7 +167,57 @@ export const NoteDetail = ({ note }: NoteDetailProps) => {
               />
             </div>
           )}
+          
           <p className="whitespace-pre-wrap mb-4">{note.content}</p>
+          
+          {note.metadata && (
+            <div className="space-y-4 mb-6 bg-muted p-4 rounded-lg">
+              <h3 className="font-semibold text-lg">Image Analysis</h3>
+              
+              {note.metadata.technical_details && (
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground">Technical Details</h4>
+                  <p>{note.metadata.technical_details}</p>
+                </div>
+              )}
+              
+              {note.metadata.visual_elements && note.metadata.visual_elements.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground">Visual Elements</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {note.metadata.visual_elements.map((element, index) => (
+                      <Badge key={index} variant="secondary">{element}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {note.metadata.color_palette && note.metadata.color_palette.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground">Color Palette</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {note.metadata.color_palette.map((color, index) => (
+                      <Badge key={index} variant="outline">{color}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {note.metadata.composition_notes && (
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground">Composition Notes</h4>
+                  <p>{note.metadata.composition_notes}</p>
+                </div>
+              )}
+              
+              {note.metadata.estimated_date_or_period && (
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground">Estimated Period</h4>
+                  <p>{note.metadata.estimated_date_or_period}</p>
+                </div>
+              )}
+            </div>
+          )}
           
           {/* Tag Management Section */}
           <div className="space-y-4">
