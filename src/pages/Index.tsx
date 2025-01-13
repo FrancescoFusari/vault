@@ -74,105 +74,138 @@ const Index = () => {
               <p className="text-sm text-muted-foreground">Import your data from other platforms</p>
             </div>
             
-            <div className="grid grid-cols-4 md:grid-cols-7 gap-4 p-6 rounded-lg border border-border bg-card shadow-sm">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="aspect-square rounded-xl hover:bg-secondary"
-                onClick={() => handleServiceClick('github')}
-              >
-                <Github className="h-6 w-6" />
-              </Button>
+            <div className="grid grid-cols-4 md:grid-cols-7 gap-6 p-6 rounded-lg border border-border bg-card shadow-sm">
+              <div className="flex flex-col items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="aspect-square rounded-xl hover:bg-secondary"
+                  onClick={() => handleServiceClick('github')}
+                >
+                  <Github className="h-6 w-6" />
+                </Button>
+                <span className="text-xs text-muted-foreground">GitHub</span>
+              </div>
               
-              <Button
-                variant="ghost"
-                size="icon"
-                className="aspect-square rounded-xl hover:bg-secondary"
-                onClick={() => handleServiceClick('gmail')}
-              >
-                <Mail className="h-6 w-6" />
-              </Button>
+              <div className="flex flex-col items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="aspect-square rounded-xl hover:bg-secondary"
+                  onClick={() => handleServiceClick('gmail')}
+                >
+                  <Mail className="h-6 w-6" />
+                </Button>
+                <span className="text-xs text-muted-foreground">Gmail</span>
+              </div>
               
-              <Button
-                variant="ghost"
-                size="icon"
-                className="aspect-square rounded-xl hover:bg-secondary"
-                onClick={() => handleServiceClick('x')}
-              >
-                <X className="h-6 w-6" />
-              </Button>
+              <div className="flex flex-col items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="aspect-square rounded-xl hover:bg-secondary"
+                  onClick={() => handleServiceClick('x')}
+                >
+                  <X className="h-6 w-6" />
+                </Button>
+                <span className="text-xs text-muted-foreground">X</span>
+              </div>
               
-              <Button
-                variant="ghost"
-                size="icon"
-                className="aspect-square rounded-xl hover:bg-secondary"
-                onClick={() => handleServiceClick('threads')}
-              >
-                <MessageSquare className="h-6 w-6" />
-              </Button>
+              <div className="flex flex-col items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="aspect-square rounded-xl hover:bg-secondary"
+                  onClick={() => handleServiceClick('threads')}
+                >
+                  <MessageSquare className="h-6 w-6" />
+                </Button>
+                <span className="text-xs text-muted-foreground">Threads</span>
+              </div>
               
-              <Button
-                variant="ghost"
-                size="icon"
-                className="aspect-square rounded-xl hover:bg-secondary"
-                onClick={() => handleServiceClick('linkedin')}
-              >
-                <Linkedin className="h-6 w-6" />
-              </Button>
+              <div className="flex flex-col items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="aspect-square rounded-xl hover:bg-secondary"
+                  onClick={() => handleServiceClick('linkedin')}
+                >
+                  <Linkedin className="h-6 w-6" />
+                </Button>
+                <span className="text-xs text-muted-foreground">LinkedIn</span>
+              </div>
               
-              <Button
-                variant="ghost"
-                size="icon"
-                className="aspect-square rounded-xl hover:bg-secondary"
-                onClick={() => handleServiceClick('facebook')}
-              >
-                <Facebook className="h-6 w-6" />
-              </Button>
+              <div className="flex flex-col items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="aspect-square rounded-xl hover:bg-secondary"
+                  onClick={() => handleServiceClick('facebook')}
+                >
+                  <Facebook className="h-6 w-6" />
+                </Button>
+                <span className="text-xs text-muted-foreground">Facebook</span>
+              </div>
               
-              <Button
-                variant="ghost"
-                size="icon"
-                className="aspect-square rounded-xl hover:bg-secondary"
-                onClick={() => handleServiceClick('instagram')}
-              >
-                <Instagram className="h-6 w-6" />
-              </Button>
+              <div className="flex flex-col items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="aspect-square rounded-xl hover:bg-secondary"
+                  onClick={() => handleServiceClick('instagram')}
+                >
+                  <Instagram className="h-6 w-6" />
+                </Button>
+                <span className="text-xs text-muted-foreground">Instagram</span>
+              </div>
               
-              <Button
-                variant="ghost"
-                size="icon"
-                className="aspect-square rounded-xl hover:bg-secondary"
-                onClick={() => handleServiceClick('youtube')}
-              >
-                <Youtube className="h-6 w-6" />
-              </Button>
+              <div className="flex flex-col items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="aspect-square rounded-xl hover:bg-secondary"
+                  onClick={() => handleServiceClick('youtube')}
+                >
+                  <Youtube className="h-6 w-6" />
+                </Button>
+                <span className="text-xs text-muted-foreground">YouTube</span>
+              </div>
 
-              <Button
-                variant="ghost"
-                size="icon"
-                className="aspect-square rounded-xl hover:bg-secondary"
-                onClick={() => handleServiceClick('notion')}
-              >
-                <Notebook className="h-6 w-6" />
-              </Button>
+              <div className="flex flex-col items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="aspect-square rounded-xl hover:bg-secondary"
+                  onClick={() => handleServiceClick('notion')}
+                >
+                  <Notebook className="h-6 w-6" />
+                </Button>
+                <span className="text-xs text-muted-foreground">Notion</span>
+              </div>
 
-              <Button
-                variant="ghost"
-                size="icon"
-                className="aspect-square rounded-xl hover:bg-secondary"
-                onClick={() => handleServiceClick('obsidian')}
-              >
-                <BookOpen className="h-6 w-6" />
-              </Button>
+              <div className="flex flex-col items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="aspect-square rounded-xl hover:bg-secondary"
+                  onClick={() => handleServiceClick('obsidian')}
+                >
+                  <BookOpen className="h-6 w-6" />
+                </Button>
+                <span className="text-xs text-muted-foreground">Obsidian</span>
+              </div>
 
-              <Button
-                variant="ghost"
-                size="icon"
-                className="aspect-square rounded-xl hover:bg-secondary"
-                onClick={() => handleServiceClick('google-drive')}
-              >
-                <Cloud className="h-6 w-6" />
-              </Button>
+              <div className="flex flex-col items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="aspect-square rounded-xl hover:bg-secondary"
+                  onClick={() => handleServiceClick('google-drive')}
+                >
+                  <Cloud className="h-6 w-6" />
+                </Button>
+                <span className="text-xs text-muted-foreground">Drive</span>
+              </div>
             </div>
           </div>
         </div>
