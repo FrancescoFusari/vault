@@ -20,6 +20,8 @@ serve(async (req) => {
       throw new Error('No image data provided');
     }
 
+    console.log('Processing image:', filename);
+
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -42,6 +44,8 @@ serve(async (req) => {
     // Upload file to storage
     const fileExt = filename.split('.').pop();
     const filePath = `${crypto.randomUUID()}.${fileExt}`;
+
+    console.log('Uploading image to storage...');
 
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('note_images')
@@ -78,16 +82,26 @@ serve(async (req) => {
           },
           {
             role: 'user',
-            content: `Please analyze this image at ${publicUrl} and provide a detailed description, relevant tags, and a category.`
+            content: [
+              {
+                type: 'text',
+                text: 'Please analyze this image and provide a detailed description, relevant tags, and a category.'
+              },
+              {
+                type: 'image_url',
+                image_url: {
+                  url: publicUrl
+                }
+              }
+            ]
           }
-        ],
-        max_tokens: 500
+        ]
       }),
     });
 
     if (!openAIResponse.ok) {
       console.error('OpenAI API Error:', await openAIResponse.text());
-      throw new Error(`OpenAI API error: ${openAIResponse.status}`);
+      throw new Error(`Failed to analyze image with OpenAI: ${openAIResponse.status}`);
     }
 
     const analysisData = await openAIResponse.json();
