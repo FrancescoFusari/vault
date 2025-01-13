@@ -16,6 +16,8 @@ serve(async (req) => {
   try {
     const { message, noteContent } = await req.json();
 
+    console.log('Received request:', { message, noteContentLength: noteContent?.length });
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -27,8 +29,11 @@ serve(async (req) => {
         messages: [
           { 
             role: 'system', 
-            content: `You are a helpful assistant discussing a note. Here's the note content: "${noteContent}". 
-                     Provide relevant insights, answer questions, and help users understand the content better.` 
+            content: `You are a helpful assistant discussing a note. Here is the note content that we're discussing:
+
+"${noteContent}"
+
+Your role is to help users understand this note better, answer questions about it, and provide relevant insights. Always reference specific parts of the note when answering questions.`
           },
           { role: 'user', content: message }
         ],
@@ -36,6 +41,8 @@ serve(async (req) => {
     });
 
     const data = await response.json();
+    console.log('OpenAI response:', data);
+
     const reply = data.choices[0].message.content;
 
     return new Response(JSON.stringify({ reply }), {

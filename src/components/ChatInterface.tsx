@@ -29,11 +29,15 @@ export const ChatInterface = ({ noteContent }: ChatInterfaceProps) => {
     setIsLoading(true);
 
     try {
+      console.log('Sending message with note content:', { message, noteContentLength: noteContent?.length });
+      
       const { data, error } = await supabase.functions.invoke('chat-with-note', {
         body: { message, noteContent }
       });
 
       if (error) throw error;
+
+      console.log('Received response:', data);
 
       const assistantMessage = { role: 'assistant' as const, content: data.reply };
       setMessages(prev => [...prev, assistantMessage]);
