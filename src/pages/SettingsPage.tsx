@@ -4,10 +4,17 @@ import { LogOut, Moon, Sun } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useEffect, useState } from "react";
 
 const SettingsPage = () => {
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -20,6 +27,11 @@ const SettingsPage = () => {
     }
   };
 
+  // Prevent hydration mismatch
+  if (!mounted) {
+    return null;
+  }
+
   return (
     <div className="container max-w-2xl py-4 space-y-8">
       <h1 className="text-2xl font-semibold">Settings</h1>
@@ -31,7 +43,7 @@ const SettingsPage = () => {
             <span>Dark Mode</span>
           </div>
           <Button
-            variant="ghost"
+            variant="outline"
             size="icon"
             onClick={() => setTheme(theme === "light" ? "dark" : "light")}
           >
