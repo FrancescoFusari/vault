@@ -12,7 +12,7 @@ export const DesktopNav = () => {
   const isActive = (path: string) => location.pathname === path;
   
   return (
-    <div className="hidden md:flex fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-b px-6 py-3 z-50">
+    <div className="hidden md:flex fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-lg border-b px-6 py-3 z-50 mb-12">
       <div className="flex-1 flex items-center gap-6">
         <button
           onClick={() => navigate('/')}
