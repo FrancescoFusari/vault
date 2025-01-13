@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { NoteDetail } from "@/components/NoteDetail";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ChatInterface } from "@/components/ChatInterface";
 
 type NoteMetadata = {
   technical_details?: string;
@@ -66,6 +67,7 @@ const NotePage = () => {
   return (
     <div className="container">
       <NoteDetail note={note} />
+      <ChatInterface noteContent={note.content} />
     </div>
   );
 };
