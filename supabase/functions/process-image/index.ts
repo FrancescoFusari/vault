@@ -78,14 +78,14 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are an AI that analyzes images and provides detailed descriptions with relevant tags and categories. Always respond with valid JSON in this format: {"description": "detailed description here", "tags": ["tag1", "tag2"], "category": "category name"}.'
+            content: 'You are an AI that analyzes images and provides detailed descriptions with relevant tags and categories. Respond with a JSON object containing three fields: "description" (string), "tags" (array of strings), and "category" (string). For example: {"description": "A scenic mountain landscape", "tags": ["nature", "mountains", "landscape"], "category": "Nature"}.'
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: 'Analyze this image and provide a detailed description, relevant tags, and a category. Respond ONLY with valid JSON.'
+                text: 'Analyze this image and provide a detailed description, relevant tags, and a category.'
               },
               {
                 type: 'image_url',
@@ -105,47 +105,58 @@ serve(async (req) => {
     }
 
     const analysisData = await openAIResponse.json();
+    console.log('Raw OpenAI response:', JSON.stringify(analysisData));
     
     if (!analysisData.choices?.[0]?.message?.content) {
       console.error('Unexpected OpenAI response format:', analysisData);
       throw new Error('Invalid response from OpenAI');
     }
 
+    let analysis;
     try {
       // Parse the response content as JSON
-      const analysis = JSON.parse(analysisData.choices[0].message.content);
-      console.log('OpenAI analysis complete:', analysis);
-
+      const content = analysisData.choices[0].message.content.trim();
+      console.log('Attempting to parse content:', content);
+      analysis = JSON.parse(content);
+      
       // Validate the required fields
       if (!analysis.description || !Array.isArray(analysis.tags) || !analysis.category) {
-        throw new Error('Invalid analysis format');
+        console.error('Invalid analysis structure:', analysis);
+        throw new Error('Missing required fields in analysis');
       }
-
-      // Create note with image analysis
-      const { data: note, error: noteError } = await supabase
-        .from('notes')
-        .insert({
-          user_id: user.id,
-          content: analysis.description,
-          category: analysis.category,
-          tags: analysis.tags,
-          input_type: 'image',
-          source_image_path: filePath
-        })
-        .select()
-        .single();
-
-      if (noteError) throw noteError;
-
-      return new Response(
-        JSON.stringify({ success: true, note }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-
+      
+      console.log('Successfully parsed analysis:', analysis);
     } catch (parseError) {
       console.error('Error parsing OpenAI response:', parseError);
-      throw new Error('Failed to parse OpenAI response as JSON');
+      console.error('Response content:', analysisData.choices[0].message.content);
+      throw new Error(`Failed to parse OpenAI response: ${parseError.message}`);
     }
+
+    // Create note with image analysis
+    const { data: note, error: noteError } = await supabase
+      .from('notes')
+      .insert({
+        user_id: user.id,
+        content: analysis.description,
+        category: analysis.category,
+        tags: analysis.tags,
+        input_type: 'image',
+        source_image_path: filePath
+      })
+      .select()
+      .single();
+
+    if (noteError) {
+      console.error('Error creating note:', noteError);
+      throw noteError;
+    }
+
+    console.log('Successfully created note:', note);
+
+    return new Response(
+      JSON.stringify({ success: true, note }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error) {
     console.error('Error processing image:', error);
