@@ -78,14 +78,14 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are an AI that analyzes images and provides detailed descriptions with relevant tags and categories. Respond with a JSON object containing three fields: "description" (string), "tags" (array of strings), and "category" (string). For example: {"description": "A scenic mountain landscape", "tags": ["nature", "mountains", "landscape"], "category": "Nature"}.'
+            content: 'You are an AI that analyzes images and provides detailed descriptions with relevant tags and categories. Return ONLY raw JSON without any markdown formatting or code blocks. The JSON should contain three fields: "description" (string), "tags" (array of strings), and "category" (string). Example: {"description": "A scenic mountain landscape", "tags": ["nature", "mountains", "landscape"], "category": "Nature"}'
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: 'Analyze this image and provide a detailed description, relevant tags, and a category.'
+                text: 'Analyze this image and provide a detailed description, relevant tags, and a category. Return ONLY raw JSON.'
               },
               {
                 type: 'image_url',
@@ -114,9 +114,13 @@ serve(async (req) => {
 
     let analysis;
     try {
-      // Parse the response content as JSON
-      const content = analysisData.choices[0].message.content.trim();
-      console.log('Attempting to parse content:', content);
+      // Clean up the response content by removing any markdown formatting
+      const content = analysisData.choices[0].message.content.trim()
+        .replace(/```json\n?/g, '') // Remove ```json
+        .replace(/```\n?/g, '')     // Remove closing ```
+        .trim();
+      
+      console.log('Cleaned content for parsing:', content);
       analysis = JSON.parse(content);
       
       // Validate the required fields
