@@ -4,6 +4,7 @@ import { Input } from "./ui/input";
 import { ScrollArea } from "./ui/scroll-area";
 import { Loader2, Send, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -19,6 +20,7 @@ export const ChatInterface = ({ noteContent }: ChatInterfaceProps) => {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const isMobile = useIsMobile();
 
   const handleSend = async () => {
     if (!message.trim() || isLoading) return;
@@ -48,7 +50,7 @@ export const ChatInterface = ({ noteContent }: ChatInterfaceProps) => {
     }
   };
 
-  if (!isOpen) {
+  if (!isOpen && isMobile) {
     return (
       <Button
         className="fixed bottom-24 right-4 md:bottom-4 rounded-full shadow-lg"
@@ -59,16 +61,18 @@ export const ChatInterface = ({ noteContent }: ChatInterfaceProps) => {
     );
   }
 
-  return (
-    <div className="fixed bottom-24 right-4 md:bottom-4 w-[90vw] max-w-[400px] bg-background border rounded-lg shadow-lg">
+  const chatContent = (
+    <div className={`${isMobile ? 'fixed bottom-24 right-4 w-[90vw] max-w-[400px]' : 'h-full'} bg-background border rounded-lg shadow-lg`}>
       <div className="flex items-center justify-between p-3 border-b">
         <h3 className="font-semibold">Chat about this note</h3>
-        <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
-          <X className="h-4 w-4" />
-        </Button>
+        {isMobile && (
+          <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+            <X className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
-      <ScrollArea className="h-[300px] p-4">
+      <ScrollArea className={`${isMobile ? 'h-[300px]' : 'h-[calc(100vh-13rem)]'} p-4`}>
         <div className="space-y-4">
           {messages.map((msg, i) => (
             <div
@@ -114,6 +118,12 @@ export const ChatInterface = ({ noteContent }: ChatInterfaceProps) => {
           </Button>
         </form>
       </div>
+    </div>
+  );
+
+  return isMobile ? chatContent : (
+    <div className="h-full sticky top-20">
+      {chatContent}
     </div>
   );
 };

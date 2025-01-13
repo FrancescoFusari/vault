@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { NoteDetail } from "@/components/NoteDetail";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChatInterface } from "@/components/ChatInterface";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type NoteMetadata = {
   technical_details?: string;
@@ -25,6 +26,7 @@ type Note = {
 
 const NotePage = () => {
   const { id } = useParams();
+  const isMobile = useIsMobile();
 
   const { data: note, isLoading } = useQuery({
     queryKey: ['note', id],
@@ -66,8 +68,17 @@ const NotePage = () => {
 
   return (
     <div className="container">
-      <NoteDetail note={note} />
-      <ChatInterface noteContent={note.content} />
+      <div className="flex flex-col md:flex-row md:gap-6">
+        <div className="flex-1">
+          <NoteDetail note={note} />
+        </div>
+        {!isMobile && (
+          <div className="w-[400px] shrink-0">
+            <ChatInterface noteContent={note.content} />
+          </div>
+        )}
+      </div>
+      {isMobile && <ChatInterface noteContent={note.content} />}
     </div>
   );
 };
