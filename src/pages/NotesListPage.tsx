@@ -30,8 +30,8 @@ const NotesListPage = () => {
       <div className="flex min-h-screen w-full">
         <TagsSidebar />
         <div className="flex-1">
-          <div className="container mx-auto py-8">
-            <h1 className="text-2xl font-semibold">Vault</h1>
+          <div className="container mx-auto py-8 md:mt-16">
+            <h1 className="text-2xl font-semibold mb-6">Vault</h1>
             {isLoading ? (
               <div className="text-center py-12">Loading notes...</div>
             ) : error ? (
