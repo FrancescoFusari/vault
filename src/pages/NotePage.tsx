@@ -79,11 +79,11 @@ const NotePage = () => {
               </div>
               {!isMobile && (
                 <div className="w-[400px] shrink-0">
-                  <ChatInterface noteContent={note.content} />
+                  <ChatInterface noteContent={note.content} noteId={note.id} />
                 </div>
               )}
             </div>
-            {isMobile && <ChatInterface noteContent={note.content} />}
+            {isMobile && <ChatInterface noteContent={note.content} noteId={note.id} />}
           </div>
         </div>
       </div>

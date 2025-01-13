@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { ScrollArea } from "./ui/scroll-area";
 import { Loader2, Send, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useQuery } from "@tanstack/react-query";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -13,26 +14,60 @@ interface Message {
 
 interface ChatInterfaceProps {
   noteContent: string;
+  noteId: string;
 }
 
-export const ChatInterface = ({ noteContent }: ChatInterfaceProps) => {
+export const ChatInterface = ({ noteContent, noteId }: ChatInterfaceProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const isMobile = useIsMobile();
+
+  // Fetch existing messages
+  const { data: messages = [], refetch: refetchMessages } = useQuery({
+    queryKey: ['chat-messages', noteId],
+    queryFn: async () => {
+      console.log('Fetching messages for note:', noteId);
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('note_id', noteId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching messages:', error);
+        throw error;
+      }
+
+      console.log('Fetched messages:', data);
+      return data.map(msg => ({
+        role: msg.role as 'user' | 'assistant',
+        content: msg.content
+      }));
+    }
+  });
 
   const handleSend = async () => {
     if (!message.trim() || isLoading) return;
 
     const userMessage = { role: 'user' as const, content: message };
-    setMessages(prev => [...prev, userMessage]);
-    setMessage('');
     setIsLoading(true);
 
     try {
       console.log('Sending message with note content:', { message, noteContentLength: noteContent?.length });
       
+      // Save user message
+      const { error: insertError } = await supabase
+        .from('chat_messages')
+        .insert({
+          note_id: noteId,
+          role: 'user',
+          content: message
+        });
+
+      if (insertError) throw insertError;
+
+      // Get AI response
       const { data, error } = await supabase.functions.invoke('chat-with-note', {
         body: { message, noteContent }
       });
@@ -41,10 +76,22 @@ export const ChatInterface = ({ noteContent }: ChatInterfaceProps) => {
 
       console.log('Received response:', data);
 
-      const assistantMessage = { role: 'assistant' as const, content: data.reply };
-      setMessages(prev => [...prev, assistantMessage]);
+      // Save assistant message
+      const { error: assistantInsertError } = await supabase
+        .from('chat_messages')
+        .insert({
+          note_id: noteId,
+          role: 'assistant',
+          content: data.reply
+        });
+
+      if (assistantInsertError) throw assistantInsertError;
+
+      // Refresh messages
+      refetchMessages();
+      setMessage('');
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Error in chat flow:', error);
     } finally {
       setIsLoading(false);
     }
