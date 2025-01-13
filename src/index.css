@@ -4,6 +4,29 @@
  
 @layer base {
   :root {
+    --background: 0 0% 100%;
+    --foreground: 229 19% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 229 19% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 229 19% 12%;
+    --primary: 229 19% 12%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 229 19% 12%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 229 19% 42%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 229 19% 12%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 229 19% 88%;
+    --input: 229 19% 88%;
+    --ring: 229 19% 12%;
+    --radius: 1rem;
+  }
+
+  .dark {
     --background: 229 19% 12%;
     --foreground: 40 33% 98%;
     --card: 229 19% 12%;
@@ -23,8 +46,6 @@
     --border: 229 19% 25%;
     --input: 229 19% 25%;
     --ring: 40 33% 98%;
-    --sidebar: 229 19% 15%;
-    --radius: 1rem;
   }
 }
  
@@ -46,7 +67,7 @@
 }
 
 .sidebar-container {
-  @apply fixed top-0 left-0 h-full w-64 bg-[#1A1F2C] border-r border-border/10 backdrop-blur-xl;
+  @apply fixed top-0 left-0 h-full w-64 bg-background border-r border-border/10 backdrop-blur-xl;
 }
 
 .main-content {
@@ -54,7 +75,7 @@
 }
 
 .floating-sidebar {
-  @apply fixed top-4 left-4 h-[calc(100vh-2rem)] w-60 bg-[#1A1F2C]/90 backdrop-blur-xl rounded-2xl border border-border/10 shadow-xl overflow-hidden;
+  @apply fixed top-4 left-4 h-[calc(100vh-2rem)] w-60 bg-background/90 backdrop-blur-xl rounded-2xl border border-border/10 shadow-xl overflow-hidden;
 }
 
 .page-title {
