@@ -4,6 +4,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { NoteDetail } from "@/components/NoteDetail";
 import { Skeleton } from "@/components/ui/skeleton";
 
+type NoteMetadata = {
+  technical_details?: string;
+  visual_elements?: string[];
+  color_palette?: string[];
+  composition_notes?: string;
+  estimated_date_or_period?: string;
+};
+
+type Note = {
+  id: string;
+  content: string;
+  category: string;
+  tags: string[];
+  created_at: string;
+  source_image_path?: string;
+  metadata: NoteMetadata | null;
+};
+
 const NotePage = () => {
   const { id } = useParams();
 
@@ -17,7 +35,19 @@ const NotePage = () => {
         .single();
       
       if (error) throw error;
-      return data;
+
+      // Transform the data to match the expected type
+      const transformedNote: Note = {
+        id: data.id,
+        content: data.content,
+        category: data.category,
+        tags: data.tags,
+        created_at: data.created_at,
+        source_image_path: data.source_image_path || undefined,
+        metadata: data.metadata as NoteMetadata || null,
+      };
+
+      return transformedNote;
     }
   });
 
