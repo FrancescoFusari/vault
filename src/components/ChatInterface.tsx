@@ -21,7 +21,19 @@ export const ChatInterface = ({ noteContent, noteId }: ChatInterfaceProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const isMobile = useIsMobile();
+
+  // Get current user's ID
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUserId(session.user.id);
+      }
+    };
+    getCurrentUser();
+  }, []);
 
   // Fetch existing messages
   const { data: messages = [], refetch: refetchMessages } = useQuery({
@@ -48,7 +60,7 @@ export const ChatInterface = ({ noteContent, noteId }: ChatInterfaceProps) => {
   });
 
   const handleSend = async () => {
-    if (!message.trim() || isLoading) return;
+    if (!message.trim() || isLoading || !userId) return;
 
     const userMessage = { role: 'user' as const, content: message };
     setIsLoading(true);
@@ -61,6 +73,7 @@ export const ChatInterface = ({ noteContent, noteId }: ChatInterfaceProps) => {
         .from('chat_messages')
         .insert({
           note_id: noteId,
+          user_id: userId,
           role: 'user',
           content: message
         });
@@ -81,6 +94,7 @@ export const ChatInterface = ({ noteContent, noteId }: ChatInterfaceProps) => {
         .from('chat_messages')
         .insert({
           note_id: noteId,
+          user_id: userId,
           role: 'assistant',
           content: data.reply
         });
