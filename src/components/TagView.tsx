@@ -19,6 +19,10 @@ interface Categories {
   [key: string]: string[];
 }
 
+interface LifeSections {
+  [key: string]: string[];
+}
+
 export const TagView = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -93,6 +97,25 @@ export const TagView = () => {
     const words = content.split(' ');
     return words.slice(0, 18).join(' ') + (words.length > 18 ? '...' : '');
   };
+
+  // Extract life sections from category names
+  const getLifeSections = (): LifeSections => {
+    if (!savedCategories) return {};
+    
+    const sections: Record<string, string[]> = {};
+    Object.entries(savedCategories).forEach(([category]) => {
+      const [section, name] = category.split(': ');
+      if (!sections[section]) {
+        sections[section] = [];
+      }
+      if (name && !sections[section].includes(name)) {
+        sections[section].push(name);
+      }
+    });
+    return sections;
+  };
+
+  const lifeSections = getLifeSections();
 
   const categorizeTags = async () => {
     setIsLoading(true);
