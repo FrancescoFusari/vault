@@ -29,11 +29,11 @@ serve(async (req) => {
         messages: [
           { 
             role: 'system', 
-            content: `You are a helpful assistant discussing a note. Here is the note content that we're discussing:
+            content: `You are a helpful assistant discussing a note. Here is the note content:
 
 "${noteContent}"
 
-Your role is to help users understand this note better, answer questions about it, and provide relevant insights. Always reference specific parts of the note when answering questions.`
+Provide concise, informative responses limited to 130 words. Focus on key information without using code blocks or special formatting. Reference specific parts of the note when relevant. Be direct and efficient in your explanations.`
           },
           { role: 'user', content: message }
         ],
