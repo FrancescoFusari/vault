@@ -1,9 +1,9 @@
 import { NoteInput } from "@/components/NoteInput";
-import { BottomNav } from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { analyzeNote } from "@/lib/openai";
+import { Github, Mail, Twitter, Linkedin, Facebook, Instagram, Youtube } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -38,6 +38,11 @@ const Index = () => {
     navigate('/auth');
   };
 
+  const handleServiceClick = (service: string) => {
+    console.log(`Clicked ${service} integration`);
+    // Implementation will be added later
+  };
+
   return (
     <div className="container mx-auto min-h-screen flex flex-col bg-background">
       <div className="flex justify-end p-4">
@@ -60,12 +65,82 @@ const Index = () => {
           </p>
         </div>
         
-        <div className="w-full max-w-2xl mx-auto">
+        <div className="w-full max-w-2xl mx-auto space-y-12">
           <NoteInput onNoteSubmit={handleNoteSubmit} />
+          
+          <div className="space-y-6">
+            <div className="text-center">
+              <h2 className="text-xl font-medium text-foreground mb-2">Connect services</h2>
+              <p className="text-sm text-muted-foreground">Import your data from other platforms</p>
+            </div>
+            
+            <div className="grid grid-cols-4 md:grid-cols-7 gap-4 p-6 rounded-lg border border-border bg-card shadow-sm">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="aspect-square rounded-xl hover:bg-secondary"
+                onClick={() => handleServiceClick('github')}
+              >
+                <Github className="h-6 w-6" />
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="icon"
+                className="aspect-square rounded-xl hover:bg-secondary"
+                onClick={() => handleServiceClick('gmail')}
+              >
+                <Mail className="h-6 w-6" />
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="icon"
+                className="aspect-square rounded-xl hover:bg-secondary"
+                onClick={() => handleServiceClick('twitter')}
+              >
+                <Twitter className="h-6 w-6" />
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="icon"
+                className="aspect-square rounded-xl hover:bg-secondary"
+                onClick={() => handleServiceClick('linkedin')}
+              >
+                <Linkedin className="h-6 w-6" />
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="icon"
+                className="aspect-square rounded-xl hover:bg-secondary"
+                onClick={() => handleServiceClick('facebook')}
+              >
+                <Facebook className="h-6 w-6" />
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="icon"
+                className="aspect-square rounded-xl hover:bg-secondary"
+                onClick={() => handleServiceClick('instagram')}
+              >
+                <Instagram className="h-6 w-6" />
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="icon"
+                className="aspect-square rounded-xl hover:bg-secondary"
+                onClick={() => handleServiceClick('youtube')}
+              >
+                <Youtube className="h-6 w-6" />
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
-      
-      <BottomNav />
     </div>
   );
 };
