@@ -78,14 +78,14 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are an AI that analyzes images and provides detailed descriptions with relevant tags and categories. Respond with a JSON object containing: description (string), tags (array of strings), and category (string).'
+            content: 'You are an AI that analyzes images and provides detailed descriptions with relevant tags and categories. Always respond with valid JSON in this format: {"description": "detailed description here", "tags": ["tag1", "tag2"], "category": "category name"}.'
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: 'Please analyze this image and provide a detailed description, relevant tags, and a category.'
+                text: 'Analyze this image and provide a detailed description, relevant tags, and a category. Respond ONLY with valid JSON.'
               },
               {
                 type: 'image_url',
@@ -111,29 +111,41 @@ serve(async (req) => {
       throw new Error('Invalid response from OpenAI');
     }
 
-    const analysis = JSON.parse(analysisData.choices[0].message.content);
-    console.log('OpenAI analysis complete:', analysis);
+    try {
+      // Parse the response content as JSON
+      const analysis = JSON.parse(analysisData.choices[0].message.content);
+      console.log('OpenAI analysis complete:', analysis);
 
-    // Create note with image analysis
-    const { data: note, error: noteError } = await supabase
-      .from('notes')
-      .insert({
-        user_id: user.id,
-        content: analysis.description,
-        category: analysis.category,
-        tags: analysis.tags,
-        input_type: 'image',
-        source_image_path: filePath
-      })
-      .select()
-      .single();
+      // Validate the required fields
+      if (!analysis.description || !Array.isArray(analysis.tags) || !analysis.category) {
+        throw new Error('Invalid analysis format');
+      }
 
-    if (noteError) throw noteError;
+      // Create note with image analysis
+      const { data: note, error: noteError } = await supabase
+        .from('notes')
+        .insert({
+          user_id: user.id,
+          content: analysis.description,
+          category: analysis.category,
+          tags: analysis.tags,
+          input_type: 'image',
+          source_image_path: filePath
+        })
+        .select()
+        .single();
 
-    return new Response(
-      JSON.stringify({ success: true, note }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+      if (noteError) throw noteError;
+
+      return new Response(
+        JSON.stringify({ success: true, note }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+
+    } catch (parseError) {
+      console.error('Error parsing OpenAI response:', parseError);
+      throw new Error('Failed to parse OpenAI response as JSON');
+    }
 
   } catch (error) {
     console.error('Error processing image:', error);
