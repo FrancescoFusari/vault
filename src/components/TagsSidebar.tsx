@@ -37,7 +37,7 @@ export const TagsSidebar = () => {
     <>
       {/* Desktop Sidebar */}
       <div className="hidden md:block">
-        <div className="floating-sidebar">
+        <div className="floating-sidebar mt-[84px]">
           <SidebarContentComponent />
         </div>
       </div>
