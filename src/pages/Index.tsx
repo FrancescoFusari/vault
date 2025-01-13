@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { analyzeNote } from "@/lib/openai";
-import { Github, Mail, Twitter, Linkedin, Facebook, Instagram, Youtube, MessageSquare, X } from "lucide-react";
+import { Github, Mail, X, MessageSquare, Linkedin, Facebook, Instagram, Youtube, BookOpen, Cloud, Notebook } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -145,6 +145,33 @@ const Index = () => {
                 onClick={() => handleServiceClick('youtube')}
               >
                 <Youtube className="h-6 w-6" />
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="aspect-square rounded-xl hover:bg-secondary"
+                onClick={() => handleServiceClick('notion')}
+              >
+                <Notebook className="h-6 w-6" />
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="aspect-square rounded-xl hover:bg-secondary"
+                onClick={() => handleServiceClick('obsidian')}
+              >
+                <BookOpen className="h-6 w-6" />
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="aspect-square rounded-xl hover:bg-secondary"
+                onClick={() => handleServiceClick('google-drive')}
+              >
+                <Cloud className="h-6 w-6" />
               </Button>
             </div>
           </div>
