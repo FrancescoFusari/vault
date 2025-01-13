@@ -39,7 +39,7 @@ function App() {
     <>
       <div className="min-h-screen bg-background">
         {isAuthenticated && <DesktopNav />}
-        <main className={isAuthenticated ? "pb-24 md:ml-64 md:pb-4" : ""}>
+        <main className={isAuthenticated ? "pb-24 md:ml-64 md:pb-4 pt-[72px]" : ""}>
           <Routes>
             <Route
               path="/auth"
