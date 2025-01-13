@@ -16,7 +16,8 @@ interface NoteListProps {
 }
 
 export const NoteList = ({ notes }: NoteListProps) => {
-  if (notes.length === 0) {
+  // Add a safety check for notes
+  if (!notes || notes.length === 0) {
     return (
       <div className="text-center text-muted-foreground py-12">
         No notes yet. Start by adding one above!
