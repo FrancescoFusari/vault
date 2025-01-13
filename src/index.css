@@ -4,29 +4,6 @@
  
 @layer base {
   :root {
-    --background: 40 33% 98%;
-    --foreground: 229 19% 22%;
-    --card: 40 33% 98%;
-    --card-foreground: 229 19% 22%;
-    --popover: 40 33% 98%;
-    --popover-foreground: 229 19% 22%;
-    --primary: 229 19% 22%;
-    --primary-foreground: 40 33% 98%;
-    --secondary: 40 10% 94%;
-    --secondary-foreground: 229 19% 22%;
-    --muted: 40 10% 94%;
-    --muted-foreground: 229 10% 45%;
-    --accent: 40 10% 94%;
-    --accent-foreground: 229 19% 22%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 40 10% 90%;
-    --input: 40 10% 90%;
-    --ring: 229 19% 22%;
-    --radius: 0.5rem;
-  }
-
-  .dark {
     --background: 229 19% 12%;
     --foreground: 40 33% 98%;
     --card: 229 19% 12%;
@@ -46,6 +23,7 @@
     --border: 229 19% 25%;
     --input: 229 19% 25%;
     --ring: 40 33% 98%;
+    --sidebar: 229 19% 15%;
   }
 }
  
@@ -64,4 +42,36 @@
 
 .tag {
   @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors;
+}
+
+.sidebar-container {
+  @apply fixed top-0 left-0 h-full w-64 bg-[#1A1F2C] border-r border-border/10 backdrop-blur-xl;
+}
+
+.main-content {
+  @apply ml-64 p-8;
+}
+
+.floating-sidebar {
+  @apply fixed top-4 left-4 h-[calc(100vh-2rem)] w-60 bg-[#1A1F2C]/90 backdrop-blur-xl rounded-xl border border-border/10 shadow-xl overflow-hidden;
+}
+
+.page-title {
+  @apply text-2xl font-semibold mb-6 text-foreground/90;
+}
+
+.section-title {
+  @apply text-lg font-medium mb-4 text-foreground/80;
+}
+
+.card-grid {
+  @apply grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+}
+
+.tag-badge {
+  @apply px-2 py-1 rounded-full text-xs font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors;
+}
+
+.category-card {
+  @apply p-4 rounded-xl bg-secondary/50 border border-border/10 hover:bg-secondary/70 transition-all;
 }

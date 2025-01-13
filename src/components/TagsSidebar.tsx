@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ChevronRight, FolderClosed, Hash, Menu, StickyNote, X } from "lucide-react";
 import {
   Sidebar,
-  SidebarContent as BaseSidebarContent,
+  SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -37,9 +37,9 @@ export const TagsSidebar = () => {
     <>
       {/* Desktop Sidebar */}
       <div className="hidden md:block">
-        <Sidebar variant="floating">
+        <div className="floating-sidebar">
           <SidebarContentComponent />
-        </Sidebar>
+        </div>
       </div>
 
       {/* Mobile Layout */}
@@ -48,23 +48,20 @@ export const TagsSidebar = () => {
         <Button
           variant="outline"
           size="icon"
-          className="fixed top-4 left-4 z-50"
+          className="fixed top-4 left-4 z-50 bg-background/50 backdrop-blur-sm"
           onClick={() => setOpen(!open)}
         >
           {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
         </Button>
 
-        {/* Mobile Sidebar and Content Container */}
-        <div className="flex min-h-screen w-full">
-          {/* Sidebar */}
-          <div
-            className={`fixed inset-y-0 left-0 w-[300px] bg-background/80 backdrop-blur-sm transform transition-transform duration-300 ease-in-out ${
-              open ? 'translate-x-0' : '-translate-x-full'
-            }`}
-          >
-            <div className="h-full overflow-y-auto pt-16">
-              <SidebarContentComponent />
-            </div>
+        {/* Mobile Sidebar */}
+        <div
+          className={`fixed inset-y-0 left-0 w-[300px] bg-background/80 backdrop-blur-sm transform transition-transform duration-300 ease-in-out ${
+            open ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          <div className="h-full overflow-y-auto pt-16">
+            <SidebarContentComponent />
           </div>
         </div>
       </div>
@@ -154,7 +151,7 @@ const SidebarContentComponent = () => {
   };
 
   return (
-    <BaseSidebarContent className="pt-4">
+    <SidebarContent className="pt-4">
       <SidebarGroup>
         <SidebarGroupLabel>Life Sections</SidebarGroupLabel>
         <SidebarGroupContent>
@@ -224,6 +221,6 @@ const SidebarContentComponent = () => {
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
-    </BaseSidebarContent>
+    </SidebarContent>
   );
 };

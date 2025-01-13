@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 interface Note {
   id: string;
@@ -166,48 +167,34 @@ export const TagView = () => {
     );
   }
 
-  // Extract life sections from category names
-  const getLifeSections = () => {
-    if (!savedCategories) return {};
-    
-    const sections: Record<string, string[]> = {};
-    Object.entries(savedCategories).forEach(([category, tags]) => {
-      const [section, name] = category.split(': ');
-      if (!sections[section]) {
-        sections[section] = [];
-      }
-      sections[section].push(name);
-    });
-    return sections;
-  };
-
   if (selectedTag) {
     const tagNotes = tagMap.get(selectedTag) || [];
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <button 
+          <Button 
+            variant="ghost" 
             onClick={() => setSelectedTag(null)}
             className="text-sm text-muted-foreground hover:text-primary"
           >
             ← Back to all tags
-          </button>
+          </Button>
           <Badge variant="secondary" className="text-sm">
             {selectedTag} ({tagNotes.length})
           </Badge>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="card-grid">
           {tagNotes.map(note => (
             <Card 
               key={note.id}
-              className="cursor-pointer hover:bg-accent transition-colors"
+              className="note-card bg-secondary/50 border-border/10"
               onClick={() => navigate(`/note/${note.id}`)}
             >
               <CardHeader className="space-y-2">
-                <h3 className="font-medium text-lg">
-                  {note.content.split('\n')[0].substring(0, 50)}
+                <h3 className="font-medium text-lg line-clamp-1">
+                  {note.content.split('\n')[0]}
                 </h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground line-clamp-3">
                   {getPreviewContent(note.content)}
                 </p>
               </CardHeader>
@@ -218,8 +205,6 @@ export const TagView = () => {
     );
   }
 
-  const lifeSections = getLifeSections();
-
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center gap-4">
@@ -227,36 +212,52 @@ export const TagView = () => {
           <Button 
             onClick={categorizeTags} 
             disabled={isLoading}
-            variant="outline"
+            variant="secondary"
+            className="hover:bg-secondary/80"
           >
-            {isLoading ? "Categorizing..." : "Categorize Tags"}
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Categorizing...
+              </>
+            ) : (
+              "Categorize Tags"
+            )}
           </Button>
         )}
         {savedCategories && (
           <Button
             onClick={categorizeCategories}
             disabled={isCategorizing}
-            variant="outline"
+            variant="secondary"
+            className="hover:bg-secondary/80"
           >
-            {isCategorizing ? "Organizing..." : "Categorize Categories :)"}
+            {isCategorizing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Organizing...
+              </>
+            ) : (
+              "Organize Categories"
+            )}
           </Button>
         )}
       </div>
 
       {Object.keys(lifeSections).length > 0 && (
         <div className="space-y-6">
-          <h2 className="text-lg font-semibold">Life Sections</h2>
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          <h2 className="section-title">Life Sections</h2>
+          <div className="card-grid">
             {Object.entries(lifeSections).map(([section, categories]) => (
-              <Card key={section}>
-                <CardHeader>
-                  <h3 className="font-medium capitalize">{section}</h3>
-                  <div className="flex flex-wrap gap-2 mt-2">
+              <Card key={section} className="category-card">
+                <CardHeader className="p-4">
+                  <h3 className="font-medium capitalize mb-3">{section}</h3>
+                  <div className="flex flex-wrap gap-2">
                     {categories.map(category => (
                       <Badge 
                         key={category}
                         variant="secondary"
-                        className="capitalize"
+                        className="capitalize tag-badge"
                       >
                         {category}
                       </Badge>
@@ -271,17 +272,17 @@ export const TagView = () => {
 
       {savedCategories && (
         <div className="space-y-6">
-          <h2 className="text-lg font-semibold">Categories and Tags</h2>
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          <h2 className="section-title">Categories and Tags</h2>
+          <div className="card-grid">
             {Object.entries(savedCategories).map(([category, tags]) => (
-              <Card key={category}>
-                <CardHeader>
-                  <h3 className="font-medium capitalize">{category.split(': ')[1]}</h3>
-                  <div className="flex flex-wrap gap-2 mt-2">
+              <Card key={category} className="category-card">
+                <CardHeader className="p-4">
+                  <h3 className="font-medium capitalize mb-3">{category.split(': ')[1]}</h3>
+                  <div className="flex flex-wrap gap-2">
                     {tags.map(tag => (
                       <Badge 
                         key={tag}
-                        className="cursor-pointer hover:bg-primary"
+                        className="tag-badge cursor-pointer"
                         onClick={() => setSelectedTag(tag)}
                       >
                         {tag}
@@ -296,15 +297,15 @@ export const TagView = () => {
       )}
 
       {(!savedCategories || shouldShowCategorizeButton()) && (
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        <div className="card-grid">
           {sortedTags.map(([tag, tagNotes]) => (
             <Card 
               key={tag}
-              className="cursor-pointer hover:bg-accent transition-colors"
+              className="category-card cursor-pointer"
               onClick={() => setSelectedTag(tag)}
             >
-              <CardHeader className="space-y-2">
-                <Badge variant="secondary" className="text-sm inline-block">
+              <CardHeader className="p-4 space-y-2">
+                <Badge variant="secondary" className="tag-badge inline-block">
                   {tag}
                 </Badge>
                 <p className="text-sm text-muted-foreground">
