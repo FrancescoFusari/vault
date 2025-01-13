@@ -17,6 +17,7 @@ interface NoteDetailProps {
     category: string;
     tags: string[];
     created_at: string;
+    source_image_path?: string;
   };
 }
 
@@ -28,6 +29,11 @@ export const NoteDetail = ({ note }: NoteDetailProps) => {
   const [isRegeneratingTags, setIsRegeneratingTags] = useState(false);
   const [newTag, setNewTag] = useState("");
   const [editingTag, setEditingTag] = useState<{ original: string; new: string } | null>(null);
+
+  // Get the public URL for the image if it exists
+  const imageUrl = note.source_image_path 
+    ? supabase.storage.from('note_images').getPublicUrl(note.source_image_path).data.publicUrl
+    : null;
 
   const updateNoteMutation = useMutation({
     mutationFn: async (tags: string[]) => {
@@ -146,6 +152,15 @@ export const NoteDetail = ({ note }: NoteDetailProps) => {
           </div>
         </CardHeader>
         <CardContent>
+          {imageUrl && (
+            <div className="mb-6">
+              <img 
+                src={imageUrl} 
+                alt="Note source" 
+                className="rounded-lg max-h-96 w-full object-cover"
+              />
+            </div>
+          )}
           <p className="whitespace-pre-wrap mb-4">{note.content}</p>
           
           {/* Tag Management Section */}
