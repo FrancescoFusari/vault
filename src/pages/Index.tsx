@@ -74,7 +74,7 @@ const Index = () => {
               <p className="text-sm text-muted-foreground">Import your data from other platforms</p>
             </div>
             
-            <div className="grid grid-cols-4 md:grid-cols-7 gap-6 p-6 rounded-lg border border-border bg-card shadow-sm">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 gap-4 p-6 rounded-lg border border-border bg-card shadow-sm">
               <div className="flex flex-col items-center gap-2">
                 <Button
                   variant="ghost"
@@ -82,9 +82,9 @@ const Index = () => {
                   className="aspect-square rounded-xl hover:bg-secondary"
                   onClick={() => handleServiceClick('github')}
                 >
-                  <Github className="h-6 w-6" />
+                  <Github className="h-5 w-5" />
                 </Button>
-                <span className="text-xs text-muted-foreground">GitHub</span>
+                <span className="text-xs text-muted-foreground text-center">GitHub</span>
               </div>
               
               <div className="flex flex-col items-center gap-2">
@@ -94,9 +94,9 @@ const Index = () => {
                   className="aspect-square rounded-xl hover:bg-secondary"
                   onClick={() => handleServiceClick('gmail')}
                 >
-                  <Mail className="h-6 w-6" />
+                  <Mail className="h-5 w-5" />
                 </Button>
-                <span className="text-xs text-muted-foreground">Gmail</span>
+                <span className="text-xs text-muted-foreground text-center">Gmail</span>
               </div>
               
               <div className="flex flex-col items-center gap-2">
@@ -106,9 +106,9 @@ const Index = () => {
                   className="aspect-square rounded-xl hover:bg-secondary"
                   onClick={() => handleServiceClick('x')}
                 >
-                  <X className="h-6 w-6" />
+                  <X className="h-5 w-5" />
                 </Button>
-                <span className="text-xs text-muted-foreground">X</span>
+                <span className="text-xs text-muted-foreground text-center">X</span>
               </div>
               
               <div className="flex flex-col items-center gap-2">
@@ -118,9 +118,9 @@ const Index = () => {
                   className="aspect-square rounded-xl hover:bg-secondary"
                   onClick={() => handleServiceClick('threads')}
                 >
-                  <MessageSquare className="h-6 w-6" />
+                  <MessageSquare className="h-5 w-5" />
                 </Button>
-                <span className="text-xs text-muted-foreground">Threads</span>
+                <span className="text-xs text-muted-foreground text-center">Threads</span>
               </div>
               
               <div className="flex flex-col items-center gap-2">
@@ -130,9 +130,9 @@ const Index = () => {
                   className="aspect-square rounded-xl hover:bg-secondary"
                   onClick={() => handleServiceClick('linkedin')}
                 >
-                  <Linkedin className="h-6 w-6" />
+                  <Linkedin className="h-5 w-5" />
                 </Button>
-                <span className="text-xs text-muted-foreground">LinkedIn</span>
+                <span className="text-xs text-muted-foreground text-center">LinkedIn</span>
               </div>
               
               <div className="flex flex-col items-center gap-2">
@@ -142,9 +142,9 @@ const Index = () => {
                   className="aspect-square rounded-xl hover:bg-secondary"
                   onClick={() => handleServiceClick('facebook')}
                 >
-                  <Facebook className="h-6 w-6" />
+                  <Facebook className="h-5 w-5" />
                 </Button>
-                <span className="text-xs text-muted-foreground">Facebook</span>
+                <span className="text-xs text-muted-foreground text-center">Facebook</span>
               </div>
               
               <div className="flex flex-col items-center gap-2">
@@ -154,9 +154,9 @@ const Index = () => {
                   className="aspect-square rounded-xl hover:bg-secondary"
                   onClick={() => handleServiceClick('instagram')}
                 >
-                  <Instagram className="h-6 w-6" />
+                  <Instagram className="h-5 w-5" />
                 </Button>
-                <span className="text-xs text-muted-foreground">Instagram</span>
+                <span className="text-xs text-muted-foreground text-center">Instagram</span>
               </div>
               
               <div className="flex flex-col items-center gap-2">
@@ -166,9 +166,9 @@ const Index = () => {
                   className="aspect-square rounded-xl hover:bg-secondary"
                   onClick={() => handleServiceClick('youtube')}
                 >
-                  <Youtube className="h-6 w-6" />
+                  <Youtube className="h-5 w-5" />
                 </Button>
-                <span className="text-xs text-muted-foreground">YouTube</span>
+                <span className="text-xs text-muted-foreground text-center">YouTube</span>
               </div>
 
               <div className="flex flex-col items-center gap-2">
@@ -178,9 +178,9 @@ const Index = () => {
                   className="aspect-square rounded-xl hover:bg-secondary"
                   onClick={() => handleServiceClick('notion')}
                 >
-                  <Notebook className="h-6 w-6" />
+                  <Notebook className="h-5 w-5" />
                 </Button>
-                <span className="text-xs text-muted-foreground">Notion</span>
+                <span className="text-xs text-muted-foreground text-center">Notion</span>
               </div>
 
               <div className="flex flex-col items-center gap-2">
@@ -190,9 +190,9 @@ const Index = () => {
                   className="aspect-square rounded-xl hover:bg-secondary"
                   onClick={() => handleServiceClick('obsidian')}
                 >
-                  <BookOpen className="h-6 w-6" />
+                  <BookOpen className="h-5 w-5" />
                 </Button>
-                <span className="text-xs text-muted-foreground">Obsidian</span>
+                <span className="text-xs text-muted-foreground text-center">Obsidian</span>
               </div>
 
               <div className="flex flex-col items-center gap-2">
@@ -202,9 +202,9 @@ const Index = () => {
                   className="aspect-square rounded-xl hover:bg-secondary"
                   onClick={() => handleServiceClick('google-drive')}
                 >
-                  <Cloud className="h-6 w-6" />
+                  <Cloud className="h-5 w-5" />
                 </Button>
-                <span className="text-xs text-muted-foreground">Drive</span>
+                <span className="text-xs text-muted-foreground text-center">Drive</span>
               </div>
             </div>
           </div>
