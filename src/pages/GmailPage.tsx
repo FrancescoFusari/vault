@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Mail } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const GmailPage = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -29,15 +29,24 @@ const GmailPage = () => {
     }
   };
 
-  const handleGmailConnect = () => {
-    // Initialize Google OAuth
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    const redirectUri = `${window.location.origin}/auth/callback/google`;
-    const scope = 'https://www.googleapis.com/auth/gmail.readonly';
-    
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
-    
-    window.location.href = authUrl;
+  const handleGmailConnect = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('gmail-auth', {
+        body: { action: 'get-auth-url' }
+      });
+
+      if (error) throw error;
+      if (data?.authUrl) {
+        window.location.href = data.authUrl;
+      }
+    } catch (error) {
+      console.error('Error initiating Gmail connection:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to connect to Gmail. Please try again.",
+      });
+    }
   };
 
   const handleGmailDisconnect = async () => {
