@@ -23,10 +23,12 @@ serve(async (req) => {
 
     if (action === 'get-auth-url') {
       // Generate OAuth URL
-      const redirectUri = `${SUPABASE_URL}/auth/callback/google`
+      const redirectUri = `${SUPABASE_URL}/functions/v1/gmail-auth`
       const scope = 'https://www.googleapis.com/auth/gmail.readonly'
       
       const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`
+      
+      console.log('Generated auth URL:', authUrl)
       
       return new Response(
         JSON.stringify({ authUrl }),
@@ -36,6 +38,8 @@ serve(async (req) => {
         },
       )
     } else if (action === 'exchange-code' && code) {
+      const redirectUri = `${SUPABASE_URL}/functions/v1/gmail-auth`
+      
       // Exchange code for tokens
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
@@ -46,7 +50,7 @@ serve(async (req) => {
           code,
           client_id: GOOGLE_CLIENT_ID!,
           client_secret: GOOGLE_CLIENT_SECRET!,
-          redirect_uri: `${SUPABASE_URL}/auth/callback/google`,
+          redirect_uri: redirectUri,
           grant_type: 'authorization_code',
         }),
       })
