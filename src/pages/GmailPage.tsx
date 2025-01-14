@@ -31,8 +31,16 @@ const GmailPage = () => {
 
   const handleGmailConnect = async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
       const { data, error } = await supabase.functions.invoke('gmail-auth', {
-        body: { action: 'get-auth-url' }
+        body: { action: 'get-auth-url' },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
       });
 
       if (error) throw error;
