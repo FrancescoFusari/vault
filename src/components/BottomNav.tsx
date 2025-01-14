@@ -1,4 +1,4 @@
-import { List, Tag, FileText, Settings, Square } from "lucide-react";
+import { List, Tag, FileText, Settings, Square, Mail } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 export const BottomNav = () => {
@@ -29,6 +29,13 @@ export const BottomNav = () => {
       >
         <Tag className="h-5 w-5" />
         <span className="text-xs mt-1">Tags</span>
+      </button>
+      <button
+        onClick={() => navigate('/gmail')}
+        className={`flex flex-col items-center ${isActive('/gmail') ? 'text-primary' : 'text-muted-foreground'}`}
+      >
+        <Mail className="h-5 w-5" />
+        <span className="text-xs mt-1">Gmail</span>
       </button>
       <button
         onClick={() => navigate('/network3d')}

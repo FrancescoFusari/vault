@@ -1,4 +1,4 @@
-import { List, Tag, FileText, Square, Settings } from "lucide-react";
+import { List, Tag, FileText, Square, Settings, Mail } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { Button } from "./ui/button";
@@ -41,6 +41,13 @@ export const DesktopNav = () => {
         >
           <Square className="h-5 w-5" />
           <span>Network 3D</span>
+        </button>
+        <button
+          onClick={() => navigate('/gmail')}
+          className={`flex items-center gap-2 ${isActive('/gmail') ? 'text-primary' : 'text-muted-foreground'} hover:text-primary transition-colors rounded-lg px-3 py-2 hover:bg-secondary/50`}
+        >
+          <Mail className="h-5 w-5" />
+          <span>Gmail</span>
         </button>
         <button
           onClick={() => navigate('/settings')}
