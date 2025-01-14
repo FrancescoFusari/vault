@@ -18,26 +18,14 @@ serve(async (req) => {
   }
 
   try {
+    const url = new URL(req.url)
+    const code = url.searchParams.get('code')
     const supabase = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!)
-    const { action, code } = await req.json()
 
-    if (action === 'get-auth-url') {
-      // Generate OAuth URL
-      const redirectUri = `${SUPABASE_URL}/functions/v1/gmail-auth`
-      const scope = 'https://www.googleapis.com/auth/gmail.readonly'
+    // Handle OAuth callback
+    if (code) {
+      console.log('Received OAuth callback with code:', code)
       
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`
-      
-      console.log('Generated auth URL:', authUrl)
-      
-      return new Response(
-        JSON.stringify({ authUrl }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        },
-      )
-    } else if (action === 'exchange-code' && code) {
       const redirectUri = `${SUPABASE_URL}/functions/v1/gmail-auth`
       
       // Exchange code for tokens
@@ -62,9 +50,18 @@ serve(async (req) => {
         throw new Error(tokens.error_description || tokens.error)
       }
 
-      // Get the user's auth session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      if (sessionError || !session) {
+      // Get authorization header from request
+      const authHeader = req.headers.get('Authorization')
+      if (!authHeader) {
+        throw new Error('Missing authorization header')
+      }
+
+      // Get user session from Supabase
+      const { data: { user }, error: authError } = await supabase.auth.getUser(
+        authHeader.replace('Bearer ', '')
+      )
+      
+      if (authError || !user) {
         throw new Error('Not authenticated')
       }
 
@@ -72,7 +69,7 @@ serve(async (req) => {
       const { error: insertError } = await supabase
         .from('gmail_integrations')
         .upsert({
-          user_id: session.user.id,
+          user_id: user.id,
           access_token: tokens.access_token,
           refresh_token: tokens.refresh_token,
           expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
@@ -82,8 +79,29 @@ serve(async (req) => {
         throw insertError
       }
 
+      // Redirect back to the application
+      return new Response(null, {
+        status: 302,
+        headers: {
+          ...corsHeaders,
+          'Location': `${SUPABASE_URL}/gmail?success=true`,
+        },
+      })
+    }
+
+    // Handle initial auth URL generation
+    const { action } = await req.json()
+    
+    if (action === 'get-auth-url') {
+      const redirectUri = `${SUPABASE_URL}/functions/v1/gmail-auth`
+      const scope = 'https://www.googleapis.com/auth/gmail.readonly'
+      
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`
+      
+      console.log('Generated auth URL:', authUrl)
+      
       return new Response(
-        JSON.stringify({ success: true }),
+        JSON.stringify({ authUrl }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200,

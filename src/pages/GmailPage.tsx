@@ -37,10 +37,7 @@ const GmailPage = () => {
       }
 
       const { data, error } = await supabase.functions.invoke('gmail-auth', {
-        body: { action: 'get-auth-url' },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
+        body: { action: 'get-auth-url' }
       });
 
       if (error) throw error;
