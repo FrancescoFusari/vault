@@ -30,15 +30,16 @@ export const Network3DGraph = ({ notes, searchQuery = '' }: Network3DGraphProps)
   const dimensions = useGraphDimensions(containerRef, isMobile);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [highlightedNode, setHighlightedNode] = useState<NetworkNode | null>(null);
+  const [searchResults, setSearchResults] = useState<NetworkNode[]>([]);
 
   const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
 
   // Search and highlight functionality
   useEffect(() => {
-    if (searchQuery && graphRef.current) {
+    if (searchQuery) {
       console.log('Searching for:', searchQuery);
       const lowerQuery = searchQuery.toLowerCase();
-      const foundNode = nodes.find(node => {
+      const results = nodes.filter(node => {
         const isMatch = node.name.toLowerCase().includes(lowerQuery) ||
           (node.type === 'tag' && node.name.toLowerCase().includes(lowerQuery));
         if (isMatch) {
@@ -47,7 +48,10 @@ export const Network3DGraph = ({ notes, searchQuery = '' }: Network3DGraphProps)
         return isMatch;
       });
 
-      if (foundNode) {
+      setSearchResults(results);
+
+      if (results.length > 0 && graphRef.current) {
+        const foundNode = results[0];
         console.log('Setting highlighted node:', foundNode);
         setHighlightedNode(foundNode);
         
@@ -68,6 +72,7 @@ export const Network3DGraph = ({ notes, searchQuery = '' }: Network3DGraphProps)
         setHighlightedNode(null);
       }
     } else {
+      setSearchResults([]);
       setHighlightedNode(null);
     }
   }, [searchQuery, nodes]);
@@ -81,6 +86,22 @@ export const Network3DGraph = ({ notes, searchQuery = '' }: Network3DGraphProps)
       }
     }
   }, [isMobile, navigate]);
+
+  const handleSearchResultClick = (node: NetworkNode) => {
+    setHighlightedNode(node);
+    if (graphRef.current) {
+      const distance = 200;
+      const position = node.x && node.y && node.z
+        ? { x: node.x, y: node.y, z: node.z + distance }
+        : { x: 0, y: 0, z: distance };
+      
+      graphRef.current.cameraPosition(
+        position,
+        node,
+        2000
+      );
+    }
+  };
 
   useEffect(() => {
     if (graphRef.current && isMobile) {
@@ -176,6 +197,42 @@ export const Network3DGraph = ({ notes, searchQuery = '' }: Network3DGraphProps)
       ref={containerRef} 
       className="absolute inset-0 w-full h-full touch-pan-y touch-pinch-zoom"
     >
+      <div className="absolute top-4 left-4 right-4 z-10">
+        <div className="relative max-w-md mx-auto">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input
+            type="text"
+            placeholder="Search notes and tags..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 bg-background/80 backdrop-blur-sm"
+          />
+          {searchResults.length > 0 && (
+            <div className="absolute w-full mt-2 p-2 bg-background/95 backdrop-blur-sm rounded-lg border border-border/50 shadow-lg max-h-60 overflow-y-auto">
+              {searchResults.map((result) => (
+                <button
+                  key={result.id}
+                  onClick={() => handleSearchResultClick(result)}
+                  className={`w-full text-left px-3 py-2 rounded-md mb-1 last:mb-0 flex items-center gap-2 hover:bg-accent transition-colors ${
+                    highlightedNode?.id === result.id ? 'bg-accent' : ''
+                  }`}
+                >
+                  {result.type === 'tag' ? (
+                    <div className="tag-badge"># {result.name}</div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      {result.originalNote?.input_type === 'url' && (
+                        <Link2Icon className="h-4 w-4 text-blue-500" />
+                      )}
+                      <span className="truncate">{result.name}</span>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
       <ForceGraph3D
         ref={graphRef}
         width={dimensions.width}
