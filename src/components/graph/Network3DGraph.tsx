@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useTheme } from 'next-themes';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
@@ -30,18 +30,21 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const highlightedNodeRef = useRef<NetworkNode | null>(null);
   
   const [settings, setSettings] = useState<Network3DSettings>({
-    nodeSize: 6,
-    linkWidth: 1,
-    enableNodeDrag: true,
+    nodeSize: isMobile ? 4 : 6, // Reduced node size for mobile
+    linkWidth: isMobile ? 0.5 : 1, // Thinner links for mobile
+    enableNodeDrag: !isMobile, // Disable node drag on mobile
     enableNavigationControls: true,
-    showNavInfo: true,
+    showNavInfo: !isMobile, // Hide nav info on mobile
     enablePointerInteraction: true,
     backgroundColor: theme === 'dark' ? 'hsl(229 19% 12%)' : 'hsl(40 33% 98%)',
-    enableNodeFixing: true,
-    enableCurvedLinks: true
+    enableNodeFixing: !isMobile, // Disable node fixing on mobile
+    enableCurvedLinks: !isMobile // Disable curved links on mobile
   });
 
-  const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
+  // Memoize graph data processing
+  const { nodes, links, tagUsageCount, colorScale } = useMemo(() => 
+    processNetworkData(notes), [notes]
+  );
 
   // Add performance monitoring
   useEffect(() => {
@@ -105,14 +108,8 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     }, 3000); // Wait for camera animation to complete
   };
 
-  const getLinkColor = (link: NetworkLink) => {
-    // Check if the link is connected to the highlighted node
-    if (highlightedNodeRef.current && 
-       (link.source.id === highlightedNodeRef.current.id || 
-        link.target.id === highlightedNodeRef.current.id)) {
-      return '#ea384c'; // Red color for highlighted links
-    }
-    
+  // Memoize color functions
+  const getLinkColor = useMemo(() => (link: NetworkLink) => {
     if (!link.source || !link.target) return theme === 'dark' ? '#475569' : '#94a3b8';
     
     const isUrlLink = 
@@ -122,9 +119,9 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     return isUrlLink 
       ? theme === 'dark' ? '#60a5fa' : '#3b82f6'
       : theme === 'dark' ? '#475569' : '#94a3b8';
-  };
+  }, [theme]);
 
-  const getNodeColor = (node: NetworkNode) => {
+  const getNodeColor = useMemo(() => (node: NetworkNode) => {
     if (node.type === 'tag') {
       const usageCount = tagUsageCount.get(node.name) ?? 1;
       return colorScale(usageCount);
@@ -135,29 +132,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     }
     
     return theme === 'dark' ? '#6366f1' : '#818cf8';
-  };
-
-  const getLinkCurveGeometry = (link: NetworkLink) => {
-    if (!settings.enableCurvedLinks) return null;
-    if (isMobile) return null; // Disable curved links on mobile for better performance
-
-    const source = link.source as NetworkNode;
-    const target = link.target as NetworkNode;
-    
-    // Calculate middle point with an offset
-    const middlePoint = {
-      x: (source.x! + target.x!) / 2,
-      y: (source.y! + target.y!) / 2,
-      z: (source.z! + target.z!) / 2 + 5 // Add some height to create a curve
-    };
-
-    // Return points for the curve
-    return [
-      [source.x, source.y, source.z], // start
-      [middlePoint.x, middlePoint.y, middlePoint.z], // middle control point
-      [target.x, target.y, target.z] // end
-    ];
-  };
+  }, [theme, tagUsageCount, colorScale]);
 
   return (
     <div 
@@ -193,8 +168,8 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         enablePointerInteraction={settings.enablePointerInteraction}
         controlType="orbit"
         forceEngine={isMobile ? "d3" : undefined}
-        cooldownTime={isMobile ? 2000 : 3000} // Reduced cooldown time
-        warmupTicks={isMobile ? 50 : 20} // Increased warmup ticks for better initial stability
+        cooldownTime={isMobile ? 1500 : 2000} // Further reduced cooldown time
+        warmupTicks={isMobile ? 100 : 50} // Increased warmup ticks
         linkCurveRotation={settings.enableCurvedLinks && !isMobile ? 0.5 : 0}
         linkCurvature={settings.enableCurvedLinks && !isMobile ? 0.25 : 0}
       />
