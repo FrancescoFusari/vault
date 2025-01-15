@@ -12,6 +12,7 @@ import * as THREE from 'three';
 
 interface Network3DGraphProps {
   notes: Note[];
+  searchQuery?: string;
 }
 
 interface NetworkLink {
@@ -20,7 +21,7 @@ interface NetworkLink {
   value: number;
 }
 
-export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
+export const Network3DGraph = ({ notes, searchQuery = '' }: Network3DGraphProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<any>(null);
   const { theme } = useTheme();
@@ -28,8 +29,36 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const navigate = useNavigate();
   const dimensions = useGraphDimensions(containerRef, isMobile);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [highlightedNode, setHighlightedNode] = useState<NetworkNode | null>(null);
 
   const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
+
+  // Search and highlight functionality
+  useEffect(() => {
+    if (searchQuery && graphRef.current) {
+      const lowerQuery = searchQuery.toLowerCase();
+      const foundNode = nodes.find(node => 
+        node.name.toLowerCase().includes(lowerQuery) ||
+        (node.type === 'tag' && node.name.toLowerCase().includes(lowerQuery))
+      );
+
+      if (foundNode) {
+        setHighlightedNode(foundNode);
+        // Center view on found node
+        graphRef.current.centerAt(
+          foundNode.x,
+          foundNode.y,
+          foundNode.z,
+          1000
+        );
+        graphRef.current.zoom(1.5, 1000);
+      } else {
+        setHighlightedNode(null);
+      }
+    } else {
+      setHighlightedNode(null);
+    }
+  }, [searchQuery, nodes]);
 
   // Handle node click/tap
   const handleNodeClick = useCallback((node: NetworkNode) => {
@@ -99,6 +128,12 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const getLinkColor = (link: NetworkLink) => {
     if (!link.source || !link.target) return theme === 'dark' ? '#475569' : '#94a3b8';
     
+    // Highlight links connected to the highlighted node
+    if (highlightedNode && 
+       (link.source.id === highlightedNode.id || link.target.id === highlightedNode.id)) {
+      return theme === 'dark' ? '#f43f5e' : '#e11d48';
+    }
+    
     const isUrlLink = 
       (link.source as NetworkNode).originalNote?.input_type === 'url' || 
       (link.target as NetworkNode).originalNote?.input_type === 'url';
@@ -109,6 +144,11 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   };
 
   const getNodeColor = (node: NetworkNode) => {
+    // Highlight the searched/selected node
+    if (highlightedNode && node.id === highlightedNode.id) {
+      return theme === 'dark' ? '#f43f5e' : '#e11d48';
+    }
+    
     if (node.type === 'tag') {
       const usageCount = tagUsageCount.get(node.name) ?? 1;
       return colorScale(usageCount);
