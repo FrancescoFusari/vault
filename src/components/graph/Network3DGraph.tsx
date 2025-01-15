@@ -32,7 +32,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const [settings, setSettings] = useState<Network3DSettings>({
     nodeSize: 6,
     linkWidth: 1,
-    linkLength: 120,
     enableNodeDrag: true,
     enableNavigationControls: true,
     showNavInfo: true,
@@ -64,6 +63,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       graphRef.current.refresh();
     }
     
+    // Calculate the distance based on the node's position
     const distance = 40;
     const distRatio = 1 + distance/Math.hypot(node.x || 0, node.y || 0, node.z || 0);
 
@@ -73,14 +73,16 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           y: (node.y || 0) * distRatio, 
           z: (node.z || 0) * distRatio 
         }
-      : { x: 0, y: 0, z: distance };
+      : { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
 
+    // Animate camera position
     graphRef.current.cameraPosition(
-      newPos,
-      node,
-      3000
+      newPos,           // New position
+      node,            // Look at this node
+      3000            // Animation duration in milliseconds
     );
 
+    // Handle navigation after camera movement
     setTimeout(() => {
       if (node.type === 'note' && node.originalNote) {
         if (isMobile) {
@@ -89,14 +91,15 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           navigate(`/note/${node.originalNote.id}`);
         }
       }
-    }, 3000);
+    }, 3000); // Wait for camera animation to complete
   };
 
   const getLinkColor = (link: NetworkLink) => {
+    // Check if the link is connected to the highlighted node
     if (highlightedNodeRef.current && 
        (link.source.id === highlightedNodeRef.current.id || 
         link.target.id === highlightedNodeRef.current.id)) {
-      return '#ea384c';
+      return '#ea384c'; // Red color for highlighted links
     }
     
     if (!link.source || !link.target) return theme === 'dark' ? '#475569' : '#94a3b8';
@@ -159,12 +162,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         forceEngine={isMobile ? "d3" : undefined}
         cooldownTime={isMobile ? 3000 : undefined}
         warmupTicks={isMobile ? 20 : undefined}
-        d3Force="link"
-        d3ForceConfig={{
-          link: {
-            distance: settings.linkLength
-          }
-        }}
       />
       {selectedNote && (
         <NotePopupWindow
