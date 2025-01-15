@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef } from 'react';
 import { useTheme } from 'next-themes';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
@@ -30,31 +30,15 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const highlightedNodeRef = useRef<NetworkNode | null>(null);
   
   const [settings, setSettings] = useState<Network3DSettings>({
-    nodeSize: isMobile ? 4 : 6, // Reduced node size for mobile
-    linkWidth: isMobile ? 0.5 : 1, // Thinner links for mobile
-    enableNodeDrag: !isMobile, // Disable node drag on mobile
+    nodeSize: 6,
+    linkWidth: 1,
+    enableNodeDrag: true,
     enableNavigationControls: true,
-    showNavInfo: !isMobile, // Hide nav info on mobile
+    showNavInfo: true,
     enablePointerInteraction: true,
     backgroundColor: theme === 'dark' ? 'hsl(229 19% 12%)' : 'hsl(40 33% 98%)',
-    enableNodeFixing: !isMobile, // Disable node fixing on mobile
-    enableCurvedLinks: !isMobile // Disable curved links on mobile
+    enableNodeFixing: true
   });
-
-  // Memoize graph data processing
-  const { nodes, links, tagUsageCount, colorScale } = useMemo(() => 
-    processNetworkData(notes), [notes]
-  );
-
-  // Add performance monitoring
-  useEffect(() => {
-    console.log('Graph Data Stats:', {
-      nodeCount: nodes.length,
-      linkCount: links.length,
-      isMobile,
-      curvedLinksEnabled: settings.enableCurvedLinks
-    });
-  }, [nodes.length, links.length, isMobile, settings.enableCurvedLinks]);
 
   const handleSettingChange = (key: keyof Network3DSettings, value: any) => {
     setSettings(prev => ({
@@ -62,6 +46,8 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       [key]: value
     }));
   };
+
+  const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
 
   const handleNodeDragEnd = (node: NetworkNode) => {
     if (settings.enableNodeFixing) {
@@ -108,8 +94,14 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     }, 3000); // Wait for camera animation to complete
   };
 
-  // Memoize color functions
-  const getLinkColor = useMemo(() => (link: NetworkLink) => {
+  const getLinkColor = (link: NetworkLink) => {
+    // Check if the link is connected to the highlighted node
+    if (highlightedNodeRef.current && 
+       (link.source.id === highlightedNodeRef.current.id || 
+        link.target.id === highlightedNodeRef.current.id)) {
+      return '#ea384c'; // Red color for highlighted links
+    }
+    
     if (!link.source || !link.target) return theme === 'dark' ? '#475569' : '#94a3b8';
     
     const isUrlLink = 
@@ -119,9 +111,9 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     return isUrlLink 
       ? theme === 'dark' ? '#60a5fa' : '#3b82f6'
       : theme === 'dark' ? '#475569' : '#94a3b8';
-  }, [theme]);
+  };
 
-  const getNodeColor = useMemo(() => (node: NetworkNode) => {
+  const getNodeColor = (node: NetworkNode) => {
     if (node.type === 'tag') {
       const usageCount = tagUsageCount.get(node.name) ?? 1;
       return colorScale(usageCount);
@@ -132,7 +124,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     }
     
     return theme === 'dark' ? '#6366f1' : '#818cf8';
-  }, [theme, tagUsageCount, colorScale]);
+  };
 
   return (
     <div 
@@ -168,10 +160,8 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         enablePointerInteraction={settings.enablePointerInteraction}
         controlType="orbit"
         forceEngine={isMobile ? "d3" : undefined}
-        cooldownTime={isMobile ? 1500 : 2000} // Further reduced cooldown time
-        warmupTicks={isMobile ? 100 : 50} // Increased warmup ticks
-        linkCurveRotation={settings.enableCurvedLinks && !isMobile ? 0.5 : 0}
-        linkCurvature={settings.enableCurvedLinks && !isMobile ? 0.25 : 0}
+        cooldownTime={isMobile ? 3000 : undefined}
+        warmupTicks={isMobile ? 20 : undefined}
       />
       {selectedNote && (
         <NotePopupWindow

@@ -14,7 +14,6 @@ export interface Network3DSettings {
   enablePointerInteraction: boolean;
   backgroundColor: string;
   enableNodeFixing: boolean;
-  enableCurvedLinks: boolean;
 }
 
 interface Network3DSettingsProps {
@@ -71,14 +70,6 @@ export const Network3DSettingsDialog = ({ settings, onSettingChange }: Network3D
               id="nodeFixing"
               checked={settings.enableNodeFixing}
               onCheckedChange={(checked) => onSettingChange('enableNodeFixing', checked)}
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <Label htmlFor="curvedLinks">Curved Links</Label>
-            <Switch
-              id="curvedLinks"
-              checked={settings.enableCurvedLinks}
-              onCheckedChange={(checked) => onSettingChange('enableCurvedLinks', checked)}
             />
           </div>
           <div className="flex items-center justify-between">
