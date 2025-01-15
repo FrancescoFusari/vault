@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import NotesListPage from "./pages/NotesListPage";
 import NotePage from "./pages/NotePage";
 import TagsPage from "./pages/TagsPage";
+import Network3DPage from "./pages/Network3DPage";
 import SettingsPage from "./pages/SettingsPage";
 import { supabase } from "./integrations/supabase/client";
 import "./App.css";
@@ -59,6 +60,10 @@ function App() {
             <Route
               path="/tags"
               element={isAuthenticated ? <TagsPage /> : <Navigate to="/auth" />}
+            />
+            <Route
+              path="/network3d"
+              element={isAuthenticated ? <Network3DPage /> : <Navigate to="/auth" />}
             />
             <Route
               path="/settings"
