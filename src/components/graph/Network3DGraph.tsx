@@ -37,7 +37,8 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     showNavInfo: true,
     enablePointerInteraction: true,
     backgroundColor: theme === 'dark' ? 'hsl(229 19% 12%)' : 'hsl(40 33% 98%)',
-    enableNodeFixing: true
+    enableNodeFixing: true,
+    enableCurvedLinks: true
   });
 
   const handleSettingChange = (key: keyof Network3DSettings, value: any) => {
@@ -126,6 +127,28 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     return theme === 'dark' ? '#6366f1' : '#818cf8';
   };
 
+  // Function to create curved links
+  const getLinkCurveGeometry = (link: NetworkLink) => {
+    if (!settings.enableCurvedLinks) return null;
+
+    const source = link.source as NetworkNode;
+    const target = link.target as NetworkNode;
+    
+    // Calculate middle point with an offset
+    const middlePoint = {
+      x: (source.x! + target.x!) / 2,
+      y: (source.y! + target.y!) / 2,
+      z: (source.z! + target.z!) / 2 + 5 // Add some height to create a curve
+    };
+
+    // Return points for the curve
+    return [
+      [source.x, source.y, source.z], // start
+      [middlePoint.x, middlePoint.y, middlePoint.z], // middle control point
+      [target.x, target.y, target.z] // end
+    ];
+  };
+
   return (
     <div 
       ref={containerRef} 
@@ -162,6 +185,8 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         forceEngine={isMobile ? "d3" : undefined}
         cooldownTime={isMobile ? 3000 : undefined}
         warmupTicks={isMobile ? 20 : undefined}
+        linkCurveRotation={settings.enableCurvedLinks ? 0.5 : 0}
+        linkCurvature={settings.enableCurvedLinks ? 0.25 : 0}
       />
       {selectedNote && (
         <NotePopupWindow
