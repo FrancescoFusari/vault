@@ -61,8 +61,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         return defaultSettings;
       }
 
-      const parsedSettings = settings?.settings as unknown as Network3DSettings;
-      return parsedSettings || defaultSettings;
+      return settings?.settings as Network3DSettings || defaultSettings;
     }
   });
 
@@ -106,11 +105,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     };
     setSettings(newSettings);
     updateSettingsMutation.mutate(newSettings);
-
-    // Update force engine parameters when link distance changes
-    if (key === 'linkDistance' && graphRef.current) {
-      graphRef.current.d3Force('link').distance(value);
-    }
   };
 
   const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
