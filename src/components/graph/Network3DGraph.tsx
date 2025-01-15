@@ -53,14 +53,14 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       const { data: settings, error } = await supabase
         .from('graph_settings')
         .select('settings')
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         toast.error('Failed to load graph settings');
         return defaultSettings;
       }
 
-      return settings?.settings || defaultSettings;
+      return settings?.settings as Network3DSettings || defaultSettings;
     }
   });
 
@@ -70,7 +70,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       const { data, error } = await supabase
         .from('graph_settings')
         .upsert({ 
-          settings: newSettings,
+          settings: newSettings as unknown as Json,
           user_id: (await supabase.auth.getUser()).data.user?.id 
         })
         .select()
@@ -222,7 +222,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         forceEngine={isMobile ? "d3" : undefined}
         cooldownTime={isMobile ? 3000 : undefined}
         warmupTicks={isMobile ? 20 : undefined}
-        d3Force="link"
         d3ForceConfig={{
           link: {
             distance: settings.linkDistance
