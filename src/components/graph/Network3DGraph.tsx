@@ -90,7 +90,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     if (highlightedNodeRef.current && 
        (link.source.id === highlightedNodeRef.current.id || 
         link.target.id === highlightedNodeRef.current.id)) {
-      return theme === 'dark' ? '#60a5fa' : '#3b82f6'; // Bright blue for highlighted links
+      return '#ea384c'; // Red color for highlighted links
     }
     
     if (!link.source || !link.target) return theme === 'dark' ? '#475569' : '#94a3b8';
