@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTheme } from 'next-themes';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +8,9 @@ import { NotePopupWindow } from './NotePopupWindow';
 import { processNetworkData, NetworkNode } from '@/utils/networkGraphUtils';
 import { Note } from '@/types/graph';
 import { Network3DSettingsDialog, Network3DSettings } from './Network3DSettings';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 interface Network3DGraphProps {
   notes: Note[];
@@ -28,24 +31,79 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const dimensions = useGraphDimensions(containerRef, isMobile);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const highlightedNodeRef = useRef<NetworkNode | null>(null);
+  const queryClient = useQueryClient();
   
-  const [settings, setSettings] = useState<Network3DSettings>({
+  // Default settings
+  const defaultSettings: Network3DSettings = {
     nodeSize: 6,
     linkWidth: 1,
-    linkDistance: isMobile ? 60 : 120, // Default distance based on device
+    linkDistance: isMobile ? 60 : 120,
     enableNodeDrag: true,
     enableNavigationControls: true,
     showNavInfo: true,
     enablePointerInteraction: true,
     backgroundColor: theme === 'dark' ? 'hsl(229 19% 12%)' : 'hsl(40 33% 98%)',
     enableNodeFixing: true
+  };
+
+  // Fetch user settings
+  const { data: userSettings } = useQuery({
+    queryKey: ['graphSettings'],
+    queryFn: async () => {
+      const { data: settings, error } = await supabase
+        .from('graph_settings')
+        .select('settings')
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        toast.error('Failed to load graph settings');
+        return defaultSettings;
+      }
+
+      return settings?.settings || defaultSettings;
+    }
   });
 
+  // Update settings mutation
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (newSettings: Network3DSettings) => {
+      const { data, error } = await supabase
+        .from('graph_settings')
+        .upsert({ 
+          settings: newSettings,
+          user_id: (await supabase.auth.getUser()).data.user?.id 
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onError: () => {
+      toast.error('Failed to save graph settings');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['graphSettings'] });
+      toast.success('Graph settings saved');
+    }
+  });
+
+  const [settings, setSettings] = useState<Network3DSettings>(defaultSettings);
+
+  // Update local settings when user settings are loaded
+  useEffect(() => {
+    if (userSettings) {
+      setSettings(userSettings);
+    }
+  }, [userSettings]);
+
   const handleSettingChange = (key: keyof Network3DSettings, value: any) => {
-    setSettings(prev => ({
-      ...prev,
+    const newSettings = {
+      ...settings,
       [key]: value
-    }));
+    };
+    setSettings(newSettings);
+    updateSettingsMutation.mutate(newSettings);
 
     // Update force engine parameters when link distance changes
     if (key === 'linkDistance' && graphRef.current) {
