@@ -61,7 +61,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         return defaultSettings;
       }
 
-      const parsedSettings = settings?.settings as Network3DSettings;
+      const parsedSettings = settings?.settings as unknown as Network3DSettings;
       return parsedSettings || defaultSettings;
     }
   });
@@ -224,14 +224,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         forceEngine={isMobile ? "d3" : undefined}
         cooldownTime={isMobile ? 3000 : undefined}
         warmupTicks={isMobile ? 20 : undefined}
-        d3Force={(force: string) => {
-          if (force === 'link') {
-            return {
-              distance: settings.linkDistance
-            };
-          }
-          return undefined;
-        }}
+        linkDistance={settings.linkDistance}
       />
       {selectedNote && (
         <NotePopupWindow
