@@ -7,7 +7,7 @@ import ForceGraph3D from 'react-force-graph-3d';
 import { NotePopupWindow } from './NotePopupWindow';
 import { processNetworkData, NetworkNode } from '@/utils/networkGraphUtils';
 import { Note } from '@/types/graph';
-import { Link2Icon } from 'lucide-react';
+import { Network3DSettingsDialog, Network3DSettings } from './Network3DSettings';
 
 interface Network3DGraphProps {
   notes: Note[];
@@ -26,6 +26,23 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const navigate = useNavigate();
   const dimensions = useGraphDimensions(containerRef, isMobile);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  
+  const [settings, setSettings] = useState<Network3DSettings>({
+    nodeSize: 6,
+    linkWidth: 1,
+    enableNodeDrag: true,
+    enableNavigationControls: true,
+    showNavInfo: true,
+    enablePointerInteraction: true,
+    backgroundColor: theme === 'dark' ? 'hsl(229 19% 12%)' : 'hsl(40 33% 98%)'
+  });
+
+  const handleSettingChange = (key: keyof Network3DSettings, value: any) => {
+    setSettings(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
 
   const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
 
@@ -42,14 +59,13 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const getLinkColor = (link: NetworkLink) => {
     if (!link.source || !link.target) return theme === 'dark' ? '#475569' : '#94a3b8';
     
-    // Check if either node is a URL-based note
     const isUrlLink = 
       (link.source as NetworkNode).originalNote?.input_type === 'url' || 
       (link.target as NetworkNode).originalNote?.input_type === 'url';
     
     return isUrlLink 
-      ? theme === 'dark' ? '#60a5fa' : '#3b82f6' // Blue for URL links
-      : theme === 'dark' ? '#475569' : '#94a3b8'; // Default color for other links
+      ? theme === 'dark' ? '#60a5fa' : '#3b82f6'
+      : theme === 'dark' ? '#475569' : '#94a3b8';
   };
 
   const getNodeColor = (node: NetworkNode) => {
@@ -58,12 +74,11 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       return colorScale(usageCount);
     }
     
-    // Special color for URL-based notes
     if (node.type === 'note' && node.originalNote?.input_type === 'url') {
-      return theme === 'dark' ? '#60a5fa' : '#3b82f6'; // Blue for URL nodes
+      return theme === 'dark' ? '#60a5fa' : '#3b82f6';
     }
     
-    return theme === 'dark' ? '#6366f1' : '#818cf8'; // Default color
+    return theme === 'dark' ? '#6366f1' : '#818cf8';
   };
 
   return (
@@ -71,6 +86,10 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       ref={containerRef} 
       className="absolute inset-0 w-full h-full"
     >
+      <Network3DSettingsDialog
+        settings={settings}
+        onSettingChange={handleSettingChange}
+      />
       <ForceGraph3D
         width={dimensions.width}
         height={dimensions.height}
@@ -84,13 +103,14 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         }}
         nodeColor={getNodeColor}
         linkColor={getLinkColor}
-        backgroundColor={theme === 'dark' ? 'hsl(229 19% 12%)' : 'hsl(40 33% 98%)'}
+        backgroundColor={settings.backgroundColor}
         onNodeClick={handleNodeClick}
-        nodeRelSize={6}
-        linkWidth={1}
-        enableNodeDrag={true}
-        enableNavigationControls={true}
-        showNavInfo={true}
+        nodeRelSize={settings.nodeSize}
+        linkWidth={settings.linkWidth}
+        enableNodeDrag={settings.enableNodeDrag}
+        enableNavigationControls={settings.enableNavigationControls}
+        showNavInfo={settings.showNavInfo}
+        enablePointerInteraction={settings.enablePointerInteraction}
         controlType="orbit"
         forceEngine={isMobile ? "d3" : undefined}
         cooldownTime={isMobile ? 3000 : undefined}
