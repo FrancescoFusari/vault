@@ -10,7 +10,6 @@ import NotePage from "./pages/NotePage";
 import TagsPage from "./pages/TagsPage";
 import Network3DPage from "./pages/Network3DPage";
 import SettingsPage from "./pages/SettingsPage";
-import GmailPage from "./pages/GmailPage";
 import { supabase } from "./integrations/supabase/client";
 import "./App.css";
 
@@ -69,10 +68,6 @@ function App() {
             <Route
               path="/settings"
               element={isAuthenticated ? <SettingsPage /> : <Navigate to="/auth" />}
-            />
-            <Route
-              path="/gmail"
-              element={isAuthenticated ? <GmailPage /> : <Navigate to="/auth" />}
             />
           </Routes>
         </main>
