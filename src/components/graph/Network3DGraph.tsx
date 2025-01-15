@@ -7,21 +7,17 @@ import ForceGraph3D from 'react-force-graph-3d';
 import { NotePopupWindow } from './NotePopupWindow';
 import { processNetworkData, NetworkNode } from '@/utils/networkGraphUtils';
 import { Note } from '@/types/graph';
-import { Link2Icon } from 'lucide-react';
+import { Link2Icon, SearchIcon } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import * as THREE from 'three';
 
 interface Network3DGraphProps {
   notes: Note[];
-  searchQuery?: string;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
 }
 
-interface NetworkLink {
-  source: NetworkNode;
-  target: NetworkNode;
-  value: number;
-}
-
-export const Network3DGraph = ({ notes, searchQuery = '' }: Network3DGraphProps) => {
+export const Network3DGraph = ({ notes, searchQuery, setSearchQuery }: Network3DGraphProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const graphRef = useRef<any>(null);
   const { theme } = useTheme();
@@ -199,7 +195,7 @@ export const Network3DGraph = ({ notes, searchQuery = '' }: Network3DGraphProps)
     >
       <div className="absolute top-4 left-4 right-4 z-10">
         <div className="relative max-w-md mx-auto">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <Input
             type="text"
             placeholder="Search notes and tags..."
@@ -233,6 +229,7 @@ export const Network3DGraph = ({ notes, searchQuery = '' }: Network3DGraphProps)
           )}
         </div>
       </div>
+      
       <ForceGraph3D
         ref={graphRef}
         width={dimensions.width}
