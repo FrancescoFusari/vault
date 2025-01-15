@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTheme } from 'next-themes';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
@@ -41,14 +41,24 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     enableCurvedLinks: true
   });
 
+  const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
+
+  // Add performance monitoring
+  useEffect(() => {
+    console.log('Graph Data Stats:', {
+      nodeCount: nodes.length,
+      linkCount: links.length,
+      isMobile,
+      curvedLinksEnabled: settings.enableCurvedLinks
+    });
+  }, [nodes.length, links.length, isMobile, settings.enableCurvedLinks]);
+
   const handleSettingChange = (key: keyof Network3DSettings, value: any) => {
     setSettings(prev => ({
       ...prev,
       [key]: value
     }));
   };
-
-  const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
 
   const handleNodeDragEnd = (node: NetworkNode) => {
     if (settings.enableNodeFixing) {
@@ -127,9 +137,9 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     return theme === 'dark' ? '#6366f1' : '#818cf8';
   };
 
-  // Function to create curved links
   const getLinkCurveGeometry = (link: NetworkLink) => {
     if (!settings.enableCurvedLinks) return null;
+    if (isMobile) return null; // Disable curved links on mobile for better performance
 
     const source = link.source as NetworkNode;
     const target = link.target as NetworkNode;
@@ -183,10 +193,10 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         enablePointerInteraction={settings.enablePointerInteraction}
         controlType="orbit"
         forceEngine={isMobile ? "d3" : undefined}
-        cooldownTime={isMobile ? 3000 : undefined}
-        warmupTicks={isMobile ? 20 : undefined}
-        linkCurveRotation={settings.enableCurvedLinks ? 0.5 : 0}
-        linkCurvature={settings.enableCurvedLinks ? 0.25 : 0}
+        cooldownTime={isMobile ? 2000 : 3000} // Reduced cooldown time
+        warmupTicks={isMobile ? 50 : 20} // Increased warmup ticks for better initial stability
+        linkCurveRotation={settings.enableCurvedLinks && !isMobile ? 0.5 : 0}
+        linkCurvature={settings.enableCurvedLinks && !isMobile ? 0.25 : 0}
       />
       {selectedNote && (
         <NotePopupWindow
