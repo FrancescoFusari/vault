@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useTheme } from 'next-themes';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
@@ -30,14 +30,14 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const highlightedNodeRef = useRef<NetworkNode | null>(null);
   
   const [settings, setSettings] = useState<Network3DSettings>({
-    nodeSize: 6,
-    linkWidth: 1,
-    enableNodeDrag: true,
+    nodeSize: isMobile ? 4 : 6,
+    linkWidth: isMobile ? 0.5 : 1,
+    enableNodeDrag: !isMobile,
     enableNavigationControls: true,
-    showNavInfo: true,
+    showNavInfo: !isMobile,
     enablePointerInteraction: true,
     backgroundColor: theme === 'dark' ? 'hsl(229 19% 12%)' : 'hsl(40 33% 98%)',
-    enableNodeFixing: true
+    enableNodeFixing: !isMobile
   });
 
   const handleSettingChange = (key: keyof Network3DSettings, value: any) => {
@@ -47,7 +47,11 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     }));
   };
 
-  const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
+  // Memoize the processed network data
+  const { nodes, links, tagUsageCount, colorScale } = useMemo(() => {
+    console.log('Processing network data with', notes.length, 'notes');
+    return processNetworkData(notes);
+  }, [notes]);
 
   const handleNodeDragEnd = (node: NetworkNode) => {
     if (settings.enableNodeFixing) {
@@ -63,7 +67,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       graphRef.current.refresh();
     }
     
-    // Calculate the distance based on the node's position
     const distance = 40;
     const distRatio = 1 + distance/Math.hypot(node.x || 0, node.y || 0, node.z || 0);
 
@@ -73,16 +76,14 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           y: (node.y || 0) * distRatio, 
           z: (node.z || 0) * distRatio 
         }
-      : { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
+      : { x: 0, y: 0, z: distance };
 
-    // Animate camera position
     graphRef.current.cameraPosition(
-      newPos,           // New position
-      node,            // Look at this node
-      3000            // Animation duration in milliseconds
+      newPos,
+      node,
+      3000
     );
 
-    // Handle navigation after camera movement
     setTimeout(() => {
       if (node.type === 'note' && node.originalNote) {
         if (isMobile) {
@@ -91,15 +92,15 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           navigate(`/note/${node.originalNote.id}`);
         }
       }
-    }, 3000); // Wait for camera animation to complete
+    }, 3000);
   };
 
-  const getLinkColor = (link: NetworkLink) => {
-    // Check if the link is connected to the highlighted node
+  // Memoize the link color function
+  const getLinkColor = useMemo(() => (link: NetworkLink) => {
     if (highlightedNodeRef.current && 
        (link.source.id === highlightedNodeRef.current.id || 
         link.target.id === highlightedNodeRef.current.id)) {
-      return '#ea384c'; // Red color for highlighted links
+      return '#ea384c';
     }
     
     if (!link.source || !link.target) return theme === 'dark' ? '#475569' : '#94a3b8';
@@ -111,9 +112,10 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     return isUrlLink 
       ? theme === 'dark' ? '#60a5fa' : '#3b82f6'
       : theme === 'dark' ? '#475569' : '#94a3b8';
-  };
+  }, [theme, highlightedNodeRef.current]);
 
-  const getNodeColor = (node: NetworkNode) => {
+  // Memoize the node color function
+  const getNodeColor = useMemo(() => (node: NetworkNode) => {
     if (node.type === 'tag') {
       const usageCount = tagUsageCount.get(node.name) ?? 1;
       return colorScale(usageCount);
@@ -124,7 +126,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     }
     
     return theme === 'dark' ? '#6366f1' : '#818cf8';
-  };
+  }, [theme, tagUsageCount, colorScale]);
 
   return (
     <div 
@@ -159,9 +161,11 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         showNavInfo={settings.showNavInfo}
         enablePointerInteraction={settings.enablePointerInteraction}
         controlType="orbit"
+        linkCurvature={0.25}
+        linkCurveRotation={Math.PI / 2}
         forceEngine={isMobile ? "d3" : undefined}
-        cooldownTime={isMobile ? 3000 : undefined}
-        warmupTicks={isMobile ? 20 : undefined}
+        cooldownTime={isMobile ? 2000 : 15000}
+        warmupTicks={isMobile ? 50 : 100}
       />
       {selectedNote && (
         <NotePopupWindow
