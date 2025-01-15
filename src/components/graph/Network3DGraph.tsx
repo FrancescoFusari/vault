@@ -36,26 +36,35 @@ export const Network3DGraph = ({ notes, searchQuery = '' }: Network3DGraphProps)
   // Search and highlight functionality
   useEffect(() => {
     if (searchQuery && graphRef.current) {
+      console.log('Searching for:', searchQuery);
       const lowerQuery = searchQuery.toLowerCase();
-      const foundNode = nodes.find(node => 
-        node.name.toLowerCase().includes(lowerQuery) ||
-        (node.type === 'tag' && node.name.toLowerCase().includes(lowerQuery))
-      );
+      const foundNode = nodes.find(node => {
+        const isMatch = node.name.toLowerCase().includes(lowerQuery) ||
+          (node.type === 'tag' && node.name.toLowerCase().includes(lowerQuery));
+        if (isMatch) {
+          console.log('Found matching node:', node);
+        }
+        return isMatch;
+      });
 
       if (foundNode) {
+        console.log('Setting highlighted node:', foundNode);
         setHighlightedNode(foundNode);
+        
         // Center view on found node using cameraPosition
-        const distance = 100;
+        const distance = 200; // Increased distance for better visibility
         const position = foundNode.x && foundNode.y && foundNode.z
           ? { x: foundNode.x, y: foundNode.y, z: foundNode.z + distance }
           : { x: 0, y: 0, z: distance };
         
+        console.log('Moving camera to position:', position);
         graphRef.current.cameraPosition(
           position,
-          { x: position.x, y: position.y, z: position.z - distance }, // lookAt
-          3000  // transition duration
+          foundNode, // Look directly at the node
+          2000  // transition duration
         );
       } else {
+        console.log('No matching node found');
         setHighlightedNode(null);
       }
     } else {
