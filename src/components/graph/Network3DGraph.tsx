@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useTheme } from 'next-themes';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
@@ -30,15 +30,15 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const highlightedNodeRef = useRef<NetworkNode | null>(null);
   
   const [settings, setSettings] = useState<Network3DSettings>({
-    nodeSize: 6,
-    linkWidth: 1,
-    enableNodeDrag: true,
+    nodeSize: isMobile ? 4 : 6,
+    linkWidth: isMobile ? 0.5 : 1,
+    enableNodeDrag: !isMobile,
     enableNavigationControls: true,
-    showNavInfo: true,
+    showNavInfo: !isMobile,
     enablePointerInteraction: true,
     backgroundColor: theme === 'dark' ? 'hsl(229 19% 12%)' : 'hsl(40 33% 98%)',
-    enableNodeFixing: true,
-    enableCurvedLinks: true
+    enableNodeFixing: !isMobile,
+    enableCurvedLinks: !isMobile // Disable curved links on mobile by default
   });
 
   const handleSettingChange = (key: keyof Network3DSettings, value: any) => {
@@ -48,7 +48,11 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     }));
   };
 
-  const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
+  // Memoize expensive data processing
+  const { nodes, links, tagUsageCount, colorScale } = useMemo(() => {
+    console.log('Processing network data with', notes.length, 'notes');
+    return processNetworkData(notes);
+  }, [notes]);
 
   const handleNodeDragEnd = (node: NetworkNode) => {
     if (settings.enableNodeFixing) {
@@ -92,7 +96,8 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     }, 3000);
   };
 
-  const getLinkColor = (link: NetworkLink) => {
+  // Memoize color functions
+  const getLinkColor = useMemo(() => (link: NetworkLink) => {
     if (highlightedNodeRef.current && 
        (link.source.id === highlightedNodeRef.current.id || 
         link.target.id === highlightedNodeRef.current.id)) {
@@ -108,9 +113,9 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     return isUrlLink 
       ? theme === 'dark' ? '#60a5fa' : '#3b82f6'
       : theme === 'dark' ? '#475569' : '#94a3b8';
-  };
+  }, [theme, highlightedNodeRef.current]);
 
-  const getNodeColor = (node: NetworkNode) => {
+  const getNodeColor = useMemo(() => (node: NetworkNode) => {
     if (node.type === 'tag') {
       const usageCount = tagUsageCount.get(node.name) ?? 1;
       return colorScale(usageCount);
@@ -121,7 +126,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     }
     
     return theme === 'dark' ? '#6366f1' : '#818cf8';
-  };
+  }, [theme, tagUsageCount, colorScale]);
 
   return (
     <div 
@@ -157,8 +162,8 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         enablePointerInteraction={settings.enablePointerInteraction}
         controlType="orbit"
         forceEngine={isMobile ? "d3" : undefined}
-        cooldownTime={isMobile ? 3000 : undefined}
-        warmupTicks={isMobile ? 20 : undefined}
+        cooldownTime={isMobile ? 2000 : 15000}
+        warmupTicks={isMobile ? 50 : 100}
         linkCurvature={settings.enableCurvedLinks ? 0.25 : 0}
         linkCurveRotation={settings.enableCurvedLinks ? Math.PI / 2 : 0}
       />
