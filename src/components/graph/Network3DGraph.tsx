@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGraphDimensions } from '@/hooks/useGraphDimensions';
 import ForceGraph3D from 'react-force-graph-3d';
 import { NotePopupWindow } from './NotePopupWindow';
-import { processNetworkData, NetworkNode } from '@/utils/networkGraphUtils';
+import { processNetworkData, NetworkNode, NetworkLink } from '@/utils/networkGraphUtils';
 import { Note } from '@/types/graph';
 import { Link2Icon, SearchIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
