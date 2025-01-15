@@ -21,6 +21,7 @@ interface NetworkLink {
 
 export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const graphRef = useRef<any>(null);
   const { theme } = useTheme();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
@@ -47,13 +48,35 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
 
   const handleNodeClick = (node: NetworkNode) => {
-    if (node.type === 'note' && node.originalNote) {
-      if (isMobile) {
-        setSelectedNote(node.originalNote);
-      } else {
-        navigate(`/note/${node.originalNote.id}`);
+    // Calculate the distance based on the node's position
+    const distance = 40;
+    const distRatio = 1 + distance/Math.hypot(node.x || 0, node.y || 0, node.z || 0);
+
+    const newPos = node.x || node.y || node.z
+      ? { 
+          x: (node.x || 0) * distRatio, 
+          y: (node.y || 0) * distRatio, 
+          z: (node.z || 0) * distRatio 
+        }
+      : { x: 0, y: 0, z: distance }; // special case if node is in (0,0,0)
+
+    // Animate camera position
+    graphRef.current.cameraPosition(
+      newPos,           // New position
+      node,            // Look at this node
+      3000            // Animation duration in milliseconds
+    );
+
+    // Handle navigation after camera movement
+    setTimeout(() => {
+      if (node.type === 'note' && node.originalNote) {
+        if (isMobile) {
+          setSelectedNote(node.originalNote);
+        } else {
+          navigate(`/note/${node.originalNote.id}`);
+        }
       }
-    }
+    }, 3000); // Wait for camera animation to complete
   };
 
   const getLinkColor = (link: NetworkLink) => {
@@ -91,6 +114,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         onSettingChange={handleSettingChange}
       />
       <ForceGraph3D
+        ref={graphRef}
         width={dimensions.width}
         height={dimensions.height}
         graphData={{ nodes, links }}
