@@ -51,18 +51,8 @@ export const Network3DGraph = ({ notes, searchQuery, setSearchQuery }: Network3D
         console.log('Setting highlighted node:', foundNode);
         setHighlightedNode(foundNode);
         
-        // Center view on found node using cameraPosition
-        const distance = 200; // Increased distance for better visibility
-        const position = foundNode.x && foundNode.y && foundNode.z
-          ? { x: foundNode.x, y: foundNode.y, z: foundNode.z + distance }
-          : { x: 0, y: 0, z: distance };
-        
-        console.log('Moving camera to position:', position);
-        graphRef.current.cameraPosition(
-          position,
-          foundNode, // Look directly at the node
-          2000  // transition duration
-        );
+        // Center view on found node with default camera behavior
+        graphRef.current.centerAt(foundNode.x, foundNode.y, foundNode.z, 1000);
       } else {
         console.log('No matching node found');
         setHighlightedNode(null);
@@ -86,71 +76,18 @@ export const Network3DGraph = ({ notes, searchQuery, setSearchQuery }: Network3D
   const handleSearchResultClick = (node: NetworkNode) => {
     setHighlightedNode(node);
     if (graphRef.current) {
-      const distance = 200;
-      const position = node.x && node.y && node.z
-        ? { x: node.x, y: node.y, z: node.z + distance }
-        : { x: 0, y: 0, z: distance };
-      
-      graphRef.current.cameraPosition(
-        position,
-        node,
-        2000
-      );
+      graphRef.current.centerAt(node.x, node.y, node.z, 1000);
     }
   };
 
   useEffect(() => {
     if (graphRef.current && isMobile) {
-      // Optimize force simulation for mobile
+      // Basic mobile optimizations
       const fg = graphRef.current;
       fg.d3Force('charge').strength(-150);
       fg.d3Force('link').distance(60);
-      
-      // Adjust camera and controls for mobile
-      const distance = 200;
-      fg.cameraPosition({ z: distance });
-      
-      // Enable touch-based rotation
-      let touchRotationSpeed = 0.5;
-      let lastTouchX = 0;
-      let lastTouchY = 0;
-      
-      const handleTouchStart = (event: TouchEvent) => {
-        const touch = event.touches[0];
-        lastTouchX = touch.clientX;
-        lastTouchY = touch.clientY;
-      };
-      
-      const handleTouchMove = (event: TouchEvent) => {
-        const touch = event.touches[0];
-        const deltaX = touch.clientX - lastTouchX;
-        const deltaY = touch.clientY - lastTouchY;
-        
-        if (fg.camera) {
-          fg.camera().position.applyAxisAngle(
-            new THREE.Vector3(0, 1, 0),
-            -deltaX * touchRotationSpeed / dimensions.width
-          );
-          fg.camera().position.applyAxisAngle(
-            new THREE.Vector3(1, 0, 0),
-            -deltaY * touchRotationSpeed / dimensions.height
-          );
-        }
-        
-        lastTouchX = touch.clientX;
-        lastTouchY = touch.clientY;
-      };
-      
-      const elem = fg.renderer().domElement;
-      elem.addEventListener('touchstart', handleTouchStart);
-      elem.addEventListener('touchmove', handleTouchMove);
-      
-      return () => {
-        elem.removeEventListener('touchstart', handleTouchStart);
-        elem.removeEventListener('touchmove', handleTouchMove);
-      };
     }
-  }, [isMobile, dimensions]);
+  }, [isMobile]);
 
   const getLinkColor = (link: NetworkLink) => {
     if (!link.source || !link.target) return theme === 'dark' ? '#475569' : '#94a3b8';
@@ -248,13 +185,6 @@ export const Network3DGraph = ({ notes, searchQuery, setSearchQuery }: Network3D
         onNodeClick={handleNodeClick}
         nodeRelSize={6}
         linkWidth={1}
-        enableNodeDrag={true}
-        enableNavigationControls={true}
-        showNavInfo={isMobile}
-        controlType="orbit"
-        forceEngine={isMobile ? "d3" : undefined}
-        cooldownTicks={isMobile ? 50 : undefined}
-        warmupTicks={isMobile ? 20 : undefined}
       />
       {selectedNote && (
         <NotePopupWindow
