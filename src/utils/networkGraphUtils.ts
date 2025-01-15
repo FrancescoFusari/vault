@@ -9,7 +9,6 @@ export interface NetworkNode {
   originalNote?: Note;
   x?: number;
   y?: number;
-  z?: number;  // Added z coordinate for 3D positioning
 }
 
 export interface NetworkLink {

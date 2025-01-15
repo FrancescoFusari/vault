@@ -2,11 +2,8 @@ import { Network3DGraph } from "@/components/graph/Network3DGraph";
 import { BottomNav } from "@/components/BottomNav";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
 
 const Network3DPage = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  
   const { data: notes = [] } = useQuery({
     queryKey: ['notes'],
     queryFn: async () => {
@@ -22,12 +19,8 @@ const Network3DPage = () => {
 
   return (
     <div className="fixed inset-0 flex flex-col h-screen w-screen">
-      <div className="relative flex-1 w-full h-full">
-        <Network3DGraph 
-          notes={notes} 
-          searchQuery={searchQuery} 
-          setSearchQuery={setSearchQuery} 
-        />
+      <div className="flex-1 relative w-full h-full">
+        <Network3DGraph notes={notes} />
       </div>
       <BottomNav />
     </div>
