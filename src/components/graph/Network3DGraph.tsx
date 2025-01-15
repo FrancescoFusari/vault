@@ -11,7 +11,6 @@ import { Network3DSettingsDialog, Network3DSettings } from './Network3DSettings'
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Json } from '@/integrations/supabase/types';
 
 interface Network3DGraphProps {
   notes: Note[];
@@ -61,7 +60,9 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         return defaultSettings;
       }
 
-      return settings?.settings as Network3DSettings || defaultSettings;
+      // Explicitly cast the settings to Network3DSettings after verifying its shape
+      const savedSettings = settings?.settings as Network3DSettings | null;
+      return savedSettings || defaultSettings;
     }
   });
 
@@ -71,7 +72,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       const { data, error } = await supabase
         .from('graph_settings')
         .upsert({ 
-          settings: newSettings as unknown as Json,
+          settings: newSettings,
           user_id: (await supabase.auth.getUser()).data.user?.id 
         })
         .select()
@@ -218,9 +219,11 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         forceEngine={isMobile ? "d3" : undefined}
         cooldownTime={isMobile ? 3000 : undefined}
         warmupTicks={isMobile ? 20 : undefined}
-        d3Forces={{
-          link: {
-            distance: settings.linkDistance
+        d3Force={(force: string) => {
+          if (force === 'link') {
+            return {
+              distance: settings.linkDistance
+            };
           }
         }}
       />
