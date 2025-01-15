@@ -224,13 +224,10 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         forceEngine={isMobile ? "d3" : undefined}
         cooldownTime={isMobile ? 3000 : undefined}
         warmupTicks={isMobile ? 20 : undefined}
-        d3Force={(force: string) => {
-          if (force === 'link') {
-            return {
-              distance: settings.linkDistance
-            };
+        d3Forces={{
+          link: {
+            distance: settings.linkDistance
           }
-          return undefined;
         }}
       />
       {selectedNote && (
