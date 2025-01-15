@@ -36,7 +36,8 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     enableNavigationControls: true,
     showNavInfo: true,
     enablePointerInteraction: true,
-    backgroundColor: theme === 'dark' ? 'hsl(229 19% 12%)' : 'hsl(40 33% 98%)'
+    backgroundColor: theme === 'dark' ? 'hsl(229 19% 12%)' : 'hsl(40 33% 98%)',
+    enableNodeFixing: true
   });
 
   const handleSettingChange = (key: keyof Network3DSettings, value: any) => {
@@ -47,6 +48,14 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   };
 
   const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
+
+  const handleNodeDragEnd = (node: NetworkNode) => {
+    if (settings.enableNodeFixing) {
+      node.fx = node.x;
+      node.fy = node.y;
+      node.fz = node.z;
+    }
+  };
 
   const handleNodeClick = (node: NetworkNode) => {
     highlightedNodeRef.current = node;
@@ -142,6 +151,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         linkColor={getLinkColor}
         backgroundColor={settings.backgroundColor}
         onNodeClick={handleNodeClick}
+        onNodeDragEnd={handleNodeDragEnd}
         nodeRelSize={settings.nodeSize}
         linkWidth={settings.linkWidth}
         enableNodeDrag={settings.enableNodeDrag}

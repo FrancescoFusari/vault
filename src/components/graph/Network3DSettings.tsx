@@ -13,6 +13,7 @@ export interface Network3DSettings {
   showNavInfo: boolean;
   enablePointerInteraction: boolean;
   backgroundColor: string;
+  enableNodeFixing: boolean;
 }
 
 interface Network3DSettingsProps {
@@ -61,6 +62,14 @@ export const Network3DSettingsDialog = ({ settings, onSettingChange }: Network3D
               id="nodeDrag"
               checked={settings.enableNodeDrag}
               onCheckedChange={(checked) => onSettingChange('enableNodeDrag', checked)}
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="nodeFixing">Fix Nodes After Drag</Label>
+            <Switch
+              id="nodeFixing"
+              checked={settings.enableNodeFixing}
+              onCheckedChange={(checked) => onSettingChange('enableNodeFixing', checked)}
             />
           </div>
           <div className="flex items-center justify-between">
