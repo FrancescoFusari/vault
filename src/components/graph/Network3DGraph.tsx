@@ -27,6 +27,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const navigate = useNavigate();
   const dimensions = useGraphDimensions(containerRef, isMobile);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [highlightedNode, setHighlightedNode] = useState<NetworkNode | null>(null);
   
   const [settings, setSettings] = useState<Network3DSettings>({
     nodeSize: 6,
@@ -48,6 +49,8 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
 
   const handleNodeClick = (node: NetworkNode) => {
+    setHighlightedNode(node);
+    
     // Calculate the distance based on the node's position
     const distance = 40;
     const distRatio = 1 + distance/Math.hypot(node.x || 0, node.y || 0, node.z || 0);
@@ -80,6 +83,12 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   };
 
   const getLinkColor = (link: NetworkLink) => {
+    // Check if the link is connected to the highlighted node
+    if (highlightedNode && 
+       (link.source.id === highlightedNode.id || link.target.id === highlightedNode.id)) {
+      return theme === 'dark' ? '#60a5fa' : '#3b82f6'; // Bright blue for highlighted links
+    }
+    
     if (!link.source || !link.target) return theme === 'dark' ? '#475569' : '#94a3b8';
     
     const isUrlLink = 
