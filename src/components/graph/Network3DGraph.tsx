@@ -44,14 +44,17 @@ export const Network3DGraph = ({ notes, searchQuery = '' }: Network3DGraphProps)
 
       if (foundNode) {
         setHighlightedNode(foundNode);
-        // Center view on found node
-        graphRef.current.centerAt(
-          foundNode.x,
-          foundNode.y,
-          foundNode.z,
-          1000
+        // Center view on found node using cameraPosition
+        const distance = 100;
+        const position = foundNode.x && foundNode.y && foundNode.z
+          ? { x: foundNode.x, y: foundNode.y, z: foundNode.z + distance }
+          : { x: 0, y: 0, z: distance };
+        
+        graphRef.current.cameraPosition(
+          position,
+          { x: position.x, y: position.y, z: position.z - distance }, // lookAt
+          3000  // transition duration
         );
-        graphRef.current.zoom(1.5, 1000);
       } else {
         setHighlightedNode(null);
       }
@@ -60,7 +63,6 @@ export const Network3DGraph = ({ notes, searchQuery = '' }: Network3DGraphProps)
     }
   }, [searchQuery, nodes]);
 
-  // Handle node click/tap
   const handleNodeClick = useCallback((node: NetworkNode) => {
     if (node.type === 'note' && node.originalNote) {
       if (isMobile) {
@@ -71,7 +73,6 @@ export const Network3DGraph = ({ notes, searchQuery = '' }: Network3DGraphProps)
     }
   }, [isMobile, navigate]);
 
-  // Mobile optimization
   useEffect(() => {
     if (graphRef.current && isMobile) {
       // Optimize force simulation for mobile
