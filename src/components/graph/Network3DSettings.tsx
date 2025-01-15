@@ -8,6 +8,7 @@ import { Settings } from "lucide-react";
 export interface Network3DSettings {
   nodeSize: number;
   linkWidth: number;
+  linkDistance: number;  // Added this setting
   enableNodeDrag: boolean;
   enableNavigationControls: boolean;
   showNavInfo: boolean;
@@ -54,6 +55,17 @@ export const Network3DSettingsDialog = ({ settings, onSettingChange }: Network3D
               step={0.1}
               value={[settings.linkWidth]}
               onValueChange={([value]) => onSettingChange('linkWidth', value)}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="linkDistance">Link Distance</Label>
+            <Slider
+              id="linkDistance"
+              min={30}
+              max={300}
+              step={10}
+              value={[settings.linkDistance]}
+              onValueChange={([value]) => onSettingChange('linkDistance', value)}
             />
           </div>
           <div className="flex items-center justify-between">
