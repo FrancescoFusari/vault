@@ -11,6 +11,7 @@ import { Network3DSettingsDialog, Network3DSettings } from './Network3DSettings'
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { Json } from '@/integrations/supabase/types';
 
 interface Network3DGraphProps {
   notes: Note[];
@@ -60,7 +61,8 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         return defaultSettings;
       }
 
-      return settings?.settings as Network3DSettings || defaultSettings;
+      const parsedSettings = settings?.settings as Network3DSettings;
+      return parsedSettings || defaultSettings;
     }
   });
 
@@ -222,10 +224,13 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         forceEngine={isMobile ? "d3" : undefined}
         cooldownTime={isMobile ? 3000 : undefined}
         warmupTicks={isMobile ? 20 : undefined}
-        d3ForceConfig={{
-          link: {
-            distance: settings.linkDistance
+        d3Force={(force: string) => {
+          if (force === 'link') {
+            return {
+              distance: settings.linkDistance
+            };
           }
+          return undefined;
         }}
       />
       {selectedNote && (
