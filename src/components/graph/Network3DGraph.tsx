@@ -28,13 +28,25 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const { data: graphSettings } = useQuery({
     queryKey: ['graphSettings'],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       const { data, error } = await supabase
         .from('graph_settings')
-        .select('*')
-        .single();
+        .select('settings')
+        .eq('user_id', user.id)
+        .maybeSingle();
       
-      if (error) throw error;
-      return data?.settings as GraphSettings;
+      if (error && error.code !== 'PGRST116') throw error;
+      return data?.settings as GraphSettings || {
+        nodeSize: 6,
+        linkWidth: 1,
+        backgroundColor: "hsl(229 19% 12%)",
+        enableNodeDrag: true,
+        enableNavigationControls: true,
+        showNavInfo: true,
+        linkDistance: 120
+      };
     }
   });
 
@@ -107,7 +119,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           enableNodeDrag={graphSettings?.enableNodeDrag ?? true}
           enableNavigationControls={graphSettings?.enableNavigationControls ?? true}
           showNavInfo={graphSettings?.showNavInfo ?? true}
-          linkDistance={graphSettings?.linkDistance || 120}
+          d3Force={('link', (d3.forceLink().distance(graphSettings?.linkDistance || 120)))}
           warmupTicks={50}
         />
       )}
