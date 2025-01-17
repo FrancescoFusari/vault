@@ -12,7 +12,6 @@ export const GmailIntegration = () => {
     try {
       console.log('Initiating Gmail connection...');
       
-      // Get the client ID from Supabase edge function
       const { data, error: clientIdError } = await supabase.functions.invoke('gmail-auth', {
         body: { action: 'get_client_id' }
       });
@@ -52,16 +51,24 @@ export const GmailIntegration = () => {
         throw error;
       }
 
+      if (!data) {
+        throw new Error('No data received from fetch-emails function');
+      }
+
       console.log('Emails fetched successfully:', data);
       toast({
         title: 'Success',
-        description: `${data.emails.length} emails fetched and queued for processing`,
+        description: `${data.emails?.length || 0} emails fetched and queued for processing`,
       });
     } catch (error) {
       console.error('Error fetching emails:', error);
+      const errorMessage = error instanceof Error ? error.message : 
+                          typeof error === 'object' && error !== null ? JSON.stringify(error) : 
+                          String(error);
+      
       toast({
         title: 'Error',
-        description: `Failed to fetch emails: ${error instanceof Error ? error.message : String(error)}`,
+        description: `Failed to fetch emails: ${errorMessage}`,
         variant: 'destructive',
       });
     } finally {
