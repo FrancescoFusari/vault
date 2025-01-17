@@ -10,6 +10,7 @@ import NotePage from "./pages/NotePage";
 import TagsPage from "./pages/TagsPage";
 import Network3DPage from "./pages/Network3DPage";
 import SettingsPage from "./pages/SettingsPage";
+import GmailCallback from "./pages/GmailCallback";
 import { supabase } from "./integrations/supabase/client";
 import "./App.css";
 
@@ -68,6 +69,10 @@ function App() {
             <Route
               path="/settings"
               element={isAuthenticated ? <SettingsPage /> : <Navigate to="/auth" />}
+            />
+            <Route
+              path="/gmail-callback"
+              element={isAuthenticated ? <GmailCallback /> : <Navigate to="/auth" />}
             />
           </Routes>
         </main>

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { analyzeNote } from "@/lib/openai";
+import { GmailIntegration } from "@/components/GmailIntegration";
 import { Github, Mail, X, MessageSquare, Linkedin, Facebook, Instagram, Youtube, BookOpen, Cloud, Notebook } from "lucide-react";
 
 const Index = () => {
@@ -75,6 +76,10 @@ const Index = () => {
             </div>
             
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 gap-4 p-6 rounded-lg border border-border bg-card shadow-sm">
+              <div className="flex flex-col items-center gap-2">
+                <GmailIntegration />
+              </div>
+              
               <div className="flex flex-col items-center gap-2">
                 <Button
                   variant="ghost"
