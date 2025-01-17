@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -14,7 +14,9 @@ import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { X } from "lucide-react";
+import { X, FileText, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 
 type QueueItem = {
   id: string;
@@ -36,13 +38,10 @@ type SenderStat = {
 };
 
 const extractSenderName = (email: string) => {
-  // Try to extract name from "Name <email@domain.com>" format
   const nameMatch = email.match(/^([^<]+)</);
   if (nameMatch) {
     return nameMatch[1].trim();
   }
-  
-  // If no name found, use part before @ in email
   return email.split('@')[0].split('.').map(word => 
     word.charAt(0).toUpperCase() + word.slice(1)
   ).join(' ');
@@ -53,6 +52,8 @@ const QueuePage = () => {
   const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSender, setSelectedSender] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   const { data: queueItems, isLoading } = useQuery({
     queryKey: ["queue-items"],
@@ -61,7 +62,7 @@ const QueuePage = () => {
       const { data, error } = await supabase
         .from("email_processing_queue")
         .select("*")
-        .order("received_at", { ascending: false }); // Changed from created_at to received_at
+        .order("received_at", { ascending: false });
 
       if (error) {
         console.error("Error fetching queue items:", error);
@@ -72,6 +73,35 @@ const QueuePage = () => {
       return data as QueueItem[];
     },
     refetchInterval: 5000,
+  });
+
+  const processEmailMutation = useMutation({
+    mutationFn: async (emailId: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase.functions.invoke('process-email-to-note', {
+        body: { emailId, userId: user.id }
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data, emailId) => {
+      queryClient.invalidateQueries({ queryKey: ["queue-items"] });
+      toast({
+        title: "Email processed successfully",
+        description: "The email has been converted to a note",
+      });
+      navigate(`/note/${data.note.id}`);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error processing email",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   });
 
   // Calculate sender statistics
@@ -95,14 +125,12 @@ const QueuePage = () => {
     
     let filtered = queueItems;
     
-    // First apply sender filter if selected
     if (selectedSender) {
       filtered = filtered.filter(item => 
         extractSenderName(item.sender) === selectedSender
       );
     }
     
-    // Then apply search query if present
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(item => 
@@ -198,16 +226,16 @@ const QueuePage = () => {
                   <TableHead>Error</TableHead>
                 </>
               )}
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredQueueItems.map((item) => (
               <TableRow 
                 key={item.id}
-                className="cursor-pointer hover:bg-muted/50"
-                onClick={() => navigate(`/email/${item.id}`)}
+                className="hover:bg-muted/50"
               >
-                <TableCell className="font-medium">
+                <TableCell className="font-medium cursor-pointer" onClick={() => navigate(`/email/${item.id}`)}>
                   <div>
                     {item.subject}
                     {isMobile && (
@@ -238,6 +266,21 @@ const QueuePage = () => {
                     </TableCell>
                   </>
                 )}
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => processEmailMutation.mutate(item.id)}
+                    disabled={item.status === 'completed' || processEmailMutation.isPending}
+                  >
+                    {processEmailMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <FileText className="h-4 w-4" />
+                    )}
+                    <span className="ml-2">Process</span>
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
