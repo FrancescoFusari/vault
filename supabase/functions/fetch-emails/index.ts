@@ -105,7 +105,7 @@ serve(async (req) => {
 
     console.log('Fetching email list...')
     const listResponse = await fetch(
-      'https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=10',
+      'https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=100',
       {
         headers: {
           Authorization: `Bearer ${integrations.access_token}`,
