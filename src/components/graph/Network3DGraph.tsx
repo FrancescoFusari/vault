@@ -10,6 +10,16 @@ interface Network3DGraphProps {
   notes: Note[];
 }
 
+interface GraphSettings {
+  nodeSize: number;
+  linkWidth: number;
+  backgroundColor: string;
+  enableNodeDrag: boolean;
+  enableNavigationControls: boolean;
+  showNavInfo: boolean;
+  linkDistance: number;
+}
+
 export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const fgRef = useRef<any>();
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -24,7 +34,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         .single();
       
       if (error) throw error;
-      return data?.settings;
+      return data?.settings as GraphSettings;
     }
   });
 
@@ -48,12 +58,10 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
 
   useEffect(() => {
     if (fgRef.current) {
-      // Add zoom controls
       fgRef.current.controls().enableDamping = true;
       fgRef.current.controls().dampingFactor = 0.1;
       fgRef.current.controls().enableZoom = true;
       
-      // Add camera positioning
       fgRef.current.camera().position.set(200, 200, 200);
       fgRef.current.camera().lookAt(0, 0, 0);
     }
@@ -61,7 +69,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
 
   const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
 
-  // Node size based on connections
   const nodeRelSize = graphSettings?.nodeSize || 6;
   const nodeSizeScale = d3.scaleLinear()
     .domain([0, Math.max(...Array.from(tagUsageCount.values()))])

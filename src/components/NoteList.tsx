@@ -2,13 +2,13 @@ import { NoteCard } from "./NoteCard";
 
 interface Note {
   id: string;
-  content: string;
-  category: string;
-  tags: string[];
+  content: string | null;
+  category: string | null;
+  tags: string[] | null;
   created_at: string;
-  input_type?: string;
-  source_url?: string;
-  source_image_path?: string;
+  input_type?: string | null;
+  source_url?: string | null;
+  source_image_path?: string | null;
 }
 
 interface NoteListProps {
@@ -28,7 +28,14 @@ export const NoteList = ({ notes }: NoteListProps) => {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {notes.map((note) => (
-        <NoteCard key={note.id} note={note} />
+        <NoteCard 
+          key={note.id} 
+          note={{
+            ...note,
+            content: note.content || '',
+            tags: note.tags || []
+          }} 
+        />
       ))}
     </div>
   );

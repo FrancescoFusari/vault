@@ -14,9 +14,9 @@ const NotesListPage = () => {
   const { data: notes, isLoading, error } = useQuery({
     queryKey: ['notes'],
     queryFn: async () => {
-      console.log('Fetching notes...');
+      console.log('Fetching notes from combined_notes_view...');
       const { data, error } = await supabase
-        .from('notes')
+        .from('combined_notes_view')
         .select('*')
         .order('created_at', { ascending: false });
       
@@ -31,8 +31,8 @@ const NotesListPage = () => {
   });
 
   const filteredNotes = notes?.filter(note => 
-    note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    note.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    note.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    note.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (
@@ -60,7 +60,7 @@ const NotesListPage = () => {
                   Error loading notes. Please try again.
                 </div>
               ) : (
-                <NoteList notes={filteredNotes} />
+                <NoteList notes={filteredNotes || []} />
               )}
             </div>
             <BottomNav />
