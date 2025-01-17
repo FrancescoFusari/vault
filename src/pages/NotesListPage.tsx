@@ -14,25 +14,33 @@ const NotesListPage = () => {
   const { data: notes, isLoading, error } = useQuery({
     queryKey: ['notes'],
     queryFn: async () => {
-      console.log('Fetching notes from combined_notes_view...');
+      console.log('Fetching notes and analyzed emails from combined_notes_view...');
       const { data, error } = await supabase
         .from('combined_notes_view')
         .select('*')
         .order('created_at', { ascending: false });
       
       if (error) {
-        console.error('Error fetching notes:', error);
+        console.error('Error fetching notes and emails:', error);
         throw error;
       }
       
-      console.log('Notes fetched:', data);
-      return data || [];
+      // Filter out null entries and ensure required fields are present
+      const validData = data?.filter(item => 
+        item && 
+        item.id && 
+        item.content && 
+        item.created_at
+      ) || [];
+      
+      console.log('Notes and emails fetched:', validData);
+      return validData;
     },
   });
 
   const filteredNotes = notes?.filter(note => 
     note.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    note.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    note.tags?.some(tag => tag?.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (

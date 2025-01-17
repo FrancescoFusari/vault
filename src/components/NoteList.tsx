@@ -25,9 +25,14 @@ export const NoteList = ({ notes }: NoteListProps) => {
     );
   }
 
+  // Sort notes by creation date (newest first)
+  const sortedNotes = [...notes].sort((a, b) => 
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {notes.map((note) => (
+      {sortedNotes.map((note) => (
         <NoteCard 
           key={note.id} 
           note={{
