@@ -12,6 +12,7 @@ import Network3DPage from "./pages/Network3DPage";
 import SettingsPage from "./pages/SettingsPage";
 import GmailCallback from "./pages/GmailCallback";
 import QueuePage from "./pages/QueuePage";
+import EmailDetailsPage from "./pages/EmailDetailsPage";
 import { supabase } from "./integrations/supabase/client";
 import "./App.css";
 
@@ -78,6 +79,10 @@ function App() {
             <Route
               path="/queue"
               element={isAuthenticated ? <QueuePage /> : <Navigate to="/auth" />}
+            />
+            <Route
+              path="/email/:id"
+              element={isAuthenticated ? <EmailDetailsPage /> : <Navigate to="/auth" />}
             />
           </Routes>
         </main>

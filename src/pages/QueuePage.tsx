@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -11,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
 
 type QueueItem = {
   id: string;
@@ -22,15 +22,20 @@ type QueueItem = {
   content: string | null;
   source_url: string | null;
   source_image_path: string | null;
+  sender: string;
+  subject: string;
+  received_at: string;
 };
 
 const QueuePage = () => {
+  const navigate = useNavigate();
+  
   const { data: queueItems, isLoading } = useQuery({
     queryKey: ["queue-items"],
     queryFn: async () => {
       console.log("Fetching queue items...");
       const { data, error } = await supabase
-        .from("batch_processing_queue")
+        .from("email_processing_queue")
         .select("*")
         .order("created_at", { ascending: false });
 
@@ -71,7 +76,8 @@ const QueuePage = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Type</TableHead>
+              <TableHead>Subject</TableHead>
+              <TableHead>From</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Created At</TableHead>
               <TableHead>Processed At</TableHead>
@@ -80,8 +86,13 @@ const QueuePage = () => {
           </TableHeader>
           <TableBody>
             {queueItems?.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.input_type}</TableCell>
+              <TableRow 
+                key={item.id}
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => navigate(`/email/${item.id}`)}
+              >
+                <TableCell className="font-medium">{item.subject}</TableCell>
+                <TableCell>{item.sender}</TableCell>
                 <TableCell>
                   <Badge className={getStatusBadgeColor(item.status)}>
                     {item.status}
