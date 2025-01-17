@@ -14,17 +14,16 @@ import { useNavigate } from "react-router-dom";
 
 type QueueItem = {
   id: string;
-  input_type: string;
+  email_id: string;
+  sender: string;
+  subject: string;
   status: string;
   created_at: string;
   processed_at: string | null;
   error_message: string | null;
-  content: string | null;
-  source_url: string | null;
-  source_image_path: string | null;
-  sender: string;
-  subject: string;
   received_at: string;
+  email_body: string | null;
+  user_id: string;
 };
 
 const QueuePage = () => {
