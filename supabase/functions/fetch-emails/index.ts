@@ -59,7 +59,7 @@ serve(async (req) => {
       messages.map(async ({ id }: { id: string }) => {
         console.log(`Fetching details for email ${id}...`);
         const emailResponse = await fetch(
-          `https://www.googleapis.com/gmail/v1/users/me/messages/${id}?format=full`,
+          `https://www.googleapis.com/gmail/v1/users/me/messages/${id}`,
           {
             headers: {
               Authorization: `Bearer ${integration.access_token}`,
@@ -73,7 +73,27 @@ serve(async (req) => {
         }
         
         const emailData = await emailResponse.json();
-        console.log(`Email ${id} payload:`, JSON.stringify(emailData.payload, null, 2));
+        console.log(`Email ${id} full payload structure:`, JSON.stringify(emailData, null, 2));
+        
+        // Log specific parts we're interested in
+        if (emailData.payload) {
+          console.log(`Email ${id} payload mimeType:`, emailData.payload.mimeType);
+          if (emailData.payload.parts) {
+            console.log(`Email ${id} parts:`, emailData.payload.parts.map((p: any) => ({
+              mimeType: p.mimeType,
+              hasBody: !!p.body,
+              bodySize: p.body?.size,
+              hasData: !!p.body?.data
+            })));
+          } else {
+            console.log(`Email ${id} body info:`, {
+              hasBody: !!emailData.payload.body,
+              bodySize: emailData.payload.body?.size,
+              hasData: !!emailData.payload.body?.data
+            });
+          }
+        }
+        
         return emailData;
       })
     );
