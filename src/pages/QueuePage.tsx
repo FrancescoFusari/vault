@@ -35,6 +35,19 @@ type SenderStat = {
   count: number;
 };
 
+const extractSenderName = (email: string) => {
+  // Try to extract name from "Name <email@domain.com>" format
+  const nameMatch = email.match(/^([^<]+)</);
+  if (nameMatch) {
+    return nameMatch[1].trim();
+  }
+  
+  // If no name found, use part before @ in email
+  return email.split('@')[0].split('.').map(word => 
+    word.charAt(0).toUpperCase() + word.slice(1)
+  ).join(' ');
+};
+
 const QueuePage = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
@@ -58,7 +71,7 @@ const QueuePage = () => {
       console.log("Queue items fetched:", data);
       return data as QueueItem[];
     },
-    refetchInterval: 5000, // Refresh every 5 seconds
+    refetchInterval: 5000,
   });
 
   // Calculate sender statistics
@@ -67,13 +80,13 @@ const QueuePage = () => {
     
     const stats: Record<string, number> = {};
     queueItems.forEach(item => {
-      stats[item.sender] = (stats[item.sender] || 0) + 1;
+      const senderName = extractSenderName(item.sender);
+      stats[senderName] = (stats[senderName] || 0) + 1;
     });
 
     return Object.entries(stats)
       .map(([sender, count]) => ({ sender, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5); // Show top 5 senders
+      .sort((a, b) => b.count - a.count);
   }, [queueItems]);
 
   // Filter queue items based on search query and selected sender
@@ -84,7 +97,9 @@ const QueuePage = () => {
     
     // First apply sender filter if selected
     if (selectedSender) {
-      filtered = filtered.filter(item => item.sender === selectedSender);
+      filtered = filtered.filter(item => 
+        extractSenderName(item.sender) === selectedSender
+      );
     }
     
     // Then apply search query if present
@@ -125,8 +140,8 @@ const QueuePage = () => {
       
       {/* Sender Statistics */}
       <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-3">Top Senders</h2>
-        <div className="flex flex-wrap gap-3">
+        <h2 className="text-lg font-semibold mb-3">Senders</h2>
+        <div className="flex flex-wrap gap-2">
           {senderStats.map(({ sender, count }) => (
             <Badge 
               key={sender} 
@@ -197,12 +212,12 @@ const QueuePage = () => {
                     {item.subject}
                     {isMobile && (
                       <div className="text-sm text-muted-foreground mt-1">
-                        {item.sender}
+                        {extractSenderName(item.sender)}
                       </div>
                     )}
                   </div>
                 </TableCell>
-                {!isMobile && <TableCell>{item.sender}</TableCell>}
+                {!isMobile && <TableCell>{extractSenderName(item.sender)}</TableCell>}
                 <TableCell>
                   <Badge className={getStatusBadgeColor(item.status)}>
                     {item.status}
