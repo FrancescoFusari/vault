@@ -80,6 +80,7 @@ const QueuePage = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      console.log('Processing email:', emailId);
       const { data, error } = await supabase.functions.invoke('process-email-to-note', {
         body: { emailId, userId: user.id }
       });
@@ -271,9 +272,13 @@ const QueuePage = () => {
                     variant="ghost"
                     size="sm"
                     onClick={() => processEmailMutation.mutate(item.id)}
-                    disabled={item.status === 'completed' || processEmailMutation.isPending}
+                    disabled={
+                      item.status === 'completed' || 
+                      processEmailMutation.isPending && 
+                      processEmailMutation.variables === item.id
+                    }
                   >
-                    {processEmailMutation.isPending ? (
+                    {processEmailMutation.isPending && processEmailMutation.variables === item.id ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <FileText className="h-4 w-4" />
