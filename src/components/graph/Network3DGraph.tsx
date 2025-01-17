@@ -83,6 +83,10 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
 
   useEffect(() => {
     if (fgRef.current) {
+      // Configure the force simulation
+      const distance = (graphSettings?.linkDistance || defaultSettings.linkDistance) * 3;
+      fgRef.current.d3Force('link').distance(() => distance);
+      
       fgRef.current.controls().enableDamping = true;
       fgRef.current.controls().dampingFactor = 0.1;
       fgRef.current.controls().enableZoom = true;
@@ -90,7 +94,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       fgRef.current.camera().position.set(200, 200, 200);
       fgRef.current.camera().lookAt(0, 0, 0);
     }
-  }, []);
+  }, [graphSettings?.linkDistance]);
 
   const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
 
