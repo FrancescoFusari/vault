@@ -11,6 +11,7 @@ import TagsPage from "./pages/TagsPage";
 import Network3DPage from "./pages/Network3DPage";
 import SettingsPage from "./pages/SettingsPage";
 import GmailCallback from "./pages/GmailCallback";
+import QueuePage from "./pages/QueuePage";
 import { supabase } from "./integrations/supabase/client";
 import "./App.css";
 
@@ -73,6 +74,10 @@ function App() {
             <Route
               path="/gmail-callback"
               element={isAuthenticated ? <GmailCallback /> : <Navigate to="/auth" />}
+            />
+            <Route
+              path="/queue"
+              element={isAuthenticated ? <QueuePage /> : <Navigate to="/auth" />}
             />
           </Routes>
         </main>

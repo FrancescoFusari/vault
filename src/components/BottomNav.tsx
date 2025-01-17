@@ -1,49 +1,49 @@
-import { List, Tag, FileText, Settings, Square } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import {
+  Home,
+  StickyNote,
+  Tags,
+  Network,
+  Settings,
+  Timer,
+} from "lucide-react";
 
-export const BottomNav = () => {
-  const navigate = useNavigate();
+const navItems = [
+  { icon: Home, label: "Home", href: "/" },
+  { icon: StickyNote, label: "Notes", href: "/notes" },
+  { icon: Tags, label: "Tags", href: "/tags" },
+  { icon: Network, label: "Network", href: "/network3d" },
+  { icon: Timer, label: "Queue", href: "/queue" },
+  { icon: Settings, label: "Settings", href: "/settings" },
+];
+
+export function BottomNav() {
   const location = useLocation();
-  
-  const isActive = (path: string) => location.pathname === path;
-  
+
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur-lg rounded-full border shadow-lg px-6 py-3 flex items-center gap-6 md:hidden">
-      <button
-        onClick={() => navigate('/')}
-        className={`flex flex-col items-center ${isActive('/') ? 'text-primary' : 'text-muted-foreground'}`}
-      >
-        <List className="h-5 w-5" />
-        <span className="text-xs mt-1">Home</span>
-      </button>
-      <button
-        onClick={() => navigate('/notes')}
-        className={`flex flex-col items-center ${isActive('/notes') ? 'text-primary' : 'text-muted-foreground'}`}
-      >
-        <FileText className="h-5 w-5" />
-        <span className="text-xs mt-1">Vault</span>
-      </button>
-      <button
-        onClick={() => navigate('/tags')}
-        className={`flex flex-col items-center ${isActive('/tags') ? 'text-primary' : 'text-muted-foreground'}`}
-      >
-        <Tag className="h-5 w-5" />
-        <span className="text-xs mt-1">Tags</span>
-      </button>
-      <button
-        onClick={() => navigate('/network3d')}
-        className={`flex flex-col items-center ${isActive('/network3d') ? 'text-primary' : 'text-muted-foreground'}`}
-      >
-        <Square className="h-5 w-5" />
-        <span className="text-xs mt-1">3D</span>
-      </button>
-      <button
-        onClick={() => navigate('/settings')}
-        className={`flex flex-col items-center ${isActive('/settings') ? 'text-primary' : 'text-muted-foreground'}`}
-      >
-        <Settings className="h-5 w-5" />
-        <span className="text-xs mt-1">Settings</span>
-      </button>
+    <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
+      <nav className="flex h-16 items-center px-4">
+        <div className="flex w-full justify-around">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                to={item.href}
+                className={cn(
+                  "flex flex-col items-center justify-center",
+                  isActive && "text-primary"
+                )}
+              >
+                <Icon className="h-5 w-5" />
+                <span className="text-xs">{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
-};
+}
