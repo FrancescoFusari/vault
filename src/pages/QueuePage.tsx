@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { X } from "lucide-react";
 
 type QueueItem = {
   id: string;
@@ -35,7 +37,9 @@ type SenderStat = {
 
 const QueuePage = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSender, setSelectedSender] = useState<string | null>(null);
   
   const { data: queueItems, isLoading } = useQuery({
     queryKey: ["queue-items"],
@@ -72,18 +76,29 @@ const QueuePage = () => {
       .slice(0, 5); // Show top 5 senders
   }, [queueItems]);
 
-  // Filter queue items based on search query
+  // Filter queue items based on search query and selected sender
   const filteredQueueItems = useMemo(() => {
     if (!queueItems) return [];
-    if (!searchQuery) return queueItems;
-
-    const query = searchQuery.toLowerCase();
-    return queueItems.filter(item => 
-      item.sender.toLowerCase().includes(query) ||
-      item.subject.toLowerCase().includes(query) ||
-      (item.email_body && item.email_body.toLowerCase().includes(query))
-    );
-  }, [queueItems, searchQuery]);
+    
+    let filtered = queueItems;
+    
+    // First apply sender filter if selected
+    if (selectedSender) {
+      filtered = filtered.filter(item => item.sender === selectedSender);
+    }
+    
+    // Then apply search query if present
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(item => 
+        item.sender.toLowerCase().includes(query) ||
+        item.subject.toLowerCase().includes(query) ||
+        (item.email_body && item.email_body.toLowerCase().includes(query))
+      );
+    }
+    
+    return filtered;
+  }, [queueItems, searchQuery, selectedSender]);
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
@@ -115,14 +130,32 @@ const QueuePage = () => {
           {senderStats.map(({ sender, count }) => (
             <Badge 
               key={sender} 
-              variant="secondary"
-              className="text-sm py-1"
+              variant={selectedSender === sender ? "default" : "secondary"}
+              className="text-sm py-1 cursor-pointer"
+              onClick={() => setSelectedSender(sender)}
             >
               {sender} ({count})
             </Badge>
           ))}
         </div>
       </div>
+
+      {/* Active Filter Display */}
+      {selectedSender && (
+        <div className="mb-4 flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Filtering by sender:</span>
+          <Badge 
+            variant="outline" 
+            className="flex items-center gap-1"
+          >
+            {selectedSender}
+            <X 
+              className="h-3 w-3 cursor-pointer" 
+              onClick={() => setSelectedSender(null)}
+            />
+          </Badge>
+        </div>
+      )}
 
       {/* Search Bar */}
       <div className="mb-6">
@@ -136,16 +169,20 @@ const QueuePage = () => {
       </div>
 
       {/* Queue Items Table */}
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Subject</TableHead>
-              <TableHead>From</TableHead>
+              {!isMobile && <TableHead>From</TableHead>}
               <TableHead>Status</TableHead>
               <TableHead>Created At</TableHead>
-              <TableHead>Processed At</TableHead>
-              <TableHead>Error</TableHead>
+              {!isMobile && (
+                <>
+                  <TableHead>Processed At</TableHead>
+                  <TableHead>Error</TableHead>
+                </>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -155,8 +192,17 @@ const QueuePage = () => {
                 className="cursor-pointer hover:bg-muted/50"
                 onClick={() => navigate(`/email/${item.id}`)}
               >
-                <TableCell className="font-medium">{item.subject}</TableCell>
-                <TableCell>{item.sender}</TableCell>
+                <TableCell className="font-medium">
+                  <div>
+                    {item.subject}
+                    {isMobile && (
+                      <div className="text-sm text-muted-foreground mt-1">
+                        {item.sender}
+                      </div>
+                    )}
+                  </div>
+                </TableCell>
+                {!isMobile && <TableCell>{item.sender}</TableCell>}
                 <TableCell>
                   <Badge className={getStatusBadgeColor(item.status)}>
                     {item.status}
@@ -165,14 +211,18 @@ const QueuePage = () => {
                 <TableCell>
                   {format(new Date(item.created_at), "PPp")}
                 </TableCell>
-                <TableCell>
-                  {item.processed_at
-                    ? format(new Date(item.processed_at), "PPp")
-                    : "-"}
-                </TableCell>
-                <TableCell className="max-w-[300px] truncate">
-                  {item.error_message || "-"}
-                </TableCell>
+                {!isMobile && (
+                  <>
+                    <TableCell>
+                      {item.processed_at
+                        ? format(new Date(item.processed_at), "PPp")
+                        : "-"}
+                    </TableCell>
+                    <TableCell className="max-w-[300px] truncate">
+                      {item.error_message || "-"}
+                    </TableCell>
+                  </>
+                )}
               </TableRow>
             ))}
           </TableBody>
