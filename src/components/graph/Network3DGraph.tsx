@@ -46,6 +46,12 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       ...prev,
       [key]: value
     }));
+
+    // Refresh the graph when link length changes
+    if (key === 'linkLength' && graphRef.current) {
+      graphRef.current.d3Force('link').distance(value);
+      graphRef.current.d3ReheatSimulation();
+    }
   };
 
   const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
@@ -159,7 +165,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         enableNavigationControls={settings.enableNavigationControls}
         showNavInfo={settings.showNavInfo}
         enablePointerInteraction={settings.enablePointerInteraction}
-        linkDistance={settings.linkLength}
+        d3Force="link"
         controlType="orbit"
         forceEngine={isMobile ? "d3" : undefined}
         cooldownTime={isMobile ? 3000 : undefined}
