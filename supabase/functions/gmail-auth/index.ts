@@ -21,6 +21,10 @@ serve(async (req) => {
   try {
     const { code, action } = await req.json();
     
+    if (!action) {
+      throw new Error('Action is required');
+    }
+    
     if (action === 'get_client_id') {
       return new Response(
         JSON.stringify({ clientId: GOOGLE_CLIENT_ID }),
@@ -29,6 +33,10 @@ serve(async (req) => {
     }
     
     if (action === 'exchange_code') {
+      if (!code) {
+        throw new Error('Code is required for exchange_code action');
+      }
+
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: {
@@ -89,6 +97,7 @@ serve(async (req) => {
 
     throw new Error('Invalid action');
   } catch (error) {
+    console.error('Gmail auth error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
