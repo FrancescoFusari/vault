@@ -9,11 +9,7 @@ export interface NetworkNode {
   originalNote?: Note;
   x?: number;
   y?: number;
-  z?: number;
-  // Add fixed position properties
-  fx?: number | null;
-  fy?: number | null;
-  fz?: number | null;
+  z?: number;  // Added z coordinate
 }
 
 export interface NetworkLink {
