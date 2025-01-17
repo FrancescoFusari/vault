@@ -66,28 +66,50 @@ serve(async (req) => {
       })
     );
 
-    // Process emails and add to queue
-    const emailsToQueue = emails.map((email: any) => ({
-      user_id: user.id,
-      email_id: email.id,
-      sender: email.payload.headers.find((h: any) => h.name === 'From').value,
-      subject: email.payload.headers.find((h: any) => h.name === 'Subject').value,
-      received_at: new Date(parseInt(email.internalDate)).toISOString(),
-    }));
-
-    const { error: queueError } = await supabase
+    // First, check which emails already exist in the queue
+    const { data: existingEmails } = await supabase
       .from('email_processing_queue')
-      .upsert(emailsToQueue);
+      .select('email_id')
+      .eq('user_id', user.id)
+      .in('email_id', emails.map(email => email.id));
 
-    if (queueError) {
-      throw queueError;
+    const existingEmailIds = new Set(existingEmails?.map(e => e.email_id) || []);
+
+    // Filter out emails that already exist and prepare new ones for insertion
+    const newEmails = emails.filter(email => !existingEmailIds.has(email.id));
+    
+    if (newEmails.length > 0) {
+      const emailsToQueue = newEmails.map((email: any) => ({
+        user_id: user.id,
+        email_id: email.id,
+        sender: email.payload.headers.find((h: any) => h.name === 'From').value,
+        subject: email.payload.headers.find((h: any) => h.name === 'Subject').value,
+        received_at: new Date(parseInt(email.internalDate)).toISOString(),
+      }));
+
+      const { error: queueError } = await supabase
+        .from('email_processing_queue')
+        .insert(emailsToQueue);
+
+      if (queueError) {
+        throw queueError;
+      }
+
+      console.log(`Successfully queued ${newEmails.length} new emails`);
+    } else {
+      console.log('No new emails to queue');
     }
 
     return new Response(
-      JSON.stringify({ emails: emailsToQueue }),
+      JSON.stringify({ 
+        emails: emails.length,
+        newEmailsQueued: newEmails.length,
+        skippedEmails: emails.length - newEmails.length 
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
+    console.error('Error in fetch-emails function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
