@@ -61,7 +61,7 @@ const QueuePage = () => {
       const { data, error } = await supabase
         .from("email_processing_queue")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("received_at", { ascending: false }); // Changed from created_at to received_at
 
       if (error) {
         console.error("Error fetching queue items:", error);
@@ -191,7 +191,7 @@ const QueuePage = () => {
               <TableHead>Subject</TableHead>
               {!isMobile && <TableHead>From</TableHead>}
               <TableHead>Status</TableHead>
-              <TableHead>Created At</TableHead>
+              <TableHead>Received At</TableHead>
               {!isMobile && (
                 <>
                   <TableHead>Processed At</TableHead>
@@ -224,7 +224,7 @@ const QueuePage = () => {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  {format(new Date(item.created_at), "PPp")}
+                  {format(new Date(item.received_at), "PPp")}
                 </TableCell>
                 {!isMobile && (
                   <>
