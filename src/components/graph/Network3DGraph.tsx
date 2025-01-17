@@ -32,6 +32,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const [settings, setSettings] = useState<Network3DSettings>({
     nodeSize: 6,
     linkWidth: 1,
+    linkLength: 120,
     enableNodeDrag: true,
     enableNavigationControls: true,
     showNavInfo: true,
@@ -162,6 +163,8 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         forceEngine={isMobile ? "d3" : undefined}
         cooldownTime={isMobile ? 3000 : undefined}
         warmupTicks={isMobile ? 20 : undefined}
+        d3Force="link"
+        linkDistance={settings.linkLength}
       />
       {selectedNote && (
         <NotePopupWindow
