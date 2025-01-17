@@ -14,7 +14,7 @@ serve(async (req) => {
 
   try {
     const { emailId, userId } = await req.json();
-    console.log('Processing email to note:', { emailId, userId });
+    console.log('Processing email:', { emailId, userId });
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -32,6 +32,8 @@ serve(async (req) => {
       console.error('Error fetching email:', emailError);
       throw new Error('Email not found');
     }
+
+    console.log('Email fetched:', email);
 
     // Analyze content with OpenAI
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -55,8 +57,8 @@ serve(async (req) => {
             1. A category that best describes the content
             2. Relevant tags (including the subject as first tag)
             3. Any key metadata or insights
-            
-            Respond with a JSON object containing:
+
+            Return a JSON object in this exact format:
             {
               "category": "string",
               "tags": ["string"],
@@ -69,7 +71,7 @@ serve(async (req) => {
           },
           {
             role: 'user',
-            content: `Subject: ${email.subject}\nFrom: ${email.sender}\n\nContent:\n${email.email_body}`
+            content: `Subject: ${email.subject}\nFrom: ${email.sender}\n\nContent:\n${email.email_body || 'No content available'}`
           }
         ],
         temperature: 0.7,
@@ -85,9 +87,21 @@ serve(async (req) => {
     const analysisData = await analysisResponse.json();
     console.log('OpenAI analysis response:', analysisData);
 
+    if (!analysisData.choices?.[0]?.message?.content) {
+      console.error('Unexpected OpenAI response format:', analysisData);
+      throw new Error('Unexpected response format from OpenAI');
+    }
+
     let analysis;
     try {
-      analysis = JSON.parse(analysisData.choices[0].message.content);
+      const content = analysisData.choices[0].message.content.trim();
+      analysis = JSON.parse(content);
+      
+      // Validate the response format
+      if (!analysis.category || !Array.isArray(analysis.tags) || !analysis.metadata) {
+        throw new Error('Invalid response structure');
+      }
+      
       console.log('Parsed analysis:', analysis);
     } catch (error) {
       console.error('Error parsing OpenAI response:', error);
@@ -100,7 +114,7 @@ serve(async (req) => {
       .from('notes')
       .insert({
         user_id: userId,
-        content: email.email_body,
+        content: email.email_body || 'No content available',
         category: analysis.category,
         tags: analysis.tags,
         input_type: 'email',
