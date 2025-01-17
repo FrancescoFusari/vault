@@ -115,10 +115,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     return node.type === 'note' ? '#60a5fa' : '#f59e0b';
   };
 
-  // Create the force link configuration
-  const forceLink = d3.forceLink()
-    .distance(graphSettings?.linkDistance || defaultSettings.linkDistance);
-
   return (
     <div ref={containerRef} className="w-full h-full">
       {dimensions.width > 0 && dimensions.height > 0 && (
@@ -136,8 +132,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           enableNodeDrag={graphSettings?.enableNodeDrag ?? defaultSettings.enableNodeDrag}
           enableNavigationControls={graphSettings?.enableNavigationControls ?? defaultSettings.enableNavigationControls}
           showNavInfo={graphSettings?.showNavInfo ?? defaultSettings.showNavInfo}
-          forceEngine="d3"
-          d3Force={('link', forceLink)}
+          d3VelocityDecay={0.1}
           warmupTicks={50}
         />
       )}
