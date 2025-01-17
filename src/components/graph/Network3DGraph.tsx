@@ -163,6 +163,12 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         forceEngine={isMobile ? "d3" : undefined}
         cooldownTime={isMobile ? 3000 : undefined}
         warmupTicks={isMobile ? 20 : undefined}
+        d3VelocityDecay={0.4}
+        d3AlphaMin={0.001}
+        d3AlphaDecay={0.0228}
+        d3Force={(force) => {
+          force.force('link').distance(settings.linkLength);
+        }}
       />
       {selectedNote && (
         <NotePopupWindow
