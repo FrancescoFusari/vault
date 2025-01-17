@@ -25,7 +25,7 @@ export function DesktopNav() {
     <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <nav className="flex h-16 items-center justify-between px-8 border-b border-border/10">
         <div className="flex items-center">
-          <span className="text-lg font-semibold mr-8">Lovable</span>
+          <span className="text-lg font-semibold mr-8">SecondBrain</span>
           <div className="hidden md:flex items-center space-x-1">
             {navItems.map((item) => {
               const Icon = item.icon;
