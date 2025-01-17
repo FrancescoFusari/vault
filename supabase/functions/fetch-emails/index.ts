@@ -13,9 +13,16 @@ serve(async (req) => {
 
   try {
     // Get user ID from auth header
-    const authHeader = req.headers.get('Authorization')!
-    const token = authHeader.replace('Bearer ', '')
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      console.error('No authorization header provided')
+      return new Response(
+        JSON.stringify({ error: 'No authorization header provided' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
     
+    const token = authHeader.replace('Bearer ', '')
     console.log('Starting email fetch process...')
     
     const supabaseClient = createClient(
@@ -27,7 +34,10 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token)
     if (userError || !user) {
       console.error('User authentication error:', userError)
-      throw new Error('Unauthorized')
+      return new Response(
+        JSON.stringify({ error: userError?.message || 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     console.log('User authenticated successfully')
@@ -42,7 +52,10 @@ serve(async (req) => {
 
     if (integrationError || !integrations) {
       console.error('Error getting Gmail integration:', integrationError)
-      throw new Error('Gmail integration not found')
+      return new Response(
+        JSON.stringify({ error: 'Gmail integration not found. Please reconnect your Gmail account.' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     console.log('Found Gmail integration')
@@ -66,7 +79,10 @@ serve(async (req) => {
       if (!response.ok) {
         const errorData = await response.text()
         console.error('Token refresh failed:', errorData)
-        throw new Error(`Failed to refresh token: ${errorData}`)
+        return new Response(
+          JSON.stringify({ error: `Failed to refresh token: ${errorData}` }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
       }
 
       const tokens = await response.json()
@@ -82,7 +98,10 @@ serve(async (req) => {
 
       if (updateError) {
         console.error('Error updating integration:', updateError)
-        throw new Error('Failed to update integration')
+        return new Response(
+          JSON.stringify({ error: 'Failed to update integration' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
       }
 
       integrations.access_token = tokens.access_token
@@ -104,7 +123,10 @@ serve(async (req) => {
     if (!listResponse.ok) {
       const errorData = await listResponse.text()
       console.error('Error fetching email list:', errorData)
-      throw new Error(`Failed to fetch email list: ${errorData}`)
+      return new Response(
+        JSON.stringify({ error: `Failed to fetch email list: ${errorData}` }),
+        { status: listResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     const listData = await listResponse.json()
@@ -126,13 +148,11 @@ serve(async (req) => {
         )
 
         if (!emailResponse.ok) {
-          const errorData = await emailResponse.text()
-          console.error(`Error fetching email ${id}:`, errorData)
-          throw new Error(`Failed to fetch email ${id}: ${errorData}`)
+          console.error(`Error fetching email ${id}:`, await emailResponse.text())
+          return null
         }
         
         const emailData = await emailResponse.json()
-        console.log(`Email ${id} structure:`, JSON.stringify(emailData.payload, null, 2))
         
         // Extract email body
         let emailBody = ''
@@ -143,7 +163,6 @@ serve(async (req) => {
               if (part.mimeType === 'text/plain' || part.mimeType === 'text/html') {
                 if (part.body?.data) {
                   emailBody = atob(part.body.data.replace(/-/g, '+').replace(/_/g, '/'))
-                  console.log(`Found email body in part with mime type: ${part.mimeType}`)
                   break
                 }
               }
@@ -151,12 +170,7 @@ serve(async (req) => {
           } else if (emailData.payload.body?.data) {
             // Handle single part message
             emailBody = atob(emailData.payload.body.data.replace(/-/g, '+').replace(/_/g, '/'))
-            console.log('Found email body in single part message')
           }
-        }
-
-        if (!emailBody) {
-          console.log('No email body found in the message')
         }
 
         // Get headers
@@ -176,11 +190,14 @@ serve(async (req) => {
       })
     )
 
+    // Filter out any null values from failed email fetches
+    const validEmails = emailDetails.filter(email => email !== null)
+
     // Store emails in queue
     const { error: queueError } = await supabaseClient
       .from('email_processing_queue')
       .upsert(
-        emailDetails.map((email: any) => ({
+        validEmails.map((email: any) => ({
           user_id: user.id,
           email_id: email.id,
           sender: email.from,
@@ -193,20 +210,23 @@ serve(async (req) => {
 
     if (queueError) {
       console.error('Error storing emails in queue:', queueError)
-      throw new Error('Failed to store emails in queue')
+      return new Response(
+        JSON.stringify({ error: 'Failed to store emails in queue' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     console.log('Successfully processed and stored emails')
 
     return new Response(
-      JSON.stringify({ success: true, emails: emailDetails }),
+      JSON.stringify({ success: true, emails: validEmails }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
     console.error('Error in fetch-emails function:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: error.message || 'Internal server error' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 })
