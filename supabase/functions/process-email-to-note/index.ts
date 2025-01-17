@@ -29,6 +29,7 @@ serve(async (req) => {
       .single();
 
     if (emailError || !email) {
+      console.error('Error fetching email:', emailError);
       throw new Error('Email not found');
     }
 
@@ -38,6 +39,7 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
+    console.log('Analyzing email content with OpenAI...');
     const analysisResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -55,24 +57,43 @@ serve(async (req) => {
             3. Any key metadata or insights
             
             Respond with a JSON object containing:
-            - category (string)
-            - tags (array of strings)
-            - metadata (object with email_subject, sender, and analysis_notes)`
+            {
+              "category": "string",
+              "tags": ["string"],
+              "metadata": {
+                "email_subject": "string",
+                "sender": "string",
+                "analysis_notes": "string"
+              }
+            }`
           },
           {
             role: 'user',
             content: `Subject: ${email.subject}\nFrom: ${email.sender}\n\nContent:\n${email.email_body}`
           }
         ],
+        temperature: 0.7,
+        max_tokens: 1000,
       }),
     });
 
     if (!analysisResponse.ok) {
+      console.error('OpenAI API error:', await analysisResponse.text());
       throw new Error(`OpenAI API error: ${analysisResponse.statusText}`);
     }
 
     const analysisData = await analysisResponse.json();
-    const analysis = JSON.parse(analysisData.choices[0].message.content);
+    console.log('OpenAI analysis response:', analysisData);
+
+    let analysis;
+    try {
+      analysis = JSON.parse(analysisData.choices[0].message.content);
+      console.log('Parsed analysis:', analysis);
+    } catch (error) {
+      console.error('Error parsing OpenAI response:', error);
+      console.error('Raw content:', analysisData.choices[0].message.content);
+      throw new Error('Invalid response format from OpenAI');
+    }
 
     // Create note
     const { data: note, error: noteError } = await supabaseClient
@@ -94,11 +115,12 @@ serve(async (req) => {
       .single();
 
     if (noteError) {
+      console.error('Error creating note:', noteError);
       throw noteError;
     }
 
     // Update email status
-    await supabaseClient
+    const { error: updateError } = await supabaseClient
       .from('email_processing_queue')
       .update({ 
         status: 'completed',
@@ -106,6 +128,12 @@ serve(async (req) => {
       })
       .eq('id', emailId);
 
+    if (updateError) {
+      console.error('Error updating email status:', updateError);
+      // Don't throw here as the note was created successfully
+    }
+
+    console.log('Successfully processed email to note:', note);
     return new Response(
       JSON.stringify({ success: true, note }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
