@@ -87,6 +87,15 @@ const EmailDetailsPage = () => {
               <p>{format(new Date(email.processed_at), "PPp")}</p>
             </div>
           )}
+
+          {email.email_body && (
+            <div>
+              <h3 className="font-semibold mb-2">Email Content</h3>
+              <div className="bg-muted p-4 rounded-lg whitespace-pre-wrap">
+                {email.email_body}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
