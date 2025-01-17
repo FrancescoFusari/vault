@@ -159,7 +159,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         enableNavigationControls={settings.enableNavigationControls}
         showNavInfo={settings.showNavInfo}
         enablePointerInteraction={settings.enablePointerInteraction}
-        linkDirectionalLength={() => settings.linkLength}
+        linkDistance={settings.linkLength}
         controlType="orbit"
         forceEngine={isMobile ? "d3" : undefined}
         cooldownTime={isMobile ? 3000 : undefined}
