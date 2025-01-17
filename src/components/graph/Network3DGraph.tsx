@@ -20,6 +20,16 @@ interface GraphSettings {
   linkDistance: number;
 }
 
+const defaultSettings: GraphSettings = {
+  nodeSize: 6,
+  linkWidth: 1,
+  backgroundColor: "hsl(229 19% 12%)",
+  enableNodeDrag: true,
+  enableNavigationControls: true,
+  showNavInfo: true,
+  linkDistance: 120
+};
+
 export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const fgRef = useRef<any>();
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -38,15 +48,18 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         .maybeSingle();
       
       if (error && error.code !== 'PGRST116') throw error;
-      return data?.settings as GraphSettings || {
-        nodeSize: 6,
-        linkWidth: 1,
-        backgroundColor: "hsl(229 19% 12%)",
-        enableNodeDrag: true,
-        enableNavigationControls: true,
-        showNavInfo: true,
-        linkDistance: 120
-      };
+      
+      // Safely type cast the settings
+      const settings = data?.settings as Record<keyof GraphSettings, any>;
+      return settings ? {
+        nodeSize: Number(settings.nodeSize) || defaultSettings.nodeSize,
+        linkWidth: Number(settings.linkWidth) || defaultSettings.linkWidth,
+        backgroundColor: String(settings.backgroundColor) || defaultSettings.backgroundColor,
+        enableNodeDrag: Boolean(settings.enableNodeDrag ?? defaultSettings.enableNodeDrag),
+        enableNavigationControls: Boolean(settings.enableNavigationControls ?? defaultSettings.enableNavigationControls),
+        showNavInfo: Boolean(settings.showNavInfo ?? defaultSettings.showNavInfo),
+        linkDistance: Number(settings.linkDistance) || defaultSettings.linkDistance
+      } : defaultSettings;
     }
   });
 
@@ -81,7 +94,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
 
   const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
 
-  const nodeRelSize = graphSettings?.nodeSize || 6;
+  const nodeRelSize = graphSettings?.nodeSize || defaultSettings.nodeSize;
   const nodeSizeScale = d3.scaleLinear()
     .domain([0, Math.max(...Array.from(tagUsageCount.values()))])
     .range([nodeRelSize, nodeRelSize * 2]);
@@ -102,6 +115,10 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     return node.type === 'note' ? '#60a5fa' : '#f59e0b';
   };
 
+  // Create the force link configuration
+  const forceLink = d3.forceLink()
+    .distance(graphSettings?.linkDistance || defaultSettings.linkDistance);
+
   return (
     <div ref={containerRef} className="w-full h-full">
       {dimensions.width > 0 && dimensions.height > 0 && (
@@ -114,12 +131,13 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           nodeRelSize={nodeRelSize}
           nodeVal={getNodeSize}
           nodeColor={getNodeColor}
-          linkWidth={graphSettings?.linkWidth || 1}
-          backgroundColor={graphSettings?.backgroundColor || "hsl(229 19% 12%)"}
-          enableNodeDrag={graphSettings?.enableNodeDrag ?? true}
-          enableNavigationControls={graphSettings?.enableNavigationControls ?? true}
-          showNavInfo={graphSettings?.showNavInfo ?? true}
-          d3Force={('link', (d3.forceLink().distance(graphSettings?.linkDistance || 120)))}
+          linkWidth={graphSettings?.linkWidth || defaultSettings.linkWidth}
+          backgroundColor={graphSettings?.backgroundColor || defaultSettings.backgroundColor}
+          enableNodeDrag={graphSettings?.enableNodeDrag ?? defaultSettings.enableNodeDrag}
+          enableNavigationControls={graphSettings?.enableNavigationControls ?? defaultSettings.enableNavigationControls}
+          showNavInfo={graphSettings?.showNavInfo ?? defaultSettings.showNavInfo}
+          forceEngine="d3"
+          d3Force={('link', forceLink)}
           warmupTicks={50}
         />
       )}
