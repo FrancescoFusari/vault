@@ -8,14 +8,29 @@ export const GmailIntegration = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleConnect = () => {
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    const redirectUri = `${window.location.origin}/gmail-callback`;
-    const scope = 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
-    
-    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
-    
-    window.location.href = url;
+  const handleConnect = async () => {
+    try {
+      // Get the client ID from Supabase edge function
+      const { data: { clientId }, error } = await supabase.functions.invoke('gmail-auth', {
+        body: { action: 'get_client_id' }
+      });
+      
+      if (error) throw error;
+
+      const redirectUri = `${window.location.origin}/gmail-callback`;
+      const scope = 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
+      
+      const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
+      
+      window.location.href = url;
+    } catch (error) {
+      console.error('Error initiating Gmail connection:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to connect to Gmail',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleFetchEmails = async () => {

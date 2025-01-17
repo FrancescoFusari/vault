@@ -21,6 +21,13 @@ serve(async (req) => {
   try {
     const { code, action } = await req.json();
     
+    if (action === 'get_client_id') {
+      return new Response(
+        JSON.stringify({ clientId: GOOGLE_CLIENT_ID }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     if (action === 'exchange_code') {
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
