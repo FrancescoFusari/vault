@@ -23,14 +23,10 @@ export function DesktopNav() {
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <nav className="flex h-16 items-center px-4 border-b border-border/10">
-        <div className="hidden md:block w-64">
-          <span className="text-lg font-semibold">Lovable</span>
-        </div>
-      </nav>
-      <div className="fixed top-16 bottom-0 left-0 w-64 border-r border-border/10 bg-background/80 hidden md:block">
-        <div className="h-full py-6 px-4 overflow-y-auto no-scrollbar">
-          <div className="space-y-2">
+      <nav className="flex h-16 items-center justify-between px-8 border-b border-border/10">
+        <div className="flex items-center">
+          <span className="text-lg font-semibold mr-8">Lovable</span>
+          <div className="hidden md:flex items-center space-x-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.href;
@@ -39,20 +35,20 @@ export function DesktopNav() {
                   key={item.href}
                   to={item.href}
                   className={cn(
-                    "group flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                    "flex items-center rounded-lg px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
                     isActive 
                       ? "bg-accent/50 text-accent-foreground" 
                       : "text-muted-foreground"
                   )}
                 >
-                  <Icon className="mr-3 h-5 w-5" />
+                  <Icon className="mr-2 h-4 w-4" />
                   <span>{item.label}</span>
                 </Link>
               );
             })}
           </div>
         </div>
-      </div>
+      </nav>
     </div>
   );
 }
