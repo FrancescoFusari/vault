@@ -55,7 +55,7 @@ serve(async (req) => {
     const emails = await Promise.all(
       messages.map(async ({ id }: { id: string }) => {
         const emailResponse = await fetch(
-          `https://www.googleapis.com/gmail/v1/users/me/messages/${id}`,
+          `https://www.googleapis.com/gmail/v1/users/me/messages/${id}?format=full`,
           {
             headers: {
               Authorization: `Bearer ${integration.access_token}`,
@@ -79,13 +79,29 @@ serve(async (req) => {
     const newEmails = emails.filter(email => !existingEmailIds.has(email.id));
     
     if (newEmails.length > 0) {
-      const emailsToQueue = newEmails.map((email: any) => ({
-        user_id: user.id,
-        email_id: email.id,
-        sender: email.payload.headers.find((h: any) => h.name === 'From').value,
-        subject: email.payload.headers.find((h: any) => h.name === 'Subject').value,
-        received_at: new Date(parseInt(email.internalDate)).toISOString(),
-      }));
+      const emailsToQueue = newEmails.map((email: any) => {
+        // Decode email body
+        let emailBody = '';
+        if (email.payload.parts) {
+          // Handle multipart messages
+          const textPart = email.payload.parts.find((part: any) => part.mimeType === 'text/plain');
+          if (textPart && textPart.body.data) {
+            emailBody = atob(textPart.body.data.replace(/-/g, '+').replace(/_/g, '/'));
+          }
+        } else if (email.payload.body.data) {
+          // Handle single part messages
+          emailBody = atob(email.payload.body.data.replace(/-/g, '+').replace(/_/g, '/'));
+        }
+
+        return {
+          user_id: user.id,
+          email_id: email.id,
+          sender: email.payload.headers.find((h: any) => h.name === 'From').value,
+          subject: email.payload.headers.find((h: any) => h.name === 'Subject').value,
+          received_at: new Date(parseInt(email.internalDate)).toISOString(),
+          email_body: emailBody,
+        };
+      });
 
       const { error: queueError } = await supabase
         .from('email_processing_queue')

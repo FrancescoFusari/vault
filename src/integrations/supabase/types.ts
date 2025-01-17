@@ -95,6 +95,7 @@ export type Database = {
       email_processing_queue: {
         Row: {
           created_at: string
+          email_body: string | null
           email_id: string
           error_message: string | null
           id: string
@@ -107,6 +108,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          email_body?: string | null
           email_id: string
           error_message?: string | null
           id?: string
@@ -119,6 +121,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          email_body?: string | null
           email_id?: string
           error_message?: string | null
           id?: string
