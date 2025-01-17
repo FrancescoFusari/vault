@@ -19,7 +19,7 @@ export const GmailIntegration = () => {
       
       if (clientIdError) {
         console.error('Error getting client ID:', clientIdError);
-        throw new Error('Failed to get client ID');
+        throw new Error(`Failed to get client ID: ${clientIdError.message}`);
       }
 
       console.log('Successfully got client ID');
@@ -35,7 +35,7 @@ export const GmailIntegration = () => {
       console.error('Error initiating Gmail connection:', error);
       toast({
         title: 'Error',
-        description: 'Failed to connect to Gmail. Please try again.',
+        description: `Failed to connect to Gmail: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: 'destructive',
       });
     }
@@ -61,7 +61,7 @@ export const GmailIntegration = () => {
       console.error('Error fetching emails:', error);
       toast({
         title: 'Error',
-        description: 'Failed to fetch emails. Please try again.',
+        description: `Failed to fetch emails: ${error instanceof Error ? error.message : String(error)}`,
         variant: 'destructive',
       });
     } finally {
