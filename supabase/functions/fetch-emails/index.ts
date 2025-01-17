@@ -1,15 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -18,163 +13,177 @@ serve(async (req) => {
 
   try {
     // Get user ID from auth header
-    const authHeader = req.headers.get('Authorization')!;
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    const authHeader = req.headers.get('Authorization')!
+    const token = authHeader.replace('Bearer ', '')
     
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    )
+
+    // Get user ID from token
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token)
     if (userError || !user) {
-      throw new Error('Unauthorized');
+      throw new Error('Unauthorized')
     }
 
-    // Get Gmail tokens
-    const { data: integration, error: integrationError } = await supabase
+    // Get Gmail integration for user
+    const { data: integrations, error: integrationError } = await supabaseClient
       .from('gmail_integrations')
       .select('*')
       .eq('user_id', user.id)
-      .single();
+      .limit(1)
+      .single()
 
-    if (integrationError || !integration) {
-      throw new Error('Gmail not connected');
+    if (integrationError || !integrations) {
+      console.error('Error getting Gmail integration:', integrationError)
+      throw new Error('Gmail integration not found')
     }
 
-    console.log('Fetching email list...');
-    // Fetch emails using Gmail API
-    const response = await fetch(
+    // Check if token is expired and refresh if needed
+    if (new Date(integrations.expires_at) <= new Date()) {
+      console.log('Token expired, refreshing...')
+      const response = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          client_id: Deno.env.get('GOOGLE_CLIENT_ID')!,
+          client_secret: Deno.env.get('GOOGLE_CLIENT_SECRET')!,
+          refresh_token: integrations.refresh_token,
+          grant_type: 'refresh_token',
+        }),
+      })
+
+      const tokens = await response.json()
+      if (!response.ok) {
+        console.error('Error refreshing token:', tokens)
+        throw new Error('Failed to refresh token')
+      }
+
+      // Update integration with new token
+      const { error: updateError } = await supabaseClient
+        .from('gmail_integrations')
+        .update({
+          access_token: tokens.access_token,
+          expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
+        })
+        .eq('user_id', user.id)
+
+      if (updateError) {
+        console.error('Error updating integration:', updateError)
+        throw new Error('Failed to update integration')
+      }
+
+      integrations.access_token = tokens.access_token
+    }
+
+    // Fetch emails
+    console.log('Fetching email list...')
+    const listResponse = await fetch(
       'https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=10',
       {
         headers: {
-          Authorization: `Bearer ${integration.access_token}`,
+          Authorization: `Bearer ${integrations.access_token}`,
         },
       }
-    );
+    )
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch emails');
+    if (!listResponse.ok) {
+      const error = await listResponse.json()
+      console.error('Error fetching email list:', error)
+      throw new Error(`Failed to fetch email list: ${error.error?.message || 'Unknown error'}`)
     }
 
-    const { messages } = await response.json();
-    console.log(`Found ${messages.length} emails to process`);
-    
-    const emails = await Promise.all(
+    const { messages } = await listResponse.json()
+    console.log(`Found ${messages?.length || 0} messages`)
+
+    // Fetch details for each email
+    const emailDetails = await Promise.all(
       messages.map(async ({ id }: { id: string }) => {
-        console.log(`Fetching details for email ${id}...`);
+        console.log(`Fetching details for email ${id}...`)
         const emailResponse = await fetch(
           `https://www.googleapis.com/gmail/v1/users/me/messages/${id}`,
           {
             headers: {
-              Authorization: `Bearer ${integration.access_token}`,
+              Authorization: `Bearer ${integrations.access_token}`,
             },
           }
-        );
-        
+        )
+
         if (!emailResponse.ok) {
-          console.error(`Failed to fetch email ${id}:`, await emailResponse.text());
-          return null;
+          const error = await emailResponse.json()
+          console.error(`Error fetching email ${id}:`, error)
+          throw new Error(`Failed to fetch email ${id}: ${error.error?.message || 'Unknown error'}`)
         }
         
-        const emailData = await emailResponse.json();
-        console.log(`Email ${id} full payload structure:`, JSON.stringify(emailData, null, 2));
+        const emailData = await emailResponse.json()
+        console.log(`Email ${id} full payload structure:`, JSON.stringify(emailData, null, 2))
         
-        // Log specific parts we're interested in
+        // Extract email body
+        let emailBody = ''
         if (emailData.payload) {
-          console.log(`Email ${id} payload mimeType:`, emailData.payload.mimeType);
           if (emailData.payload.parts) {
-            console.log(`Email ${id} parts:`, emailData.payload.parts.map((p: any) => ({
-              mimeType: p.mimeType,
-              hasBody: !!p.body,
-              bodySize: p.body?.size,
-              hasData: !!p.body?.data
-            })));
-          } else {
-            console.log(`Email ${id} body info:`, {
-              hasBody: !!emailData.payload.body,
-              bodySize: emailData.payload.body?.size,
-              hasData: !!emailData.payload.body?.data
-            });
+            // Handle multipart message
+            const textPart = emailData.payload.parts.find((part: any) => 
+              part.mimeType === 'text/plain' || part.mimeType === 'text/html'
+            )
+            if (textPart?.body?.data) {
+              emailBody = atob(textPart.body.data.replace(/-/g, '+').replace(/_/g, '/'))
+            }
+          } else if (emailData.payload.body?.data) {
+            // Handle single part message
+            emailBody = atob(emailData.payload.body.data.replace(/-/g, '+').replace(/_/g, '/'))
           }
         }
-        
-        return emailData;
-      })
-    );
 
-    // Filter out any failed email fetches
-    const validEmails = emails.filter(email => email !== null);
-
-    // First, check which emails already exist in the queue
-    const { data: existingEmails } = await supabase
-      .from('email_processing_queue')
-      .select('email_id')
-      .eq('user_id', user.id)
-      .in('email_id', validEmails.map(email => email.id));
-
-    const existingEmailIds = new Set(existingEmails?.map(e => e.email_id) || []);
-
-    // Filter out emails that already exist and prepare new ones for insertion
-    const newEmails = validEmails.filter(email => !existingEmailIds.has(email.id));
-    
-    if (newEmails.length > 0) {
-      const emailsToQueue = newEmails.map((email: any) => {
-        // Decode email body
-        let emailBody = '';
-        console.log(`Processing email ${email.id} for body content...`);
-        
-        if (email.payload.parts) {
-          // Handle multipart messages
-          console.log(`Email ${email.id} has parts:`, email.payload.parts.length);
-          const textPart = email.payload.parts.find((part: any) => part.mimeType === 'text/plain');
-          if (textPart && textPart.body.data) {
-            console.log(`Found text part for email ${email.id}`);
-            emailBody = atob(textPart.body.data.replace(/-/g, '+').replace(/_/g, '/'));
-          } else {
-            console.log(`No text part found for email ${email.id}`);
-          }
-        } else if (email.payload.body.data) {
-          // Handle single part messages
-          console.log(`Email ${email.id} is single part`);
-          emailBody = atob(email.payload.body.data.replace(/-/g, '+').replace(/_/g, '/'));
-        } else {
-          console.log(`No body data found for email ${email.id}`);
-        }
-
-        console.log(`Final email body length for ${email.id}:`, emailBody.length);
+        // Get headers
+        const headers = emailData.payload.headers
+        const subject = headers.find((h: any) => h.name === 'Subject')?.value || ''
+        const from = headers.find((h: any) => h.name === 'From')?.value || ''
+        const date = headers.find((h: any) => h.name === 'Date')?.value || ''
 
         return {
+          id: emailData.id,
+          threadId: emailData.threadId,
+          subject,
+          from,
+          receivedAt: date,
+          body: emailBody
+        }
+      })
+    )
+
+    // Store emails in queue
+    const { error: queueError } = await supabaseClient
+      .from('email_processing_queue')
+      .upsert(
+        emailDetails.map((email: any) => ({
           user_id: user.id,
           email_id: email.id,
-          sender: email.payload.headers.find((h: any) => h.name === 'From').value,
-          subject: email.payload.headers.find((h: any) => h.name === 'Subject').value,
-          received_at: new Date(parseInt(email.internalDate)).toISOString(),
-          email_body: emailBody || null,
-        };
-      });
+          sender: email.from,
+          subject: email.subject,
+          received_at: new Date(email.receivedAt).toISOString(),
+          email_body: email.body,
+          status: 'pending'
+        }))
+      )
 
-      const { error: queueError } = await supabase
-        .from('email_processing_queue')
-        .insert(emailsToQueue);
-
-      if (queueError) {
-        throw queueError;
-      }
-
-      console.log(`Successfully queued ${newEmails.length} new emails`);
-    } else {
-      console.log('No new emails to queue');
+    if (queueError) {
+      console.error('Error storing emails in queue:', queueError)
+      throw new Error('Failed to store emails in queue')
     }
 
     return new Response(
-      JSON.stringify({ 
-        emails: emails.length,
-        newEmailsQueued: newEmails.length,
-        skippedEmails: emails.length - newEmails.length 
-      }),
+      JSON.stringify({ success: true, emails: emailDetails }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    )
   } catch (error) {
-    console.error('Error in fetch-emails function:', error);
+    console.error('Error in fetch-emails function:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    )
   }
-});
+})
