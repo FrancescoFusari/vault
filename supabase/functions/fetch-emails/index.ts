@@ -194,6 +194,7 @@ serve(async (req) => {
       )
     }
 
+    // Use upsert to handle duplicates based on email_id
     const { error: queueError } = await supabaseClient
       .from('email_processing_queue')
       .upsert(
@@ -206,7 +207,10 @@ serve(async (req) => {
           email_body: email.body,
           status: 'pending'
         })),
-        { onConflict: 'email_id' }
+        { 
+          onConflict: 'email_id',
+          ignoreDuplicates: true // This ensures we don't update existing records
+        }
       )
 
     if (queueError) {
