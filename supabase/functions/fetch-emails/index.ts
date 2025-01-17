@@ -16,6 +16,8 @@ serve(async (req) => {
     const authHeader = req.headers.get('Authorization')!
     const token = authHeader.replace('Bearer ', '')
     
+    console.log('Starting email fetch process...')
+    
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -24,8 +26,11 @@ serve(async (req) => {
     // Get user ID from token
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token)
     if (userError || !user) {
+      console.error('User authentication error:', userError)
       throw new Error('Unauthorized')
     }
+
+    console.log('User authenticated successfully')
 
     // Get Gmail integration for user
     const { data: integrations, error: integrationError } = await supabaseClient
@@ -39,6 +44,8 @@ serve(async (req) => {
       console.error('Error getting Gmail integration:', integrationError)
       throw new Error('Gmail integration not found')
     }
+
+    console.log('Found Gmail integration')
 
     // Check if token is expired and refresh if needed
     if (new Date(integrations.expires_at) <= new Date()) {
@@ -56,11 +63,13 @@ serve(async (req) => {
         }),
       })
 
-      const tokens = await response.json()
       if (!response.ok) {
-        console.error('Error refreshing token:', tokens)
-        throw new Error('Failed to refresh token')
+        const errorData = await response.text()
+        console.error('Token refresh failed:', errorData)
+        throw new Error(`Failed to refresh token: ${errorData}`)
       }
+
+      const tokens = await response.json()
 
       // Update integration with new token
       const { error: updateError } = await supabaseClient
@@ -77,65 +86,77 @@ serve(async (req) => {
       }
 
       integrations.access_token = tokens.access_token
+      console.log('Token refreshed successfully')
     }
 
     // Fetch emails
     console.log('Fetching email list...')
     const listResponse = await fetch(
-      'https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=10',
+      'https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=10',
       {
         headers: {
           Authorization: `Bearer ${integrations.access_token}`,
+          'Content-Type': 'application/json',
         },
       }
     )
 
     if (!listResponse.ok) {
-      const error = await listResponse.json()
-      console.error('Error fetching email list:', error)
-      throw new Error(`Failed to fetch email list: ${error.error?.message || 'Unknown error'}`)
+      const errorData = await listResponse.text()
+      console.error('Error fetching email list:', errorData)
+      throw new Error(`Failed to fetch email list: ${errorData}`)
     }
 
-    const { messages } = await listResponse.json()
-    console.log(`Found ${messages?.length || 0} messages`)
+    const listData = await listResponse.json()
+    const messages = listData.messages || []
+    console.log(`Found ${messages.length} messages`)
 
     // Fetch details for each email
     const emailDetails = await Promise.all(
       messages.map(async ({ id }: { id: string }) => {
         console.log(`Fetching details for email ${id}...`)
         const emailResponse = await fetch(
-          `https://www.googleapis.com/gmail/v1/users/me/messages/${id}`,
+          `https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}`,
           {
             headers: {
               Authorization: `Bearer ${integrations.access_token}`,
+              'Content-Type': 'application/json',
             },
           }
         )
 
         if (!emailResponse.ok) {
-          const error = await emailResponse.json()
-          console.error(`Error fetching email ${id}:`, error)
-          throw new Error(`Failed to fetch email ${id}: ${error.error?.message || 'Unknown error'}`)
+          const errorData = await emailResponse.text()
+          console.error(`Error fetching email ${id}:`, errorData)
+          throw new Error(`Failed to fetch email ${id}: ${errorData}`)
         }
         
         const emailData = await emailResponse.json()
-        console.log(`Email ${id} full payload structure:`, JSON.stringify(emailData, null, 2))
+        console.log(`Email ${id} structure:`, JSON.stringify(emailData.payload, null, 2))
         
         // Extract email body
         let emailBody = ''
         if (emailData.payload) {
           if (emailData.payload.parts) {
             // Handle multipart message
-            const textPart = emailData.payload.parts.find((part: any) => 
-              part.mimeType === 'text/plain' || part.mimeType === 'text/html'
-            )
-            if (textPart?.body?.data) {
-              emailBody = atob(textPart.body.data.replace(/-/g, '+').replace(/_/g, '/'))
+            for (const part of emailData.payload.parts) {
+              if (part.mimeType === 'text/plain' || part.mimeType === 'text/html') {
+                if (part.body?.data) {
+                  emailBody = atob(part.body.data.replace(/-/g, '+').replace(/_/g, '/'))
+                  console.log(`Found email body in part with mime type: ${part.mimeType}`)
+                  break
+                }
+              }
             }
           } else if (emailData.payload.body?.data) {
             // Handle single part message
             emailBody = atob(emailData.payload.body.data.replace(/-/g, '+').replace(/_/g, '/'))
+            console.log('Found email body in single part message')
           }
+        }
+
+        if (!emailBody) {
+          console.log('No email body found in the message')
         }
 
         // Get headers
@@ -174,6 +195,8 @@ serve(async (req) => {
       console.error('Error storing emails in queue:', queueError)
       throw new Error('Failed to store emails in queue')
     }
+
+    console.log('Successfully processed and stored emails')
 
     return new Response(
       JSON.stringify({ success: true, emails: emailDetails }),
