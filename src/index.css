@@ -58,6 +58,16 @@
   }
 }
 
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
 .note-card {
   @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-1 rounded-2xl;
 }

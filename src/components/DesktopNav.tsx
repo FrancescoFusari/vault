@@ -23,33 +23,36 @@ export function DesktopNav() {
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <nav className="flex h-16 items-center border-b border-border/10">
-        <div className="hidden md:block w-full">
-          <div className="fixed top-16 bottom-0 left-0 w-64 overflow-y-auto border-r border-border/10 py-6 px-4 bg-background/80">
-            <div className="space-y-2">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = location.pathname === item.href;
-                return (
-                  <Link
-                    key={item.href}
-                    to={item.href}
-                    className={cn(
-                      "group flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
-                      isActive 
-                        ? "bg-accent/50 text-accent-foreground" 
-                        : "text-muted-foreground"
-                    )}
-                  >
-                    <Icon className="mr-3 h-5 w-5" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
+      <nav className="flex h-16 items-center px-4 border-b border-border/10">
+        <div className="hidden md:block w-64">
+          <span className="text-lg font-semibold">Lovable</span>
         </div>
       </nav>
+      <div className="fixed top-16 bottom-0 left-0 w-64 border-r border-border/10 bg-background/80 hidden md:block">
+        <div className="h-full py-6 px-4 overflow-y-auto no-scrollbar">
+          <div className="space-y-2">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className={cn(
+                    "group flex items-center rounded-lg px-4 py-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                    isActive 
+                      ? "bg-accent/50 text-accent-foreground" 
+                      : "text-muted-foreground"
+                  )}
+                >
+                  <Icon className="mr-3 h-5 w-5" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
