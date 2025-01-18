@@ -1,13 +1,16 @@
 import { NoteInput } from "@/components/NoteInput";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 import { analyzeNote } from "@/lib/openai";
+import { useNavigate } from "react-router-dom";
 import { GmailIntegration } from "@/components/GmailIntegration";
 import { Github, Mail, X, MessageSquare, Linkedin, Facebook, Instagram, Youtube, BookOpen, Cloud, Notebook } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Waves } from "@/components/ui/waves-background";
 
 const Index = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const handleNoteSubmit = async (content: string) => {
     try {
@@ -34,19 +37,31 @@ const Index = () => {
     }
   };
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate('/auth');
-  };
-
   const handleServiceClick = (service: string) => {
     console.log(`Clicked ${service} integration`);
-    // Implementation will be added later
   };
 
   return (
-    <div className="container mx-auto min-h-screen flex flex-col bg-background">      
-      <div className="flex-1 flex flex-col items-center justify-center -mt-20">
+    <div className="container mx-auto min-h-screen flex flex-col bg-background relative">      
+      {isMobile && (
+        <div className="absolute inset-0 pointer-events-none">
+          <Waves
+            lineColor="rgba(239, 114, 52, 0.2)"
+            backgroundColor="transparent"
+            waveSpeedX={0.02}
+            waveSpeedY={0.01}
+            waveAmpX={40}
+            waveAmpY={20}
+            friction={0.9}
+            tension={0.01}
+            maxCursorMove={120}
+            xGap={12}
+            yGap={36}
+          />
+        </div>
+      )}
+      
+      <div className="flex-1 flex flex-col items-center justify-center -mt-20 relative z-10">
         <div className="text-center space-y-4 mb-12">
           <h1 className="text-4xl font-light tracking-tight text-foreground">
             Entrance to the vault
