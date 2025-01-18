@@ -27,6 +27,28 @@ const defaultSettings: Network3DSettings = {
   tiltAngle: 23
 };
 
+// Type guard to validate if the data matches Network3DSettings structure
+const isValidSettings = (data: Json): data is Network3DSettings => {
+  if (typeof data !== 'object' || data === null || Array.isArray(data)) return false;
+  
+  const requiredKeys: (keyof Network3DSettings)[] = [
+    'nodeSize',
+    'linkWidth',
+    'backgroundColor',
+    'enableNodeDrag',
+    'enableNavigationControls',
+    'showNavInfo',
+    'linkLength',
+    'enablePointerInteraction',
+    'enableNodeFixing',
+    'cameraDistance',
+    'rotationSpeed',
+    'tiltAngle'
+  ];
+  
+  return requiredKeys.every(key => key in data);
+};
+
 export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const fgRef = useRef<any>();
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -60,7 +82,13 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         return defaultSettings;
       }
       
-      return data.settings as Network3DSettings;
+      // Validate the settings before returning them
+      if (isValidSettings(data.settings)) {
+        return data.settings;
+      }
+      
+      console.error('Invalid settings format in database, using defaults');
+      return defaultSettings;
     },
     initialData: defaultSettings
   });
