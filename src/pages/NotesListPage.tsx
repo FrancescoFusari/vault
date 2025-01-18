@@ -1,5 +1,4 @@
 import { NoteList } from "@/components/NoteList";
-import { BottomNav } from "@/components/BottomNav";
 import { TagsSidebar } from "@/components/TagsSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useQuery } from "@tanstack/react-query";
@@ -71,7 +70,6 @@ const NotesListPage = () => {
                 <NoteList notes={filteredNotes || []} />
               )}
             </div>
-            <BottomNav />
           </div>
         </div>
       </div>

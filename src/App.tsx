@@ -4,6 +4,7 @@ import { Toaster } from "./components/ui/toaster";
 import { NavBar } from "./components/ui/tubelight-navbar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Home, StickyNote, Tags, Network, Settings, Timer } from "lucide-react";
+import { cn } from "@/lib/utils";
 import Auth from "./pages/Auth";
 import Index from "./pages/Index";
 import NotesListPage from "./pages/NotesListPage";
