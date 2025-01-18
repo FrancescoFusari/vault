@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { analyzeNote } from "@/lib/openai";
 import { GmailIntegration } from "@/components/GmailIntegration";
-import { Github, Mail, X, MessageSquare, Linkedin, Facebook, Instagram, Youtube, BookOpen, Cloud, Notebook, Settings } from "lucide-react";
+import { Github, Mail, X, MessageSquare, Linkedin, Facebook, Instagram, Youtube, BookOpen, Cloud, Notebook } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
