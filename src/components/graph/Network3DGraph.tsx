@@ -15,7 +15,7 @@ const defaultSettings = {
   enableNodeDrag: true,
   enableNavigationControls: true,
   showNavInfo: true,
-  linkDistance: 1024, // Updated from 360 to 1024
+  linkDistance: 820, // Updated from 1024 to 820
   cameraPosition: { x: 5000, y: 5000, z: 5000 }
 };
 
