@@ -62,11 +62,11 @@ const Index = () => {
       )}
       
       <div className="flex-1 flex flex-col items-center justify-center -mt-20 relative z-10">
-        <div className="text-center space-y-4 mb-12">
-          <h1 className="text-4xl font-light tracking-tight text-foreground">
+        <div className="text-center space-y-3 mb-8 pt-6">
+          <h1 className="text-3xl font-light tracking-tight text-foreground">
             Entrance to the vault
           </h1>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-muted-foreground text-base">
             Drop anything, we'll add tags and categorize it
           </p>
         </div>
