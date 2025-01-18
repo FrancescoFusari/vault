@@ -4,6 +4,7 @@ import { NetworkNode, NetworkLink, processNetworkData } from '@/utils/networkGra
 import { Note } from '@/types/graph';
 import * as d3 from 'd3';
 import SpriteText from 'three-spritetext';
+import * as THREE from 'three';
 
 interface Network3DGraphProps {
   notes: Note[];
