@@ -20,9 +20,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       const fg = fgRef.current;
       if (!fg) return;
 
-      // Set initial camera position
-      fg.cameraPosition({ z: 200 });
-
       const simulation = fg.d3Force('simulation');
       if (!simulation) return;
 
@@ -36,26 +33,26 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       const linkForce = simulation.force('link');
       if (linkForce) {
         linkForce
-          .distance(30)
-          .strength(0.1)
+          .distance(30) // Reduced from 120
+          .strength(0.2) // Reduced from 0.3 for gentler movement
           .iterations(1);
       }
 
       const chargeForce = simulation.force('charge');
       if (chargeForce) {
-        chargeForce.strength(-3);
+        chargeForce.strength(-5); // Reduced from -10 for gentler repulsion
       }
 
       const centerForce = simulation.force('center');
       if (centerForce) {
-        centerForce.strength(0.5);
+        centerForce.strength(1);
       }
 
       const collisionForce = simulation.force('collision');
       if (collisionForce) {
         collisionForce
           .radius(5)
-          .strength(0.1);
+          .strength(0.2); // Added strength parameter for softer collisions
       }
 
       // Add sphere boundary force with reduced radius
@@ -71,10 +68,9 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
             const targetRadius = 60;
             const scale = targetRadius / distance;
             
-            // Smoother movement by reducing the scale effect
-            node.x *= scale * 0.7;
-            node.y *= scale * 0.7;
-            node.z *= scale * 0.7;
+            node.x *= scale;
+            node.y *= scale;
+            node.z *= scale;
           }
         });
       });
@@ -82,6 +78,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   }, [nodes]);
 
   const handleNodeDragEnd = (node: any) => {
+    // Fix node position after drag
     node.fx = node.x;
     node.fy = node.y;
     node.fz = node.z;
@@ -97,12 +94,14 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           if (node.type === 'note') {
             const group = new THREE.Group();
             
+            // Create a larger sphere for note nodes
             const sphere = new THREE.Mesh(
               new THREE.SphereGeometry(4),
               new THREE.MeshLambertMaterial({ color: '#EF7234' })
             );
             group.add(sphere);
             
+            // Create and position the text label
             const sprite = new SpriteText(node.name);
             sprite.color = '#ffffff';
             sprite.textHeight = 3;
@@ -111,9 +110,11 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
             sprite.borderRadius = 3;
             
             group.add(sprite);
+            sprite.position.set(5, 0, 0);
             
             return group;
           } else if (node.type === 'tag') {
+            // Create smaller spheres for tag nodes
             const sphere = new THREE.Mesh(
               new THREE.SphereGeometry(1.5),
               new THREE.MeshLambertMaterial({ color: '#E0E0D7' })
@@ -134,8 +135,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         forceEngine="d3"
         cooldownTime={Infinity}
         nodeResolution={32}
-        controlType="orbit"
-        showNavInfo={false}
       />
     </div>
   );

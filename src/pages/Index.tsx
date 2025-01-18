@@ -51,7 +51,7 @@ const Index = () => {
       />
       
       <div className="container mx-auto min-h-screen flex flex-col bg-transparent relative">      
-        <div className="flex-1 flex flex-col items-center justify-center relative z-10 mt-[30vh]">
+        <div className="flex-1 flex flex-col items-center justify-center -mt-20 relative z-10">
           <div className="text-center space-y-3 mb-8">
             <h1 className="text-3xl font-light tracking-tight text-foreground">
               Entrance to the vault
@@ -63,20 +63,20 @@ const Index = () => {
           
           <div className="w-full max-w-2xl mx-auto space-y-8">
             <NoteInput onNoteSubmit={handleNoteSubmit} />
-          </div>
-
-          {/* Gmail Integration Section - Moved lower on mobile */}
-          <div className={`w-full max-w-2xl mx-auto ${isMobile ? 'mt-72' : 'mt-36'} space-y-4`}>
-            <div className="text-center">
-              <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-medium text-foreground mb-2`}>
-                Gmail Integration
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Add your emails to the Vault
-              </p>
-            </div>
-            <div className="flex justify-center">
-              <GmailIntegration />
+            
+            {/* Gmail Integration Section */}
+            <div className="space-y-4">
+              <div className="text-center">
+                <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-medium text-foreground mb-2`}>
+                  Gmail Integration
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Add your emails to the Vault
+                </p>
+              </div>
+              <div className="flex justify-center">
+                <GmailIntegration />
+              </div>
             </div>
           </div>
         </div>

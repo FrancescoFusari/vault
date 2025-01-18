@@ -10,14 +10,15 @@ export const useGraphDimensions = (
   isMobile: boolean
 ): Dimensions => {
   const [dimensions, setDimensions] = useState<Dimensions>({ 
-    width: 0, 
-    height: 0
+    width: window.innerWidth, 
+    height: window.innerHeight - (isMobile ? 80 : 0) // Account for bottom nav on mobile
   });
 
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
-        const { width, height } = containerRef.current.getBoundingClientRect();
+        const { width } = containerRef.current.getBoundingClientRect();
+        const height = window.innerHeight - (isMobile ? 80 : 0); // Account for bottom nav
         setDimensions({ width, height });
       }
     };
@@ -25,7 +26,7 @@ export const useGraphDimensions = (
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
     return () => window.removeEventListener('resize', updateDimensions);
-  }, [containerRef]);
+  }, [isMobile, containerRef]);
 
   return dimensions;
 };
