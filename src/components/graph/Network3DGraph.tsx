@@ -34,32 +34,33 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         onEngineStop={handleEngineStop}
         // Force simulation configuration
         forceEngine="d3"
-        d3AlphaDecay={0.02} // Slower decay for smoother simulation
-        d3VelocityDecay={0.3} // Moderate velocity decay
-        warmupTicks={100} // Ticks before rendering
-        cooldownTicks={1000} // Ticks after rendering
-        // Configure forces
-        d3Force={(force: any) => {
+        d3AlphaDecay={0.02}
+        d3VelocityDecay={0.3}
+        warmupTicks={100}
+        cooldownTicks={1000}
+        // Configure forces using onEngineInitialized
+        onEngineInitialized={force => {
           // Link force for connection strength
-          force('link').distance(() => 100);
+          force.d3Force('link')
+            .distance(() => 100);
           
           // Charge force for node repulsion
-          force('charge')
+          force.d3Force('charge')
             .strength(-120)
             .distanceMax(250);
           
           // Center force to keep graph centered
-          force('center')
+          force.d3Force('center')
             .strength(0.3);
           
           // Add collision force to prevent node overlap
-          force('collision')
-            .radius(node => 20)
+          force.d3Force('collision')
+            .radius(() => 20)
             .strength(0.7);
 
           // X and Y forces for better spread
-          force('x').strength(0.1);
-          force('y').strength(0.1);
+          force.d3Force('x').strength(0.1);
+          force.d3Force('y').strength(0.1);
         }}
       />
     </div>
