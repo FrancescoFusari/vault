@@ -15,8 +15,8 @@ const defaultSettings = {
   enableNodeDrag: true,
   enableNavigationControls: true,
   showNavInfo: true,
-  linkDistance: 800, // Updated from 1024 to 800
-  cameraPosition: { x: 4600, y: 4600, z: 4600 } // Updated from 5000 to 4600
+  linkDistance: 800,
+  cameraPosition: { x: 4600, y: 4600, z: 4600 }
 };
 
 export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
@@ -45,17 +45,30 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   // Set up graph configuration once when the component mounts
   useEffect(() => {
     if (fgRef.current) {
-      console.log('Setting link distance to:', defaultSettings.linkDistance);
-      fgRef.current.d3Force('link').distance(() => defaultSettings.linkDistance);
+      // Force the link distance
+      const forceLink = fgRef.current.d3Force('link');
+      if (forceLink) {
+        forceLink.distance(defaultSettings.linkDistance);
+      }
       
-      fgRef.current.controls().enableDamping = true;
-      fgRef.current.controls().dampingFactor = 0.1;
-      fgRef.current.controls().enableZoom = true;
+      // Set camera position and controls
+      const camera = fgRef.current.camera();
+      const controls = fgRef.current.controls();
       
-      console.log('Setting camera position to:', defaultSettings.cameraPosition);
-      const { x, y, z } = defaultSettings.cameraPosition;
-      fgRef.current.camera().position.set(x, y, z);
-      fgRef.current.camera().lookAt(0, 0, 0);
+      if (camera) {
+        const { x, y, z } = defaultSettings.cameraPosition;
+        camera.position.set(x, y, z);
+        camera.lookAt(0, 0, 0);
+      }
+      
+      if (controls) {
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.1;
+        controls.enableZoom = true;
+      }
+
+      // Force a re-render of the graph
+      fgRef.current.refresh();
     }
   }, []);
 
@@ -102,6 +115,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           showNavInfo={defaultSettings.showNavInfo}
           d3VelocityDecay={0.1}
           warmupTicks={50}
+          linkDistance={defaultSettings.linkDistance}
         />
       )}
     </div>
