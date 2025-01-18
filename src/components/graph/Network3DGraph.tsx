@@ -99,11 +99,10 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
             sprite.padding = 2;
             sprite.borderRadius = 3;
             
-            // Set position using Three.js Vector3
-            const textPosition = new THREE.Vector3(3, 0, 0);
-            sprite.position.copy(textPosition);
+            // Position the sprite using its mesh property
+            sprite.mesh.position.set(3, 0, 0);
             
-            group.add(sprite);
+            group.add(sprite.mesh);
             
             return group;
           }
