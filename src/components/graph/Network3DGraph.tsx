@@ -1,11 +1,10 @@
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import ForceGraph3D from 'react-force-graph-3d';
 import { NetworkNode, NetworkLink, processNetworkData } from '@/utils/networkGraphUtils';
 import { Note } from '@/types/graph';
 import * as d3 from 'd3';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import * as THREE from 'three';
 
 interface Network3DGraphProps {
   notes: Note[];
@@ -35,10 +34,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const fgRef = useRef<any>();
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isPaused, setIsPaused] = useState(false);
-  const rotationRef = useRef<number | null>(null);
-  const timeoutRef = useRef<number | null>(null);
-  const initializedRef = useRef(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const { data: graphSettings } = useQuery({
     queryKey: ['graphSettings'],
@@ -54,6 +50,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       
       if (error && error.code !== 'PGRST116') throw error;
       
+      // Safely type cast the settings
       const settings = data?.settings as Record<keyof GraphSettings, any>;
       return settings ? {
         nodeSize: Number(settings.nodeSize) || defaultSettings.nodeSize,
@@ -67,44 +64,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     }
   });
 
-  const startRotation = useCallback(() => {
-    if (!fgRef.current || isPaused) return;
-    
-    const rotateCamera = () => {
-      if (fgRef.current && !isPaused) {
-        const camera = fgRef.current.camera();
-        const rotationAxis = new THREE.Vector3(0, 1, 0);
-        camera.position.applyAxisAngle(rotationAxis, 0.002);
-        camera.lookAt(0, 0, 0);
-        rotationRef.current = requestAnimationFrame(rotateCamera);
-      }
-    };
-    
-    rotationRef.current = requestAnimationFrame(rotateCamera);
-  }, [isPaused]);
-
-  const stopRotation = useCallback(() => {
-    if (rotationRef.current) {
-      cancelAnimationFrame(rotationRef.current);
-      rotationRef.current = null;
-    }
-  }, []);
-
-  const handleInteraction = useCallback(() => {
-    setIsPaused(true);
-    stopRotation();
-    
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    
-    timeoutRef.current = window.setTimeout(() => {
-      setIsPaused(false);
-      startRotation();
-    }, 2000);
-  }, [stopRotation, startRotation]);
-
-  // Handle window resize and cleanup
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
@@ -120,38 +79,45 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
 
     return () => {
       window.removeEventListener('resize', updateDimensions);
-      stopRotation();
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
     };
-  }, [stopRotation]);
+  }, []);
 
-  // Initialize graph
   useEffect(() => {
-    if (fgRef.current && graphSettings && !initializedRef.current) {
-      console.log('Initializing graph...');
+    if (fgRef.current && graphSettings && !isInitialized) {
+      // Configure the force simulation
       const distance = (graphSettings.linkDistance || defaultSettings.linkDistance) * 3;
+      console.log('Setting link distance to:', distance);
       
       fgRef.current.d3Force('link').distance(() => distance);
       fgRef.current.controls().enableDamping = true;
       fgRef.current.controls().dampingFactor = 0.1;
       fgRef.current.controls().enableZoom = true;
       
-      fgRef.current.camera().position.set(6000, 6000, 6000);
-      fgRef.current.camera().lookAt(0, 0, 0);
+      // Set initial camera position to show all nodes
+      const { nodes } = processNetworkData(notes);
+      if (nodes.length > 0) {
+        console.log('Setting initial camera distance to: 6000');
+        fgRef.current.camera().position.set(6000, 6000, 6000);
+        fgRef.current.camera().lookAt(0, 0, 0);
+      } else {
+        console.log('Setting default camera distance to: 6000');
+        fgRef.current.camera().position.set(6000, 6000, 6000);
+        fgRef.current.camera().lookAt(0, 0, 0);
+      }
       
-      initializedRef.current = true;
-      startRotation();
+      setIsInitialized(true);
     }
-  }, [graphSettings, startRotation]);
+  }, [graphSettings, isInitialized, notes]);
 
-  // Update graph settings
+  // Reset force simulation when settings change
   useEffect(() => {
-    if (fgRef.current && graphSettings && initializedRef.current) {
-      console.log('Updating graph settings...');
+    if (fgRef.current && graphSettings && isInitialized) {
       const distance = (graphSettings.linkDistance || defaultSettings.linkDistance) * 3;
+      console.log('Updating link distance to:', distance);
       fgRef.current.d3Force('link').distance(() => distance);
+      // Get the current graph data directly from the component's props
+      const currentData = { nodes, links };
+      fgRef.current.d3Force('link').initialize(currentData.links);
     }
   }, [graphSettings?.linkDistance]);
 
@@ -197,9 +163,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           showNavInfo={graphSettings?.showNavInfo ?? defaultSettings.showNavInfo}
           d3VelocityDecay={0.1}
           warmupTicks={50}
-          onNodeDrag={handleInteraction}
-          onNodeDragEnd={handleInteraction}
-          onEngineStop={handleInteraction}
         />
       )}
     </div>
