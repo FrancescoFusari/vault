@@ -130,7 +130,7 @@ export const NoteInput = ({ onNoteSubmit }: NoteInputProps) => {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-4 sm:px-6">
+    <div className="w-full max-w-2xl mx-auto">
       <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl shadow-sm transition-all">
         <div className="flex gap-1 p-2 border-b border-border/50">
           <Button
