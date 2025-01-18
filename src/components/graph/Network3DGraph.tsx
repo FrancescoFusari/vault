@@ -89,7 +89,12 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
 
       // Force a re-render and reheat simulation
       fgRef.current.refresh();
-      fgRef.current._animationCycle();
+      
+      // Reheat the simulation properly
+      const simulation = fgRef.current.d3Force();
+      if (simulation) {
+        simulation.alpha(1).restart();
+      }
     }
   }, []);
 
