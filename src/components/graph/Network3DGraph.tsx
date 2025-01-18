@@ -3,21 +3,25 @@ import ForceGraph3D from 'react-force-graph-3d';
 import { NetworkNode, NetworkLink, processNetworkData } from '@/utils/networkGraphUtils';
 import { Note } from '@/types/graph';
 import * as d3 from 'd3';
+import { ForceGraph3DInstance } from 'react-force-graph-3d';
 
 interface Network3DGraphProps {
   notes: Note[];
 }
 
 export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
-  const fgRef = useRef<any>();
+  const fgRef = useRef<ForceGraph3DInstance>();
   const graphData = processNetworkData(notes);
   const { nodes, links } = graphData;
 
   // Configure force simulation using useEffect
   useEffect(() => {
-    if (fgRef.current) {
-      // Initialize forces
+    // Wait for the ForceGraph component to be initialized
+    requestAnimationFrame(() => {
+      if (!fgRef.current) return;
+
       const simulation = fgRef.current.d3Force();
+      if (!simulation) return;
 
       // Reset to default forces
       simulation
@@ -74,7 +78,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           }
         });
       });
-    }
+    });
   }, [nodes]);
 
   return (
