@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react';
-import ForceGraph3D from 'react-force-graph-3d';
+import ForceGraph3D, { ForceGraphMethods } from 'react-force-graph-3d';
 import { NetworkNode, NetworkLink, processNetworkData } from '@/utils/networkGraphUtils';
 import { Note } from '@/types/graph';
 import * as d3 from 'd3';
@@ -9,7 +9,7 @@ interface Network3DGraphProps {
 }
 
 export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
-  const fgRef = useRef<typeof ForceGraph3D>();
+  const fgRef = useRef<ForceGraphMethods>();
   const graphData = processNetworkData(notes);
   const { nodes, links } = graphData;
 
@@ -17,9 +17,11 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   useEffect(() => {
     // Wait for the ForceGraph component to be initialized
     requestAnimationFrame(() => {
-      if (!fgRef.current) return;
+      const fg = fgRef.current;
+      if (!fg) return;
 
-      const simulation = fgRef.current.d3Force();
+      // Get the simulation
+      const simulation = fg.d3Force();
       if (!simulation) return;
 
       // Reset to default forces
