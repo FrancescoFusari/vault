@@ -22,7 +22,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         nodeColor={(node: any) => node.type === 'note' ? '#60a5fa' : '#f59e0b'}
         backgroundColor="hsl(229 19% 12%)"
         // Increase distance between graph levels for better spacing
-        dagLevelDistance={500}
+        dagLevelDistance={800}
         // Increase node spacing
         nodeRelSize={8}
         // Reduce link width
