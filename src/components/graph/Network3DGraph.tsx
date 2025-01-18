@@ -15,8 +15,7 @@ const defaultSettings = {
   enableNodeDrag: true,
   enableNavigationControls: true,
   showNavInfo: true,
-  linkDistance: 800,
-  linkCurvature: 0.2,
+  linkDistance: 1024, // Updated from 360 to 1024
   cameraPosition: { x: 5000, y: 5000, z: 5000 }
 };
 
@@ -47,40 +46,21 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   useEffect(() => {
     if (fgRef.current) {
       console.log('Setting link distance to:', defaultSettings.linkDistance);
+      fgRef.current.d3Force('link').distance(() => defaultSettings.linkDistance);
       
-      // Optimize force simulation
-      const fg = fgRef.current;
-      fg.d3Force('link').distance(() => defaultSettings.linkDistance);
-      
-      // Reduce charge strength for better performance
-      fg.d3Force('charge').strength(-50);
-      
-      // Add collision force to prevent node overlap
-      fg.d3Force('collision', d3.forceCollide(10));
-      
-      // Optimize rendering
-      fg.controls().enableDamping = true;
-      fg.controls().dampingFactor = 0.1;
-      fg.controls().enableZoom = true;
-      
-      // Reduce WebGL texture quality for better performance
-      fg.renderer().setPixelRatio(Math.min(2, window.devicePixelRatio));
+      fgRef.current.controls().enableDamping = true;
+      fgRef.current.controls().dampingFactor = 0.1;
+      fgRef.current.controls().enableZoom = true;
       
       console.log('Setting camera position to:', defaultSettings.cameraPosition);
       const { x, y, z } = defaultSettings.cameraPosition;
-      fg.camera().position.set(x, y, z);
-      fg.camera().lookAt(0, 0, 0);
+      fgRef.current.camera().position.set(x, y, z);
+      fgRef.current.camera().lookAt(0, 0, 0);
     }
   }, []);
 
   const graphData = processNetworkData(notes);
   const { nodes, links, tagUsageCount, colorScale } = graphData;
-
-  // Set fixed curvature for all links
-  const linksWithFixedCurvature = links.map(link => ({
-    ...link,
-    curvature: defaultSettings.linkCurvature
-  }));
 
   const nodeRelSize = defaultSettings.nodeSize;
   const nodeSizeScale = d3.scaleLinear()
@@ -110,7 +90,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           ref={fgRef}
           width={dimensions.width}
           height={dimensions.height}
-          graphData={{ nodes, links: linksWithFixedCurvature }}
+          graphData={{ nodes, links }}
           nodeLabel={(node: any) => node.name}
           nodeRelSize={nodeRelSize}
           nodeVal={getNodeSize}
@@ -122,8 +102,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           showNavInfo={defaultSettings.showNavInfo}
           d3VelocityDecay={0.1}
           warmupTicks={50}
-          cooldownTime={2000}
-          cooldownTicks={100}
         />
       )}
     </div>
