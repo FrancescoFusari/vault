@@ -23,8 +23,9 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       const simulation = fg.d3Force('simulation');
       if (!simulation) return;
 
+      // Reduce force strengths for gentler interactions
       simulation
-        .force('link', d3.forceLink())
+        .force('link', d3.forceLink().id((d: any) => d.id))
         .force('charge', d3.forceManyBody())
         .force('center', d3.forceCenter())
         .force('collision', d3.forceCollide());
@@ -32,27 +33,27 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       const linkForce = simulation.force('link');
       if (linkForce) {
         linkForce
-          .id((d: any) => d.id)
-          .distance(15)
-          .strength(1.5)
-          .iterations(10);
+          .distance(30) // Reduced from 120
+          .strength(0.3) // Reduced from 1.5
+          .iterations(1); // Reduced from 10
       }
 
       const chargeForce = simulation.force('charge');
       if (chargeForce) {
-        chargeForce.strength(-20);
+        chargeForce.strength(-10); // Reduced from -20
       }
 
       const centerForce = simulation.force('center');
       if (centerForce) {
-        centerForce.strength(1.2);
+        centerForce.strength(0.3); // Reduced from 1.2
       }
 
       const collisionForce = simulation.force('collision');
       if (collisionForce) {
-        collisionForce.radius(3);
+        collisionForce.radius(5);
       }
 
+      // Add sphere boundary force
       simulation.force('sphere', () => {
         nodes.forEach((node: any) => {
           const distance = Math.sqrt(
@@ -62,7 +63,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           );
           
           if (distance > 0) {
-            const targetRadius = 50;
+            const targetRadius = 100;
             const scale = targetRadius / distance;
             
             node.x *= scale;
@@ -73,6 +74,13 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       });
     });
   }, [nodes]);
+
+  const handleNodeDragEnd = (node: any) => {
+    // Fix node position after drag
+    node.fx = node.x;
+    node.fy = node.y;
+    node.fz = node.z;
+  };
 
   return (
     <div className="w-full h-full">
@@ -98,7 +106,10 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
             sprite.backgroundColor = 'rgba(0,0,0,0.5)';
             sprite.padding = 2;
             sprite.borderRadius = 3;
-            sprite.position.set(3, 0, 0);
+            
+            // Position the sprite relative to the sphere
+            const spritePosition = new THREE.Vector3(3, 0, 0);
+            sprite.position.copy(spritePosition);
             
             group.add(sprite);
             
@@ -114,6 +125,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         linkDirectionalParticleWidth={0.2}
         enableNavigationControls={true}
         enableNodeDrag={true}
+        onNodeDragEnd={handleNodeDragEnd}
         forceEngine="d3"
         cooldownTime={Infinity}
         nodeResolution={32}
