@@ -44,23 +44,21 @@ export const TagsSidebar = () => {
 
       {/* Mobile Layout */}
       <div className="md:hidden">
-        {/* Mobile Toggle Button */}
         <Button
           variant="outline"
           size="icon"
-          className="fixed top-4 left-4 z-50 bg-background/50 backdrop-blur-sm"
+          className="fixed top-4 left-4 z-50 bg-background/50 backdrop-blur-sm border-border/10"
           onClick={() => setOpen(!open)}
         >
           {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
         </Button>
 
-        {/* Mobile Sidebar */}
         <div
-          className={`fixed inset-y-0 left-0 w-[300px] bg-background/80 backdrop-blur-sm transform transition-transform duration-300 ease-in-out ${
+          className={`fixed inset-y-0 left-0 w-[280px] bg-background/90 backdrop-blur-sm border-r border-border/10 transform transition-transform duration-300 ease-in-out ${
             open ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
-          <div className="h-full overflow-y-auto pt-16">
+          <div className="h-full overflow-y-auto pt-16 pb-4">
             <SidebarContentComponent />
           </div>
         </div>
@@ -153,7 +151,7 @@ const SidebarContentComponent = () => {
   return (
     <SidebarContent className="pt-4">
       <SidebarGroup>
-        <SidebarGroupLabel>Life Sections</SidebarGroupLabel>
+        <SidebarGroupLabel className="text-secondary">Life Sections</SidebarGroupLabel>
         <SidebarGroupContent>
           <SidebarMenu>
             {Object.entries(lifeSections).map(([section, categories]) => (
@@ -163,7 +161,7 @@ const SidebarContentComponent = () => {
                 onOpenChange={() => toggleSection(section)}
               >
                 <CollapsibleTrigger asChild>
-                  <SidebarMenuButton className="w-full">
+                  <SidebarMenuButton className="w-full text-secondary hover:text-primary">
                     <ChevronRight className={`h-4 w-4 transition-transform ${openSections[section] ? 'rotate-90' : ''}`} />
                     <span className="capitalize">{section}</span>
                   </SidebarMenuButton>
@@ -177,7 +175,7 @@ const SidebarContentComponent = () => {
                         onOpenChange={() => toggleCategory(`${section}:${category}`)}
                       >
                         <CollapsibleTrigger asChild>
-                          <SidebarMenuSubButton className="pl-6">
+                          <SidebarMenuSubButton className="pl-6 text-secondary/80 hover:text-primary">
                             <FolderClosed className="h-4 w-4" />
                             <span className="capitalize">{category}</span>
                           </SidebarMenuSubButton>
@@ -190,7 +188,7 @@ const SidebarContentComponent = () => {
                               onOpenChange={() => toggleTag(tag)}
                             >
                               <CollapsibleTrigger asChild>
-                                <SidebarMenuSubButton className="pl-10">
+                                <SidebarMenuSubButton className="pl-10 text-muted-foreground hover:text-primary">
                                   <Hash className="h-4 w-4" />
                                   <span>{tag}</span>
                                 </SidebarMenuSubButton>
@@ -201,7 +199,7 @@ const SidebarContentComponent = () => {
                                     <SidebarMenuSubButton 
                                       onClick={() => navigate(`/note/${note.id}`)}
                                       size="sm"
-                                      className="pl-14"
+                                      className="pl-14 text-muted-foreground hover:text-primary"
                                     >
                                       <StickyNote className="h-3 w-3" />
                                       <span className="truncate">{note.content.split('\n')[0].substring(0, 30)}</span>
