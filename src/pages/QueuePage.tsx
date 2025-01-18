@@ -177,7 +177,7 @@ const QueuePage = () => {
             {format(new Date(item.received_at), "PPp")}
           </div>
           <Button
-            variant="ghost"
+            variant="secondary"
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
@@ -344,7 +344,7 @@ const QueuePage = () => {
                     </TableCell>
                     <TableCell>
                       <Button
-                        variant="ghost"
+                        variant="secondary"
                         size="sm"
                         onClick={() => processEmailMutation.mutate(item.id)}
                         disabled={
@@ -354,11 +354,11 @@ const QueuePage = () => {
                         }
                       >
                         {processEmailMutation.isPending && processEmailMutation.variables === item.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
                         ) : (
-                          <FileText className="h-4 w-4" />
+                          <FileText className="h-4 w-4 mr-2" />
                         )}
-                        <span className="ml-2">Process</span>
+                        Process
                       </Button>
                     </TableCell>
                   </TableRow>
