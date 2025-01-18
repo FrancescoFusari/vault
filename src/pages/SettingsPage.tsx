@@ -5,11 +5,70 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
+import { Slider } from "@/components/ui/slider";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+interface GraphSettings {
+  nodeSize: number;
+  linkWidth: number;
+  backgroundColor: string;
+  enableNodeDrag: boolean;
+  enableNavigationControls: boolean;
+  showNavInfo: boolean;
+  linkDistance: number;
+  cameraPosition: {
+    x: number;
+    y: number;
+    z: number;
+  };
+}
+
+const defaultSettings = {
+  nodeSize: 6,
+  linkWidth: 1,
+  backgroundColor: "hsl(229 19% 12%)",
+  enableNodeDrag: true,
+  enableNavigationControls: true,
+  showNavInfo: true,
+  linkDistance: 800,
+  cameraPosition: { x: 4600, y: 4600, z: 4600 }
+};
 
 const SettingsPage = () => {
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const [mounted, setMounted] = useState(false);
+  const queryClient = useQueryClient();
+
+  const { data: graphSettings } = useQuery({
+    queryKey: ['graphSettings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('graph_settings')
+        .select('*')
+        .single();
+      
+      if (error) {
+        console.error('Error fetching graph settings:', error);
+        return defaultSettings;
+      }
+      
+      return data?.settings || defaultSettings;
+    }
+  });
+
+  const form = useForm<GraphSettings>({
+    defaultValues: graphSettings || defaultSettings
+  });
+
+  useEffect(() => {
+    if (graphSettings) {
+      form.reset(graphSettings);
+    }
+  }, [graphSettings, form]);
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -24,6 +83,25 @@ const SettingsPage = () => {
     } catch (error) {
       console.error('Error logging out:', error);
       toast.error('Failed to log out');
+    }
+  };
+
+  const onSubmit = async (data: GraphSettings) => {
+    try {
+      const { error } = await supabase
+        .from('graph_settings')
+        .upsert({ 
+          settings: data,
+          user_id: (await supabase.auth.getUser()).data.user?.id 
+        });
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ['graphSettings'] });
+      toast.success('Graph settings updated successfully');
+    } catch (error) {
+      console.error('Error updating graph settings:', error);
+      toast.error('Failed to update graph settings');
     }
   };
 
@@ -52,6 +130,112 @@ const SettingsPage = () => {
             <span className="sr-only">Toggle theme</span>
           </Button>
         </div>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="p-4 bg-card rounded-lg border space-y-4">
+              <h2 className="text-lg font-semibold">Graph Settings</h2>
+
+              <FormField
+                control={form.control}
+                name="linkDistance"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Link Distance</FormLabel>
+                    <FormControl>
+                      <div className="space-y-2">
+                        <Slider
+                          min={100}
+                          max={2000}
+                          step={100}
+                          value={[field.value]}
+                          onValueChange={(value) => field.onChange(value[0])}
+                        />
+                        <div className="text-sm text-muted-foreground text-right">
+                          {field.value}
+                        </div>
+                      </div>
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="cameraPosition.x"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Camera Position X</FormLabel>
+                    <FormControl>
+                      <div className="space-y-2">
+                        <Slider
+                          min={1000}
+                          max={10000}
+                          step={100}
+                          value={[field.value]}
+                          onValueChange={(value) => field.onChange(value[0])}
+                        />
+                        <div className="text-sm text-muted-foreground text-right">
+                          {field.value}
+                        </div>
+                      </div>
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="cameraPosition.y"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Camera Position Y</FormLabel>
+                    <FormControl>
+                      <div className="space-y-2">
+                        <Slider
+                          min={1000}
+                          max={10000}
+                          step={100}
+                          value={[field.value]}
+                          onValueChange={(value) => field.onChange(value[0])}
+                        />
+                        <div className="text-sm text-muted-foreground text-right">
+                          {field.value}
+                        </div>
+                      </div>
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="cameraPosition.z"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Camera Position Z</FormLabel>
+                    <FormControl>
+                      <div className="space-y-2">
+                        <Slider
+                          min={1000}
+                          max={10000}
+                          step={100}
+                          value={[field.value]}
+                          onValueChange={(value) => field.onChange(value[0])}
+                        />
+                        <div className="text-sm text-muted-foreground text-right">
+                          {field.value}
+                        </div>
+                      </div>
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <Button type="submit">Save Graph Settings</Button>
+            </div>
+          </form>
+        </Form>
 
         <Button
           variant="destructive"
