@@ -53,7 +53,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         collisionForce.radius(5);
       }
 
-      // Add sphere boundary force
+      // Add sphere boundary force with reduced radius
       simulation.force('sphere', () => {
         nodes.forEach((node: any) => {
           const distance = Math.sqrt(
@@ -63,7 +63,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           );
           
           if (distance > 0) {
-            const targetRadius = 100;
+            const targetRadius = 60; // Changed from 100 to 60
             const scale = targetRadius / distance;
             
             node.x *= scale;
