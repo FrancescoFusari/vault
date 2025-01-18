@@ -16,41 +16,66 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   // Configure force simulation using useEffect
   useEffect(() => {
     if (fgRef.current) {
-      // Initialize forces first
-      fgRef.current.d3Force('link', d3.forceLink());
-      fgRef.current.d3Force('charge', d3.forceManyBody());
-      fgRef.current.d3Force('center', d3.forceCenter());
-      fgRef.current.d3Force('collision', d3.forceCollide());
+      // Initialize forces
+      const simulation = fgRef.current.d3Force();
 
-      // Then configure them
-      const linkForce = fgRef.current.d3Force('link');
+      // Reset to default forces
+      simulation
+        .force('link', d3.forceLink())
+        .force('charge', d3.forceManyBody())
+        .force('center', d3.forceCenter())
+        .force('collision', d3.forceCollide());
+
+      // Configure link force
+      const linkForce = simulation.force('link');
       if (linkForce) {
         linkForce
-          .distance(150) // Increased distance for more spread
-          .strength(0.15); // Reduced strength for more freedom of movement
+          .id((d: any) => d.id)
+          .distance(50); // Shorter distance for tighter sphere
       }
 
-      const chargeForce = fgRef.current.d3Force('charge');
+      // Configure charge force for 3D distribution
+      const chargeForce = simulation.force('charge');
       if (chargeForce) {
-        chargeForce
-          .strength(-120) // Increased repulsion to push nodes apart
-          .distanceMax(300) // Increased maximum distance
-          .theta(0.8); // Slightly reduced theta for more accurate force calculations
+        chargeForce.strength(-30); // Moderate repulsion
       }
 
-      const centerForce = fgRef.current.d3Force('center');
+      // Configure center force to maintain spherical shape
+      const centerForce = simulation.force('center');
       if (centerForce) {
-        centerForce.strength(0.3); // Increased center pull for better 3D distribution
+        centerForce.strength(1); // Strong centering force
       }
 
-      const collisionForce = fgRef.current.d3Force('collision');
+      // Add collision force to prevent overlap
+      const collisionForce = simulation.force('collision');
       if (collisionForce) {
-        collisionForce
-          .radius((node: NetworkNode) => Math.sqrt(node.value || 1) * 12) // Increased node spacing
-          .strength(0.8); // Strong collision force to prevent overlapping
+        collisionForce.radius(5); // Fixed radius for all nodes
       }
+
+      // Add a custom force to maintain spherical shape
+      simulation.force('sphere', () => {
+        nodes.forEach((node: any) => {
+          // Calculate distance from center
+          const distance = Math.sqrt(
+            node.x * node.x + 
+            node.y * node.y + 
+            node.z * node.z
+          );
+          
+          if (distance > 0) {
+            // Target radius of 100 units
+            const targetRadius = 100;
+            const scale = targetRadius / distance;
+            
+            // Move nodes towards the sphere surface
+            node.x *= scale;
+            node.y *= scale;
+            node.z *= scale;
+          }
+        });
+      });
     }
-  }, []);
+  }, [nodes]);
 
   return (
     <div className="w-full h-full">
