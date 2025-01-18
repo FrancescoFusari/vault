@@ -107,11 +107,9 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
             sprite.padding = 2;
             sprite.borderRadius = 3;
             
-            // Position the sprite relative to the sphere
-            const spritePosition = new THREE.Vector3(3, 0, 0);
-            sprite.position.copy(spritePosition);
-            
+            // Add sprite to group at an offset position
             group.add(sprite);
+            sprite.translateX(3);
             
             return group;
           }
