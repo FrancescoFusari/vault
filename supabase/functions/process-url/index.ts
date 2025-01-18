@@ -1,5 +1,7 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { extract } from 'https://deno.land/x/article_extractor@v1.0.0/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,67 +9,29 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { url } = await req.json();
+    const { url, userId } = await req.json();
     console.log('Processing URL:', url);
 
-    // Fetch the content from the URL
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error('Failed to fetch URL content');
+    // Extract content from URL
+    const article = await extract(url);
+    if (!article || !article.content) {
+      throw new Error('Failed to extract content from URL');
     }
 
-    const content = await response.text();
-    console.log('Content fetched, length:', content.length);
+    const content = `Title: ${article.title || 'No title'}\n\n${article.content}`;
+    console.log('Extracted content:', content);
 
-    // Convert HTML to plain text (basic conversion)
-    const plainText = content
-      .replace(/<[^>]*>/g, '') // Remove HTML tags
-      .replace(/\s+/g, ' ') // Normalize whitespace
-      .trim()
-      .substring(0, 8000); // Limit length for OpenAI
-
+    // Analyze content with OpenAI
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
       throw new Error('OpenAI API key not configured');
     }
 
-    // First, get a summary of the content
-    const summaryResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a helpful assistant that summarizes web content. Provide a clear, concise summary that captures the main points.'
-          },
-          {
-            role: 'user',
-            content: plainText
-          }
-        ],
-        max_tokens: 500
-      }),
-    });
-
-    if (!summaryResponse.ok) {
-      throw new Error('Failed to summarize content');
-    }
-
-    const summaryData = await summaryResponse.json();
-    const summary = summaryData.choices[0].message.content;
-
-    // Then, analyze for category and tags
     const analysisResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -75,80 +39,85 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4',
         messages: [
           {
             role: 'system',
-            content: `Analyze the following content and provide a category, title, and relevant tags. 
-            Respond with a JSON object containing:
-            - "category" (string): A broad category for the content
-            - "title" (string): A concise, descriptive title (2-5 words)
-            - "tags" (array of strings): 3-5 relevant tags
-            
-            Do not include any markdown formatting or code blocks in your response.`
+            content: `Analyze the content and provide:
+            1. Relevant tags
+            2. Any key metadata or insights
+
+            Return a JSON object in this exact format:
+            {
+              "tags": ["string"],
+              "metadata": {
+                "key_points": ["string"],
+                "references": ["string"],
+                "topics": ["string"]
+              }
+            }`
           },
           {
             role: 'user',
-            content: summary
+            content
           }
         ],
+        temperature: 0.7,
+        max_tokens: 1000
       }),
     });
 
     if (!analysisResponse.ok) {
-      throw new Error('Failed to analyze content');
+      throw new Error(`OpenAI API error: ${analysisResponse.statusText}`);
     }
 
     const analysisData = await analysisResponse.json();
-    console.log('Analysis response:', analysisData);
+    console.log('OpenAI analysis response:', analysisData);
 
     let analysis;
     try {
       analysis = JSON.parse(analysisData.choices[0].message.content);
+      console.log('Parsed analysis:', analysis);
     } catch (error) {
-      console.error('Failed to parse analysis:', error);
-      throw new Error('Invalid analysis format');
+      console.error('Error parsing OpenAI response:', error);
+      throw new Error('Invalid response format from OpenAI');
     }
 
-    // Add to processing queue
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Create note in Supabase
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
 
-    // Get the user from the auth header
-    const { data: { user } } = await supabase.auth.getUser(req.headers.get('Authorization')?.split(' ')[1] ?? '');
-    if (!user) throw new Error('Not authenticated');
-
-    // Create the note directly
-    const { data: note, error: noteError } = await supabase
+    const { data: note, error: noteError } = await supabaseClient
       .from('notes')
       .insert({
-        user_id: user.id,
-        content: summary,
-        category: analysis.category,
-        tags: [analysis.title, ...analysis.tags],
+        user_id: userId,
+        content,
+        category: 'URL Note',
+        tags: analysis.tags,
         input_type: 'url',
-        source_url: url
+        source_url: url,
+        metadata: analysis.metadata
       })
       .select()
       .single();
 
-    if (noteError) throw noteError;
+    if (noteError) {
+      console.error('Error creating note:', noteError);
+      throw noteError;
+    }
 
     return new Response(
-      JSON.stringify({ 
-        message: 'URL processed successfully',
-        note
-      }),
+      JSON.stringify(note),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in process-url function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
-        status: 400,
+        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );

@@ -41,7 +41,6 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    console.log('Analyzing email content with OpenAI...');
     const analysisResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -49,23 +48,21 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4',
         messages: [
           {
             role: 'system',
-            content: `Analyze the following email and provide:
-            1. A category that best describes the content
-            2. Relevant tags (including the subject as first tag)
-            3. Any key metadata or insights
+            content: `Analyze the email content and provide:
+            1. Relevant tags (including the subject as first tag)
+            2. Any key metadata or insights
 
             Return a JSON object in this exact format:
             {
-              "category": "string",
               "tags": ["string"],
               "metadata": {
-                "email_subject": "string",
-                "sender": "string",
-                "analysis_notes": "string"
+                "key_points": ["string"],
+                "action_items": ["string"],
+                "important_dates": ["string"]
               }
             }`
           },
@@ -75,7 +72,7 @@ serve(async (req) => {
           }
         ],
         temperature: 0.7,
-        max_tokens: 1000,
+        max_tokens: 1000
       }),
     });
 
@@ -98,14 +95,13 @@ serve(async (req) => {
       analysis = JSON.parse(content);
       
       // Validate the response format
-      if (!analysis.category || !Array.isArray(analysis.tags) || !analysis.metadata) {
+      if (!Array.isArray(analysis.tags) || !analysis.metadata) {
         throw new Error('Invalid response structure');
       }
       
       console.log('Parsed analysis:', analysis);
     } catch (error) {
       console.error('Error parsing OpenAI response:', error);
-      console.error('Raw content:', analysisData.choices[0].message.content);
       throw new Error('Invalid response format from OpenAI');
     }
 
@@ -115,15 +111,10 @@ serve(async (req) => {
       .insert({
         user_id: userId,
         content: email.email_body || 'No content available',
-        category: analysis.category,
+        category: 'Email Note',
         tags: analysis.tags,
         input_type: 'email',
-        metadata: {
-          email_subject: email.subject,
-          sender: email.sender,
-          received_at: email.received_at,
-          analysis_notes: analysis.metadata.analysis_notes
-        }
+        metadata: analysis.metadata
       })
       .select()
       .single();
@@ -136,20 +127,19 @@ serve(async (req) => {
     // Update email status
     const { error: updateError } = await supabaseClient
       .from('email_processing_queue')
-      .update({ 
-        status: 'completed',
+      .update({
+        status: 'processed',
         processed_at: new Date().toISOString()
       })
       .eq('id', emailId);
 
     if (updateError) {
       console.error('Error updating email status:', updateError);
-      // Don't throw here as the note was created successfully
+      throw updateError;
     }
 
-    console.log('Successfully processed email to note:', note);
     return new Response(
-      JSON.stringify({ success: true, note }),
+      JSON.stringify(note),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
