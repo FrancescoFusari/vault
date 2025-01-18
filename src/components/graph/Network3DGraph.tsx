@@ -21,21 +21,24 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         nodeLabel={(node: any) => node.name}
         nodeColor={(node: any) => node.type === 'note' ? '#60a5fa' : '#f59e0b'}
         backgroundColor="hsl(229 19% 12%)"
-        // Increase node repulsion (default: -30)
-        dagLevelDistance={300}
-        // Increase spacing between nodes
-        dagNodeFilter={(node: any) => true}
-        // Increase link length for better spacing
-        linkDirectionalParticles={2}
-        linkDirectionalParticleWidth={2}
-        // Enable 3D navigation controls
+        // Increase distance between graph levels for better spacing
+        dagLevelDistance={500}
+        // Increase node spacing
+        nodeRelSize={8}
+        // Reduce link width
+        linkWidth={0.3}
+        // Customize link appearance
+        linkOpacity={0.4}
+        // Enable navigation controls
         enableNavigationControls={true}
         // Enable node dragging
         enableNodeDrag={true}
-        // Increase force strength to push nodes apart
-        cooldownTicks={100}
-        // Customize forces
-        forceEngine="d3"
+        // Increase cooldown ticks for better stabilization
+        cooldownTicks={200}
+        // Increase link particle effect but make them smaller
+        linkDirectionalParticles={2}
+        linkDirectionalParticleWidth={0.2}
+        linkDirectionalParticleSpeed={0.006}
       />
     </div>
   );
