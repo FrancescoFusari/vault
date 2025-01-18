@@ -51,7 +51,7 @@ const Index = () => {
       />
       
       <div className="container mx-auto min-h-screen flex flex-col bg-transparent relative">      
-        <div className="flex-1 flex flex-col items-center justify-center relative z-10">
+        <div className="flex-1 flex flex-col items-center justify-center relative z-10 mt-[30vh]">
           <div className="text-center space-y-3 mb-8">
             <h1 className="text-3xl font-light tracking-tight text-foreground">
               Entrance to the vault
