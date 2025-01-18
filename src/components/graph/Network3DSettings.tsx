@@ -30,7 +30,11 @@ export const Network3DSettingsDialog = ({ settings, onSettingChange }: Network3D
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon" className="absolute top-4 right-4 z-10">
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className="absolute top-20 right-4 z-10"
+        >
           <Settings className="h-4 w-4" />
         </Button>
       </DialogTrigger>
