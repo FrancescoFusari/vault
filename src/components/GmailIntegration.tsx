@@ -3,10 +3,12 @@ import { Button } from '@/components/ui/button';
 import { Mail } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export const GmailIntegration = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const handleConnect = async () => {
     try {
@@ -77,12 +79,23 @@ export const GmailIntegration = () => {
   };
 
   return (
-    <div className="flex gap-2">
-      <Button onClick={handleConnect} variant="outline" className="gap-2">
+    <div className={`flex ${isMobile ? 'flex-col' : ''} gap-2`}>
+      <Button 
+        onClick={handleConnect} 
+        variant="outline" 
+        size={isMobile ? "sm" : "default"}
+        className="gap-2"
+      >
         <Mail className="w-4 h-4" />
         Connect Gmail
       </Button>
-      <Button onClick={handleFetchEmails} disabled={isLoading} variant="outline" className="gap-2">
+      <Button 
+        onClick={handleFetchEmails} 
+        disabled={isLoading} 
+        variant="outline"
+        size={isMobile ? "sm" : "default"}
+        className="gap-2"
+      >
         <Mail className="w-4 h-4" />
         {isLoading ? 'Fetching...' : 'Fetch Recent Emails'}
       </Button>

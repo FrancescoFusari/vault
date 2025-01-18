@@ -69,24 +69,32 @@ const Index = () => {
             </p>
           </div>
           
-          <div className="w-full max-w-2xl mx-auto space-y-12">
+          <div className="w-full max-w-2xl mx-auto space-y-8">
             <NoteInput onNoteSubmit={handleNoteSubmit} />
             
             {/* Gmail Integration Section */}
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div className="text-center">
-                <h2 className="text-xl font-medium text-foreground mb-2">Gmail Integration</h2>
-                <p className="text-sm text-muted-foreground">Connect and manage your Gmail account</p>
+                <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-medium text-foreground mb-2`}>
+                  Gmail Integration
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Connect and manage your Gmail account
+                </p>
               </div>
               <div className="flex justify-center">
                 <GmailIntegration />
               </div>
             </div>
             
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div className="text-center">
-                <h2 className="text-xl font-medium text-foreground mb-2">Connect services</h2>
-                <p className="text-sm text-muted-foreground">Import your data from other platforms</p>
+                <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-medium text-foreground mb-2`}>
+                  Connect services
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Import your data from other platforms
+                </p>
               </div>
               
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 gap-4 p-6 rounded-lg border border-border bg-card shadow-sm">
