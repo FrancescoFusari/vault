@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { Slider } from "@/components/ui/slider";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -26,7 +25,7 @@ interface GraphSettings {
   };
 }
 
-const defaultSettings = {
+const defaultSettings: GraphSettings = {
   nodeSize: 6,
   linkWidth: 1,
   backgroundColor: "hsl(229 19% 12%)",
@@ -46,17 +45,21 @@ const SettingsPage = () => {
   const { data: graphSettings } = useQuery({
     queryKey: ['graphSettings'],
     queryFn: async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error('No user found');
+
       const { data, error } = await supabase
         .from('graph_settings')
-        .select('*')
-        .single();
+        .select('settings')
+        .eq('user_id', userData.user.id)
+        .maybeSingle();
       
       if (error) {
         console.error('Error fetching graph settings:', error);
         return defaultSettings;
       }
       
-      return data?.settings || defaultSettings;
+      return (data?.settings as GraphSettings) || defaultSettings;
     }
   });
 
@@ -88,11 +91,14 @@ const SettingsPage = () => {
 
   const onSubmit = async (data: GraphSettings) => {
     try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error('No user found');
+
       const { error } = await supabase
         .from('graph_settings')
         .upsert({ 
-          settings: data,
-          user_id: (await supabase.auth.getUser()).data.user?.id 
+          user_id: userData.user.id,
+          settings: data
         });
 
       if (error) throw error;

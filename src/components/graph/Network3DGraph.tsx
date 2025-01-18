@@ -10,7 +10,22 @@ interface Network3DGraphProps {
   notes: Note[];
 }
 
-const defaultSettings = {
+interface GraphSettings {
+  nodeSize: number;
+  linkWidth: number;
+  backgroundColor: string;
+  enableNodeDrag: boolean;
+  enableNavigationControls: boolean;
+  showNavInfo: boolean;
+  linkDistance: number;
+  cameraPosition: {
+    x: number;
+    y: number;
+    z: number;
+  };
+}
+
+const defaultSettings: GraphSettings = {
   nodeSize: 6,
   linkWidth: 1,
   backgroundColor: "hsl(229 19% 12%)",
@@ -30,17 +45,21 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const { data: graphSettings } = useQuery({
     queryKey: ['graphSettings'],
     queryFn: async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error('No user found');
+
       const { data, error } = await supabase
         .from('graph_settings')
-        .select('*')
-        .single();
+        .select('settings')
+        .eq('user_id', userData.user.id)
+        .maybeSingle();
       
       if (error) {
         console.error('Error fetching graph settings:', error);
         return defaultSettings;
       }
       
-      return data?.settings || defaultSettings;
+      return (data?.settings as GraphSettings) || defaultSettings;
     }
   });
 
