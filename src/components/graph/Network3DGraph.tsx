@@ -107,11 +107,9 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
             sprite.padding = 2;
             sprite.borderRadius = 3;
             
-            // Add sprite to group and position it using the group's position
+            // Add sprite to group and position it
+            sprite.translateX(3); // Use translateX instead of position
             group.add(sprite);
-            const textPosition = new THREE.Vector3(3, 0, 0);
-            sprite.center.set(0, 0);
-            group.children[1].position.copy(textPosition);
             
             return group;
           }
