@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import ForceGraph3D from 'react-force-graph-3d';
 import { NetworkNode, NetworkLink, processNetworkData } from '@/utils/networkGraphUtils';
 import { Note } from '@/types/graph';
@@ -35,6 +35,9 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const rotationRef = useRef<number | null>(null);
+  const timeoutRef = useRef<number | null>(null);
 
   const { data: graphSettings } = useQuery({
     queryKey: ['graphSettings'],
@@ -50,7 +53,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       
       if (error && error.code !== 'PGRST116') throw error;
       
-      // Safely type cast the settings
       const settings = data?.settings as Record<keyof GraphSettings, any>;
       return settings ? {
         nodeSize: Number(settings.nodeSize) || defaultSettings.nodeSize,
@@ -63,6 +65,41 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       } : defaultSettings;
     }
   });
+
+  const startRotation = useCallback(() => {
+    if (!fgRef.current || isPaused) return;
+    
+    const rotateCamera = () => {
+      if (fgRef.current && !isPaused) {
+        fgRef.current.camera().position.applyAxisAngle(new THREE.Vector3(0, 1, 0), 0.002);
+        fgRef.current.camera().lookAt(0, 0, 0);
+        rotationRef.current = requestAnimationFrame(rotateCamera);
+      }
+    };
+    
+    rotationRef.current = requestAnimationFrame(rotateCamera);
+  }, [isPaused]);
+
+  const stopRotation = useCallback(() => {
+    if (rotationRef.current) {
+      cancelAnimationFrame(rotationRef.current);
+      rotationRef.current = null;
+    }
+  }, []);
+
+  const handleInteraction = useCallback(() => {
+    setIsPaused(true);
+    stopRotation();
+    
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
+    timeoutRef.current = window.setTimeout(() => {
+      setIsPaused(false);
+      startRotation();
+    }, 2000);
+  }, [stopRotation, startRotation]);
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -79,12 +116,15 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
 
     return () => {
       window.removeEventListener('resize', updateDimensions);
+      stopRotation();
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
-  }, []);
+  }, [stopRotation]);
 
   useEffect(() => {
     if (fgRef.current && graphSettings && !isInitialized) {
-      // Configure the force simulation
       const distance = (graphSettings.linkDistance || defaultSettings.linkDistance) * 3;
       console.log('Setting link distance to:', distance);
       
@@ -93,7 +133,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       fgRef.current.controls().dampingFactor = 0.1;
       fgRef.current.controls().enableZoom = true;
       
-      // Set initial camera position to show all nodes
       const { nodes } = processNetworkData(notes);
       if (nodes.length > 0) {
         console.log('Setting initial camera distance to: 6000');
@@ -106,16 +145,15 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       }
       
       setIsInitialized(true);
+      startRotation();
     }
-  }, [graphSettings, isInitialized, notes]);
+  }, [graphSettings, isInitialized, notes, startRotation]);
 
-  // Reset force simulation when settings change
   useEffect(() => {
     if (fgRef.current && graphSettings && isInitialized) {
       const distance = (graphSettings.linkDistance || defaultSettings.linkDistance) * 3;
       console.log('Updating link distance to:', distance);
       fgRef.current.d3Force('link').distance(() => distance);
-      // Get the current graph data directly from the component's props
       const currentData = { nodes, links };
       fgRef.current.d3Force('link').initialize(currentData.links);
     }
@@ -163,6 +201,9 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           showNavInfo={graphSettings?.showNavInfo ?? defaultSettings.showNavInfo}
           d3VelocityDecay={0.1}
           warmupTicks={50}
+          onNodeDrag={handleInteraction}
+          onNodeDragEnd={handleInteraction}
+          onNavigate={handleInteraction}
         />
       )}
     </div>
