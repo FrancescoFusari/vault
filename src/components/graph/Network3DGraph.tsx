@@ -34,25 +34,25 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       if (linkForce) {
         linkForce
           .distance(30)
-          .strength(0.1) // Reduced from 0.2
+          .strength(0.1)
           .iterations(1);
       }
 
       const chargeForce = simulation.force('charge');
       if (chargeForce) {
-        chargeForce.strength(-3); // Reduced from -5
+        chargeForce.strength(-3);
       }
 
       const centerForce = simulation.force('center');
       if (centerForce) {
-        centerForce.strength(0.5); // Reduced from 1
+        centerForce.strength(0.5);
       }
 
       const collisionForce = simulation.force('collision');
       if (collisionForce) {
         collisionForce
           .radius(5)
-          .strength(0.1); // Reduced from 0.2
+          .strength(0.1);
       }
 
       // Add sphere boundary force with reduced radius
@@ -132,11 +132,8 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         cooldownTime={Infinity}
         nodeResolution={32}
         controlType="orbit"
-        minZoom={0.5}
-        maxZoom={2.5}
-        touchMoveRatio={0.3} // Reduced touch sensitivity
-        rotateSpeed={0.4} // Reduced rotation speed
-        zoomSpeed={0.3} // Reduced zoom speed
+        showNavInfo={false}
+        cameraDistance={200}
       />
     </div>
   );
