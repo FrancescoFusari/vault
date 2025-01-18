@@ -39,6 +39,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const [isPaused, setIsPaused] = useState(false);
   const rotationRef = useRef<number | null>(null);
   const timeoutRef = useRef<number | null>(null);
+  const initializedRef = useRef(false);
 
   const { data: graphSettings } = useQuery({
     queryKey: ['graphSettings'],
@@ -127,7 +128,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   }, [stopRotation]);
 
   useEffect(() => {
-    if (fgRef.current && graphSettings && !isInitialized) {
+    if (fgRef.current && graphSettings && !initializedRef.current) {
       const distance = (graphSettings.linkDistance || defaultSettings.linkDistance) * 3;
       console.log('Setting link distance to:', distance);
       
@@ -138,29 +139,31 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       
       const { nodes } = processNetworkData(notes);
       if (nodes.length > 0) {
-        console.log('Setting initial camera distance to: 6000');
+        console.log('Setting initial camera distance');
         fgRef.current.camera().position.set(6000, 6000, 6000);
         fgRef.current.camera().lookAt(0, 0, 0);
       } else {
-        console.log('Setting default camera distance to: 6000');
+        console.log('Setting default camera distance');
         fgRef.current.camera().position.set(6000, 6000, 6000);
         fgRef.current.camera().lookAt(0, 0, 0);
       }
       
+      initializedRef.current = true;
       setIsInitialized(true);
       startRotation();
     }
-  }, [graphSettings, isInitialized, notes, startRotation]);
+  }, [graphSettings, notes, startRotation]);
 
   useEffect(() => {
     if (fgRef.current && graphSettings && isInitialized) {
       const distance = (graphSettings.linkDistance || defaultSettings.linkDistance) * 3;
       console.log('Updating link distance to:', distance);
       fgRef.current.d3Force('link').distance(() => distance);
+      const { nodes, links } = processNetworkData(notes);
       const currentData = { nodes, links };
       fgRef.current.d3Force('link').initialize(currentData.links);
     }
-  }, [graphSettings?.linkDistance]);
+  }, [graphSettings?.linkDistance, isInitialized, notes]);
 
   const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
 
