@@ -36,27 +36,27 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       if (linkForce) {
         linkForce
           .id((d: any) => d.id)
-          .distance(20) // Shorter distance for tighter sphere
-          .strength(1) // Strong link force
-          .iterations(10); // More iterations for stability
+          .distance(15) // Even shorter distance for more compact sphere
+          .strength(1.5) // Stronger link force for tighter clustering
+          .iterations(10);
       }
 
-      // Configure charge force for 3D distribution
+      // Configure charge force for tighter 3D distribution
       const chargeForce = simulation.force('charge');
       if (chargeForce) {
-        chargeForce.strength(-30); // Moderate repulsion
+        chargeForce.strength(-20); // Less repulsion for closer nodes
       }
 
       // Configure center force to maintain spherical shape
       const centerForce = simulation.force('center');
       if (centerForce) {
-        centerForce.strength(1); // Strong centering force
+        centerForce.strength(1.2); // Stronger centering force
       }
 
       // Add collision force to prevent overlap
       const collisionForce = simulation.force('collision');
       if (collisionForce) {
-        collisionForce.radius(5); // Fixed radius for all nodes
+        collisionForce.radius(3); // Smaller radius for tighter packing
       }
 
       // Add a custom force to maintain spherical shape
@@ -70,8 +70,8 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           );
           
           if (distance > 0) {
-            // Target radius of 100 units
-            const targetRadius = 100;
+            // Reduced target radius for a more compact sphere (was 100)
+            const targetRadius = 50;
             const scale = targetRadius / distance;
             
             // Move nodes towards the sphere surface
