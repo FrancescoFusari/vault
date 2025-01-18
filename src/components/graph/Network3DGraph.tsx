@@ -21,39 +21,14 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         nodeLabel={(node: any) => node.name}
         nodeColor={(node: any) => node.type === 'note' ? '#60a5fa' : '#f59e0b'}
         backgroundColor="hsl(229 19% 12%)"
+        // Reduce link width for cleaner appearance
         linkWidth={0.3}
+        // Add subtle particle effect on links
         linkDirectionalParticles={1}
         linkDirectionalParticleWidth={0.2}
+        // Enable navigation and interaction
         enableNavigationControls={true}
         enableNodeDrag={true}
-        forceEngine="d3"
-        d3Force={(force) => {
-          force.link()
-            .distance(200)
-            .strength(0.7);
-
-          force.charge()
-            .strength(-120)
-            .distanceMax(300);
-
-          force.center()
-            .strength(0.05);
-
-          force.force('collision', d3.forceCollide()
-            .radius(10)
-            .strength(0.7)
-          );
-
-          force.force('x', d3.forceX()
-            .strength(0.02)
-          );
-          force.force('y', d3.forceY()
-            .strength(0.02)
-          );
-        }}
-        warmupTicks={100}
-        cooldownTicks={50}
-        cooldownTime={3000}
       />
     </div>
   );
