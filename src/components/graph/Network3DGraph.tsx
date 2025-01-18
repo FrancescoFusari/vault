@@ -23,25 +23,22 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       const fg = fgRef.current;
       if (!fg) return;
 
-      // Optimize force parameters
-      fg.d3Force('link')?.distance(25).strength(0.3);
-      fg.d3Force('charge')?.strength(-8).distanceMax(150);
-      fg.d3Force('center')?.strength(0.05);
+      // Optimize force parameters for smoother movement
+      fg.d3Force('link')?.distance(40).strength(0.2);
+      fg.d3Force('charge')?.strength(-30).distanceMax(200);
+      fg.d3Force('center')?.strength(0.02);
 
-      // Add collision force
+      // Add collision force with optimized parameters
       fg.d3Force('collision', d3.forceCollide()
-        .radius(5)
-        .strength(0.2)
-        .iterations(1));
+        .radius(8)
+        .strength(0.5)
+        .iterations(2));
 
-      // Initial camera position
-      fg.cameraPosition({ z: 120 });
-
-      // Set graph configuration through props instead of methods
+      // Set initial camera position with smoother transition
+      fg.cameraPosition({ z: 150 }, { x: 0, y: 0, z: 0 }, 1000);
     });
 
     return () => {
-      // Cleanup
       if (fgRef.current) {
         fgRef.current.pauseAnimation();
       }
@@ -55,7 +52,11 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       
       const sphere = new THREE.Mesh(
         new THREE.SphereGeometry(3),
-        new THREE.MeshLambertMaterial({ color: '#EF7234' })
+        new THREE.MeshLambertMaterial({ 
+          color: '#EF7234',
+          transparent: true,
+          opacity: 0.8
+        })
       );
       group.add(sphere);
       
@@ -66,15 +67,18 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       sprite.padding = 1;
       sprite.borderRadius = 2;
       
-      // Fix: Position sprite relative to group using position instead of translateX
       group.add(sprite);
-      sprite.position.x = 4;
+      sprite.translateX(4);
       
       return group;
     } else if (node.type === 'tag') {
       return new THREE.Mesh(
         new THREE.SphereGeometry(1.5),
-        new THREE.MeshLambertMaterial({ color: '#E0E0D7' })
+        new THREE.MeshLambertMaterial({ 
+          color: '#E0E0D7',
+          transparent: true,
+          opacity: 0.6
+        })
       );
     }
     return null;
@@ -103,12 +107,17 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         enableNodeDrag={true}
         onNodeDragEnd={handleNodeDragEnd}
         forceEngine="d3"
-        cooldownTime={2000}
-        cooldownTicks={50}
-        warmupTicks={20}
-        nodeResolution={8}
-        d3AlphaDecay={0.02}
-        d3VelocityDecay={0.3}
+        cooldownTime={1000}
+        cooldownTicks={100}
+        warmupTicks={50}
+        nodeResolution={16}
+        d3AlphaDecay={0.01}
+        d3VelocityDecay={0.2}
+        rendererConfig={{
+          antialias: true,
+          alpha: true,
+          powerPreference: 'high-performance'
+        }}
       />
     </div>
   );
