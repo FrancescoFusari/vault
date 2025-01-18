@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Settings } from "lucide-react";
+import { Json } from "@/integrations/supabase/types";
 
 export interface Network3DSettings {
   nodeSize: number;

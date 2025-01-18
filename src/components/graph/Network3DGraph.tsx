@@ -6,6 +6,7 @@ import * as d3 from 'd3';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Network3DSettings, Network3DSettingsDialog } from './Network3DSettings';
+import { Json } from '@/integrations/supabase/types';
 
 interface Network3DGraphProps {
   notes: Note[];
@@ -53,7 +54,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           .from('graph_settings')
           .insert({
             user_id: user.id,
-            settings: defaultSettings
+            settings: defaultSettings as unknown as Json
           });
         
         if (insertError) throw insertError;
@@ -89,7 +90,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       .from('graph_settings')
       .upsert({
         user_id: user.id,
-        settings: newSettings
+        settings: newSettings as unknown as Json
       });
 
     if (error) {
