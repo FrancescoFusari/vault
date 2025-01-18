@@ -35,7 +35,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const fgRef = useRef<any>();
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const rotationRef = useRef<number | null>(null);
   const timeoutRef = useRef<number | null>(null);
@@ -105,6 +104,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     }, 2000);
   }, [stopRotation, startRotation]);
 
+  // Handle window resize and cleanup
   useEffect(() => {
     const updateDimensions = () => {
       if (containerRef.current) {
@@ -127,43 +127,33 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     };
   }, [stopRotation]);
 
+  // Initialize graph
   useEffect(() => {
     if (fgRef.current && graphSettings && !initializedRef.current) {
+      console.log('Initializing graph...');
       const distance = (graphSettings.linkDistance || defaultSettings.linkDistance) * 3;
-      console.log('Setting link distance to:', distance);
       
       fgRef.current.d3Force('link').distance(() => distance);
       fgRef.current.controls().enableDamping = true;
       fgRef.current.controls().dampingFactor = 0.1;
       fgRef.current.controls().enableZoom = true;
       
-      const { nodes } = processNetworkData(notes);
-      if (nodes.length > 0) {
-        console.log('Setting initial camera distance');
-        fgRef.current.camera().position.set(6000, 6000, 6000);
-        fgRef.current.camera().lookAt(0, 0, 0);
-      } else {
-        console.log('Setting default camera distance');
-        fgRef.current.camera().position.set(6000, 6000, 6000);
-        fgRef.current.camera().lookAt(0, 0, 0);
-      }
+      fgRef.current.camera().position.set(6000, 6000, 6000);
+      fgRef.current.camera().lookAt(0, 0, 0);
       
       initializedRef.current = true;
-      setIsInitialized(true);
       startRotation();
     }
-  }, [graphSettings, notes, startRotation]);
+  }, [graphSettings, startRotation]);
 
+  // Update graph settings
   useEffect(() => {
-    if (fgRef.current && graphSettings && isInitialized) {
+    if (fgRef.current && graphSettings && initializedRef.current) {
+      console.log('Updating graph settings...');
       const distance = (graphSettings.linkDistance || defaultSettings.linkDistance) * 3;
-      console.log('Updating link distance to:', distance);
       fgRef.current.d3Force('link').distance(() => distance);
-      const { nodes, links } = processNetworkData(notes);
-      const currentData = { nodes, links };
-      fgRef.current.d3Force('link').initialize(currentData.links);
     }
-  }, [graphSettings?.linkDistance, isInitialized, notes]);
+  }, [graphSettings?.linkDistance]);
 
   const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
 
