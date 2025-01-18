@@ -1,5 +1,4 @@
 import { Network3DGraph } from "@/components/graph/Network3DGraph";
-import { BottomNav } from "@/components/BottomNav";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -22,7 +21,6 @@ const Network3DPage = () => {
       <div className="flex-1 relative w-full h-full">
         <Network3DGraph notes={notes} />
       </div>
-      <BottomNav />
     </div>
   );
 };
