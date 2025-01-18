@@ -15,14 +15,14 @@ const defaultSettings = {
   enableNodeDrag: true,
   enableNavigationControls: true,
   showNavInfo: true,
-  linkDistance: 120
+  linkDistance: 360, // Increased from 120 to 360 (3x) as permanent default
+  cameraPosition: { x: 5000, y: 5000, z: 5000 } // Added default camera position
 };
 
 export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const fgRef = useRef<any>();
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -42,30 +42,22 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     };
   }, []);
 
+  // Set up graph configuration once when the component mounts
   useEffect(() => {
-    if (fgRef.current && !isInitialized) {
-      const distance = defaultSettings.linkDistance * 3;
-      console.log('Setting link distance to:', distance);
+    if (fgRef.current) {
+      console.log('Setting link distance to:', defaultSettings.linkDistance);
+      fgRef.current.d3Force('link').distance(() => defaultSettings.linkDistance);
       
-      fgRef.current.d3Force('link').distance(() => distance);
       fgRef.current.controls().enableDamping = true;
       fgRef.current.controls().dampingFactor = 0.1;
       fgRef.current.controls().enableZoom = true;
       
-      const { nodes } = processNetworkData(notes);
-      if (nodes.length > 0) {
-        console.log('Setting initial camera distance to: 5000');
-        fgRef.current.camera().position.set(5000, 5000, 5000);
-        fgRef.current.camera().lookAt(0, 0, 0);
-      } else {
-        console.log('Setting default camera distance to: 5000');
-        fgRef.current.camera().position.set(5000, 5000, 5000);
-        fgRef.current.camera().lookAt(0, 0, 0);
-      }
-      
-      setIsInitialized(true);
+      console.log('Setting camera position to:', defaultSettings.cameraPosition);
+      const { x, y, z } = defaultSettings.cameraPosition;
+      fgRef.current.camera().position.set(x, y, z);
+      fgRef.current.camera().lookAt(0, 0, 0);
     }
-  }, [isInitialized, notes]);
+  }, []);
 
   const graphData = processNetworkData(notes);
   const { nodes, links, tagUsageCount, colorScale } = graphData;
