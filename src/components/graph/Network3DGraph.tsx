@@ -92,9 +92,9 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           if (node.type === 'note') {
             const group = new THREE.Group();
             
-            // Create the sphere for the node
+            // Create a larger sphere for note nodes
             const sphere = new THREE.Mesh(
-              new THREE.SphereGeometry(2),
+              new THREE.SphereGeometry(4), // Increased from 2 to 4
               new THREE.MeshLambertMaterial({ color: '#EF7234' })
             );
             group.add(sphere);
@@ -107,13 +107,17 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
             sprite.padding = 2;
             sprite.borderRadius = 3;
             
-            // Add sprite to group and position it using the group's position
             group.add(sprite);
-            const textPosition = new THREE.Vector3(3, 0, 0);
-            sprite.center.set(0, 0);
-            group.children[1].position.copy(textPosition);
+            sprite.position.set(5, 0, 0); // Moved text further out due to larger sphere
             
             return group;
+          } else if (node.type === 'tag') {
+            // Create smaller spheres for tag nodes
+            const sphere = new THREE.Mesh(
+              new THREE.SphereGeometry(1.5), // Reduced size for tags
+              new THREE.MeshLambertMaterial({ color: '#E0E0D7' })
+            );
+            return sphere;
           }
           return null;
         }}
