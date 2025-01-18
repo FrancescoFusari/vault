@@ -22,8 +22,8 @@ export function DesktopNav() {
   const location = useLocation();
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 hidden md:block">
-      <nav className="flex h-16 items-center justify-between px-8 border-b border-muted">
+    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 hidden md:block">
+      <nav className="flex h-14 items-center justify-between px-6 border border-border/10 rounded-2xl bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm">
         <div className="flex items-center">
           <span className="text-lg font-semibold text-secondary mr-8">SecondBrain</span>
           <div className="flex items-center space-x-1">

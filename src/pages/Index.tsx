@@ -1,15 +1,11 @@
 import { NoteInput } from "@/components/NoteInput";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { analyzeNote } from "@/lib/openai";
-import { useNavigate } from "react-router-dom";
 import { GmailIntegration } from "@/components/GmailIntegration";
-import { Github, Mail, X, MessageSquare, Linkedin, Facebook, Instagram, Youtube, BookOpen, Cloud, Notebook } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Waves } from "@/components/ui/waves-background";
 
 const Index = () => {
-  const navigate = useNavigate();
   const isMobile = useIsMobile();
 
   const handleNoteSubmit = async (content: string) => {
@@ -35,10 +31,6 @@ const Index = () => {
       console.error('Error saving note:', error);
       throw new Error('Failed to save note. Please try again.');
     }
-  };
-
-  const handleServiceClick = (service: string) => {
-    console.log(`Clicked ${service} integration`);
   };
 
   return (
@@ -84,155 +76,6 @@ const Index = () => {
               </div>
               <div className="flex justify-center">
                 <GmailIntegration />
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="text-center">
-                <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-medium text-foreground mb-2`}>
-                  Connect services
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Import your data from other platforms
-                </p>
-              </div>
-              
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-7 gap-4 p-6 rounded-lg border border-border bg-card shadow-sm">
-                <div className="flex flex-col items-center gap-2">
-                  <GmailIntegration />
-                </div>
-                
-                <div className="flex flex-col items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="aspect-square rounded-xl hover:bg-secondary"
-                    onClick={() => handleServiceClick('github')}
-                  >
-                    <Github className="h-5 w-5" />
-                  </Button>
-                  <span className="text-xs text-muted-foreground text-center">GitHub</span>
-                </div>
-                
-                <div className="flex flex-col items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="aspect-square rounded-xl hover:bg-secondary"
-                    onClick={() => handleServiceClick('gmail')}
-                  >
-                    <Mail className="h-5 w-5" />
-                  </Button>
-                  <span className="text-xs text-muted-foreground text-center">Gmail</span>
-                </div>
-                
-                <div className="flex flex-col items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="aspect-square rounded-xl hover:bg-secondary"
-                    onClick={() => handleServiceClick('x')}
-                  >
-                    <X className="h-5 w-5" />
-                  </Button>
-                  <span className="text-xs text-muted-foreground text-center">X</span>
-                </div>
-                
-                <div className="flex flex-col items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="aspect-square rounded-xl hover:bg-secondary"
-                    onClick={() => handleServiceClick('threads')}
-                  >
-                    <MessageSquare className="h-5 w-5" />
-                  </Button>
-                  <span className="text-xs text-muted-foreground text-center">Threads</span>
-                </div>
-                
-                <div className="flex flex-col items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="aspect-square rounded-xl hover:bg-secondary"
-                    onClick={() => handleServiceClick('linkedin')}
-                  >
-                    <Linkedin className="h-5 w-5" />
-                  </Button>
-                  <span className="text-xs text-muted-foreground text-center">LinkedIn</span>
-                </div>
-                
-                <div className="flex flex-col items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="aspect-square rounded-xl hover:bg-secondary"
-                    onClick={() => handleServiceClick('facebook')}
-                  >
-                    <Facebook className="h-5 w-5" />
-                  </Button>
-                  <span className="text-xs text-muted-foreground text-center">Facebook</span>
-                </div>
-                
-                <div className="flex flex-col items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="aspect-square rounded-xl hover:bg-secondary"
-                    onClick={() => handleServiceClick('instagram')}
-                  >
-                    <Instagram className="h-5 w-5" />
-                  </Button>
-                  <span className="text-xs text-muted-foreground text-center">Instagram</span>
-                </div>
-                
-                <div className="flex flex-col items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="aspect-square rounded-xl hover:bg-secondary"
-                    onClick={() => handleServiceClick('youtube')}
-                  >
-                    <Youtube className="h-5 w-5" />
-                  </Button>
-                  <span className="text-xs text-muted-foreground text-center">YouTube</span>
-                </div>
-
-                <div className="flex flex-col items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="aspect-square rounded-xl hover:bg-secondary"
-                    onClick={() => handleServiceClick('notion')}
-                  >
-                    <Notebook className="h-5 w-5" />
-                  </Button>
-                  <span className="text-xs text-muted-foreground text-center">Notion</span>
-                </div>
-
-                <div className="flex flex-col items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="aspect-square rounded-xl hover:bg-secondary"
-                    onClick={() => handleServiceClick('obsidian')}
-                  >
-                    <BookOpen className="h-5 w-5" />
-                  </Button>
-                  <span className="text-xs text-muted-foreground text-center">Obsidian</span>
-                </div>
-
-                <div className="flex flex-col items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="aspect-square rounded-xl hover:bg-secondary"
-                    onClick={() => handleServiceClick('google-drive')}
-                  >
-                    <Cloud className="h-5 w-5" />
-                  </Button>
-                  <span className="text-xs text-muted-foreground text-center">Drive</span>
-                </div>
               </div>
             </div>
           </div>
