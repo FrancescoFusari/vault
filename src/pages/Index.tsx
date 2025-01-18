@@ -66,7 +66,7 @@ const Index = () => {
           </div>
 
           {/* Gmail Integration Section - Moved lower on mobile */}
-          <div className={`w-full max-w-2xl mx-auto ${isMobile ? 'mt-24' : 'mt-12'} space-y-4`}>
+          <div className={`w-full max-w-2xl mx-auto ${isMobile ? 'mt-72' : 'mt-36'} space-y-4`}>
             <div className="text-center">
               <h2 className={`${isMobile ? 'text-lg' : 'text-xl'} font-medium text-foreground mb-2`}>
                 Gmail Integration
