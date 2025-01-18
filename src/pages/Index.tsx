@@ -45,18 +45,7 @@ const Index = () => {
   };
 
   return (
-    <div className="container mx-auto min-h-screen flex flex-col bg-background">
-      <div className="flex justify-end p-4">
-        <Button 
-          variant="ghost" 
-          onClick={handleSignOut}
-          className="text-muted-foreground hover:text-foreground transition-colors"
-          size="icon"
-        >
-          <Settings className="h-4 w-4" />
-        </Button>
-      </div>
-      
+    <div className="container mx-auto min-h-screen flex flex-col bg-background">      
       <div className="flex-1 flex flex-col items-center justify-center -mt-20">
         <div className="text-center space-y-4 mb-12">
           <h1 className="text-4xl font-light tracking-tight text-foreground">
@@ -221,4 +210,3 @@ const Index = () => {
 };
 
 export default Index;
-
