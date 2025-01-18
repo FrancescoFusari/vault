@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useRef } from 'react';
 import ForceGraph3D from 'react-force-graph-3d';
 import { NetworkNode, NetworkLink, processNetworkData } from '@/utils/networkGraphUtils';
 import { Note } from '@/types/graph';
@@ -13,11 +13,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const graphData = processNetworkData(notes);
   const { nodes, links } = graphData;
 
-  // Configure force simulation
-  const handleEngineStop = useCallback(() => {
-    fgRef.current.zoomToFit(400);
-  }, []);
-
   return (
     <div className="w-full h-full">
       <ForceGraph3D
@@ -26,40 +21,14 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         nodeLabel={(node: any) => node.name}
         nodeColor={(node: any) => node.type === 'note' ? '#60a5fa' : '#f59e0b'}
         backgroundColor="hsl(229 19% 12%)"
+        // Reduce link width for cleaner appearance
         linkWidth={0.3}
+        // Add subtle particle effect on links
         linkDirectionalParticles={1}
         linkDirectionalParticleWidth={0.2}
+        // Enable navigation and interaction
         enableNavigationControls={true}
         enableNodeDrag={true}
-        onEngineStop={handleEngineStop}
-        // Force simulation configuration
-        forceEngine="d3"
-        d3AlphaDecay={0.02}
-        d3VelocityDecay={0.3}
-        warmupTicks={100}
-        cooldownTicks={1000}
-        d3Force={(force) => {
-          // Link force for connection strength
-          force('link').distance(() => 100);
-          
-          // Charge force for node repulsion
-          force('charge')
-            .strength(-120)
-            .distanceMax(250);
-          
-          // Center force to keep graph centered
-          force('center')
-            .strength(0.3);
-          
-          // Add collision force to prevent node overlap
-          force('collision')
-            .radius(() => 20)
-            .strength(0.7);
-
-          // X and Y forces for better spread
-          force('x').strength(0.1);
-          force('y').strength(0.1);
-        }}
       />
     </div>
   );
