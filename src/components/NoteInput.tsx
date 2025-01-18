@@ -130,84 +130,92 @@ export const NoteInput = ({ onNoteSubmit }: NoteInputProps) => {
   };
 
   return (
-    <div className="space-y-6 w-full max-w-2xl mx-auto p-6 rounded-lg border border-border bg-card shadow-sm">
-      <div className="flex gap-2">
-        <Button
-          variant={!isUrlMode && !isImageMode ? "secondary" : "ghost"}
-          onClick={() => {
-            setIsUrlMode(false);
-            setIsImageMode(false);
-          }}
-          className="flex-1"
-        >
-          <Type className="w-4 h-4 mr-2" />
-          Text
-        </Button>
-        <Button
-          variant={isUrlMode ? "secondary" : "ghost"}
-          onClick={() => {
-            setIsUrlMode(true);
-            setIsImageMode(false);
-          }}
-          className="flex-1"
-        >
-          <Link2Icon className="w-4 h-4 mr-2" />
-          URL
-        </Button>
-        <Button
-          variant={isImageMode ? "secondary" : "ghost"}
-          onClick={() => {
-            setIsUrlMode(false);
-            setIsImageMode(true);
-          }}
-          className="flex-1"
-        >
-          <ImageIcon className="w-4 h-4 mr-2" />
-          Image
-        </Button>
-      </div>
+    <div className="w-full max-w-2xl mx-auto px-4 sm:px-6">
+      <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl shadow-sm transition-all">
+        <div className="flex gap-1 p-2 border-b border-border/50">
+          <Button
+            variant={!isUrlMode && !isImageMode ? "secondary" : "ghost"}
+            onClick={() => {
+              setIsUrlMode(false);
+              setIsImageMode(false);
+            }}
+            className="flex-1 h-9 text-sm"
+            size="sm"
+          >
+            <Type className="w-3.5 h-3.5 mr-1.5" />
+            Text
+          </Button>
+          <Button
+            variant={isUrlMode ? "secondary" : "ghost"}
+            onClick={() => {
+              setIsUrlMode(true);
+              setIsImageMode(false);
+            }}
+            className="flex-1 h-9 text-sm"
+            size="sm"
+          >
+            <Link2Icon className="w-3.5 h-3.5 mr-1.5" />
+            URL
+          </Button>
+          <Button
+            variant={isImageMode ? "secondary" : "ghost"}
+            onClick={() => {
+              setIsUrlMode(false);
+              setIsImageMode(true);
+            }}
+            className="flex-1 h-9 text-sm"
+            size="sm"
+          >
+            <ImageIcon className="w-3.5 h-3.5 mr-1.5" />
+            Image
+          </Button>
+        </div>
 
-      {isImageMode ? (
-        <Input
-          type="file"
-          accept="image/*"
-          onChange={handleImageUpload}
-          disabled={isSubmitting}
-          className="text-lg bg-background"
-        />
-      ) : isUrlMode ? (
-        <Input
-          placeholder="Enter URL to process..."
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          className="text-lg bg-background"
-          type="url"
-        />
-      ) : (
-        <Textarea
-          placeholder="Write your note here..."
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          className="min-h-[200px] text-lg bg-background resize-none focus:ring-1 focus:ring-primary/20 transition-all"
-        />
-      )}
-
-      {!isImageMode && (
-        <Button 
-          onClick={handleSubmit} 
-          className="w-full h-12 text-base font-normal"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {isUrlMode ? 'Processing URL...' : 'Processing...'}
-            </>
+        <div className="p-4">
+          {isImageMode ? (
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              disabled={isSubmitting}
+              className="text-sm bg-background/50"
+            />
+          ) : isUrlMode ? (
+            <Input
+              placeholder="Enter URL to process..."
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              className="text-sm bg-background/50"
+              type="url"
+            />
           ) : (
-            isUrlMode ? 'Process URL' : 'Add Note'
+            <Textarea
+              placeholder="Write your note here..."
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              className="min-h-[180px] text-sm bg-background/50 resize-none focus:ring-1 focus:ring-primary/20 transition-all placeholder:text-muted-foreground/50"
+            />
           )}
-        </Button>
-      )}
+
+          {!isImageMode && (
+            <Button 
+              onClick={handleSubmit} 
+              className="w-full h-9 text-sm font-normal mt-4"
+              disabled={isSubmitting}
+              size="sm"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                  {isUrlMode ? 'Processing URL...' : 'Processing...'}
+                </>
+              ) : (
+                isUrlMode ? 'Process URL' : 'Add Note'
+              )}
+            </Button>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
