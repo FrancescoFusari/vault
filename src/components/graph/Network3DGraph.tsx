@@ -37,11 +37,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       // Initial camera position
       fg.cameraPosition({ z: 120 });
 
-      // Optimize performance settings
-      fg.nodeResolution(8);
-      fg.warmupTicks(20);
-      fg.cooldownTicks(50);
-      fg.cooldownTime(2000);
+      // Set graph configuration through props instead of methods
     });
 
     return () => {
@@ -70,9 +66,9 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       sprite.padding = 1;
       sprite.borderRadius = 2;
       
-      // Fix: Use group.add and position relative to group
+      // Fix: Position sprite relative to group using position instead of translateX
       group.add(sprite);
-      sprite.translateX(4);
+      sprite.position.x = 4;
       
       return group;
     } else if (node.type === 'tag') {
