@@ -12,11 +12,6 @@ const navItems = [
 
 export function DesktopNav() {
   return (
-    <>
-      <NavBar items={navItems} />
-      <div className="fixed top-4 left-8 z-50 hidden md:block">
-        <span className="text-lg font-semibold text-secondary">SecondBrain</span>
-      </div>
-    </>
+    <NavBar items={navItems} />
   );
 }

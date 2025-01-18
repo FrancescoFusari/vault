@@ -48,6 +48,7 @@ export function NavBar({ items, className }: NavBarProps) {
       )}
     >
       <div className="flex items-center gap-3 bg-background/95 border border-border/10 backdrop-blur-lg py-1 px-1 rounded-full shadow-lg">
+        <span className="text-lg font-semibold text-secondary px-4">SecondBrain</span>
         {items.map((item) => {
           const Icon = item.icon
           const isActive = activeTab === item.name
