@@ -41,9 +41,7 @@ const Network3DGraph = ({ data, settings }: Network3DGraphProps) => {
   const { theme } = useTheme();
 
   const handleNodeClick = useCallback((node: any) => {
-    // Create a text sprite
     const sprite = new SpriteText(node.name);
-    // @ts-ignore - position exists but TypeScript doesn't recognize it
     sprite.position.copy(node.position);
     sprite.textHeight = 8;
     sprite.backgroundColor = 'rgba(0,0,0,0.8)';
@@ -60,7 +58,8 @@ const Network3DGraph = ({ data, settings }: Network3DGraphProps) => {
   useEffect(() => {
     if (!fgRef.current) return;
 
-    const fg = new ForceGraph3D()(fgRef.current)
+    const Graph = new ForceGraph3D();
+    const fg = Graph(fgRef.current)
       .graphData(data)
       .nodeVal((node: any) => node.val * settings.nodeSize)
       .nodeLabel('name')

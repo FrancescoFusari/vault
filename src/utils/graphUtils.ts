@@ -33,7 +33,12 @@ export const processGraphData = (
         });
         nodeSet.add(tag);
       }
-      links.push({ source: note.id, target: tag });
+      // Add value property to match Link interface
+      links.push({ 
+        source: note.id, 
+        target: tag,
+        value: 1 // Default link value
+      });
     });
   });
 
