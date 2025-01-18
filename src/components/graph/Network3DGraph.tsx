@@ -21,7 +21,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       if (!fg) return;
 
       // Get the simulation
-      const simulation = fg.d3Force('simulation');  // Add 'simulation' as the force name
+      const simulation = fg.d3Force('simulation');
       if (!simulation) return;
 
       // Reset to default forces
@@ -31,12 +31,14 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         .force('center', d3.forceCenter())
         .force('collision', d3.forceCollide());
 
-      // Configure link force
+      // Configure link force for tighter connections
       const linkForce = simulation.force('link');
       if (linkForce) {
         linkForce
           .id((d: any) => d.id)
-          .distance(50); // Shorter distance for tighter sphere
+          .distance(20) // Shorter distance for tighter sphere
+          .strength(1) // Strong link force
+          .iterations(10); // More iterations for stability
       }
 
       // Configure charge force for 3D distribution
