@@ -78,6 +78,18 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         ref={fgRef}
         graphData={{ nodes, links }}
         nodeLabel={(node: any) => node.name}
+        nodeThreeObject={(node: any) => {
+          if (node.type === 'note') {
+            const sprite = new SpriteText(node.name);
+            sprite.color = '#ffffff';
+            sprite.textHeight = 3;
+            sprite.backgroundColor = 'rgba(0,0,0,0.5)';
+            sprite.padding = 2;
+            sprite.borderRadius = 3;
+            return sprite;
+          }
+          return null;
+        }}
         nodeColor={(node: any) => node.type === 'note' ? '#EF7234' : '#E0E0D7'}
         backgroundColor="#1B1B1F"
         linkColor={() => "#8E9196"}
