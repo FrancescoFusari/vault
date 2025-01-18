@@ -18,6 +18,9 @@ interface GraphSettings {
   enableNavigationControls: boolean;
   showNavInfo: boolean;
   linkDistance: number;
+  cameraDistance: number;
+  rotationSpeed: number;
+  tiltAngle: number;
 }
 
 const defaultSettings: GraphSettings = {
@@ -27,7 +30,10 @@ const defaultSettings: GraphSettings = {
   enableNodeDrag: true,
   enableNavigationControls: true,
   showNavInfo: true,
-  linkDistance: 120
+  linkDistance: 120,
+  cameraDistance: 5000,
+  rotationSpeed: 0.001,
+  tiltAngle: 23
 };
 
 export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
@@ -37,7 +43,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const [isInitialized, setIsInitialized] = useState(false);
   const rotationRef = useRef(0);
 
-  const { data: graphSettings } = useQuery({
+  const { data: graphSettings, refetch: refetchSettings } = useQuery({
     queryKey: ['graphSettings'],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -59,10 +65,35 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         enableNodeDrag: Boolean(settings.enableNodeDrag ?? defaultSettings.enableNodeDrag),
         enableNavigationControls: Boolean(settings.enableNavigationControls ?? defaultSettings.enableNavigationControls),
         showNavInfo: Boolean(settings.showNavInfo ?? defaultSettings.showNavInfo),
-        linkDistance: Number(settings.linkDistance) || defaultSettings.linkDistance
+        linkDistance: Number(settings.linkDistance) || defaultSettings.linkDistance,
+        cameraDistance: Number(settings.cameraDistance) || defaultSettings.cameraDistance,
+        rotationSpeed: Number(settings.rotationSpeed) || defaultSettings.rotationSpeed,
+        tiltAngle: Number(settings.tiltAngle) || defaultSettings.tiltAngle
       } : defaultSettings;
     }
   });
+
+  // Save settings to Supabase
+  const saveSettings = async (newSettings: Partial<GraphSettings>) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const mergedSettings = { ...graphSettings, ...newSettings };
+    
+    const { error } = await supabase
+      .from('graph_settings')
+      .upsert({
+        user_id: user.id,
+        settings: mergedSettings
+      });
+
+    if (error) {
+      console.error('Error saving graph settings:', error);
+      return;
+    }
+
+    await refetchSettings();
+  };
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -93,26 +124,21 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       fgRef.current.controls().dampingFactor = 0.1;
       fgRef.current.controls().enableZoom = true;
       
-      // Set initial camera position to show all nodes
-      const { nodes } = processNetworkData(notes);
-      if (nodes.length > 0) {
-        console.log('Setting initial camera distance to: 5000');
-        fgRef.current.camera().position.set(5000, 5000, 5000);
-        fgRef.current.camera().lookAt(0, 0, 0);
-      } else {
-        console.log('Setting default camera distance to: 5000');
-        fgRef.current.camera().position.set(5000, 5000, 5000);
-        fgRef.current.camera().lookAt(0, 0, 0);
-      }
+      // Set initial camera position
+      const cameraDistance = graphSettings.cameraDistance || defaultSettings.cameraDistance;
+      console.log('Setting camera distance to:', cameraDistance);
+      fgRef.current.camera().position.set(cameraDistance, cameraDistance, cameraDistance);
+      fgRef.current.camera().lookAt(0, 0, 0);
 
-      // Set up orbital rotation with 23-degree tilt
+      // Set up orbital rotation with tilt
       const scene = fgRef.current.scene();
-      scene.rotation.x = (23 * Math.PI) / 180; // 23-degree tilt in radians
+      const tiltAngle = (graphSettings.tiltAngle || defaultSettings.tiltAngle) * Math.PI / 180;
+      scene.rotation.x = tiltAngle;
       
       // Start the orbital rotation animation
       const animate = () => {
         if (fgRef.current) {
-          rotationRef.current += 0.001; // Adjust speed as needed
+          rotationRef.current += (graphSettings.rotationSpeed || defaultSettings.rotationSpeed);
           scene.rotation.y = rotationRef.current;
           requestAnimationFrame(animate);
         }
@@ -121,7 +147,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       
       setIsInitialized(true);
     }
-  }, [graphSettings, isInitialized, notes]);
+  }, [graphSettings, isInitialized]);
 
   // Reset force simulation when settings change
   useEffect(() => {
