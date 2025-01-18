@@ -96,12 +96,12 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       // Set initial camera position to show all nodes
       const { nodes } = processNetworkData(notes);
       if (nodes.length > 0) {
-        console.log('Setting initial camera distance to: 2400');
-        fgRef.current.camera().position.set(2400, 2400, 2400);
+        console.log('Setting initial camera distance to: 6000');
+        fgRef.current.camera().position.set(6000, 6000, 6000);
         fgRef.current.camera().lookAt(0, 0, 0);
       } else {
-        console.log('Setting default camera distance to: 2400');
-        fgRef.current.camera().position.set(2400, 2400, 2400);
+        console.log('Setting default camera distance to: 6000');
+        fgRef.current.camera().position.set(6000, 6000, 6000);
         fgRef.current.camera().lookAt(0, 0, 0);
       }
       
