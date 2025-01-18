@@ -3,14 +3,13 @@ import ForceGraph3D from 'react-force-graph-3d';
 import { NetworkNode, NetworkLink, processNetworkData } from '@/utils/networkGraphUtils';
 import { Note } from '@/types/graph';
 import * as d3 from 'd3';
-import { ForceGraph3DInstance } from 'react-force-graph-3d';
 
 interface Network3DGraphProps {
   notes: Note[];
 }
 
 export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
-  const fgRef = useRef<ForceGraph3DInstance>();
+  const fgRef = useRef<ForceGraph3D>();
   const graphData = processNetworkData(notes);
   const { nodes, links } = graphData;
 
