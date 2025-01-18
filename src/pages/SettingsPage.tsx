@@ -3,6 +3,7 @@ import { useTheme } from "next-themes";
 import { LogOut, Moon, Sun } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
