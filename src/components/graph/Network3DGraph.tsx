@@ -15,8 +15,8 @@ const defaultSettings = {
   enableNodeDrag: true,
   enableNavigationControls: true,
   showNavInfo: true,
-  linkDistance: 800, // Updated from 820 to 800
-  linkCurvature: 0.2, // Added default link curvature
+  linkDistance: 800,
+  linkCurvature: 0.2,
   cameraPosition: { x: 5000, y: 5000, z: 5000 }
 };
 
@@ -63,6 +63,12 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const graphData = processNetworkData(notes);
   const { nodes, links, tagUsageCount, colorScale } = graphData;
 
+  // Set fixed curvature for all links
+  const linksWithFixedCurvature = links.map(link => ({
+    ...link,
+    curvature: defaultSettings.linkCurvature
+  }));
+
   const nodeRelSize = defaultSettings.nodeSize;
   const nodeSizeScale = d3.scaleLinear()
     .domain([0, Math.max(...Array.from(tagUsageCount.values()))])
@@ -91,13 +97,12 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           ref={fgRef}
           width={dimensions.width}
           height={dimensions.height}
-          graphData={{ nodes, links }}
+          graphData={{ nodes, links: linksWithFixedCurvature }}
           nodeLabel={(node: any) => node.name}
           nodeRelSize={nodeRelSize}
           nodeVal={getNodeSize}
           nodeColor={getNodeColor}
           linkWidth={defaultSettings.linkWidth}
-          linkCurvature={defaultSettings.linkCurvature}
           backgroundColor={defaultSettings.backgroundColor}
           enableNodeDrag={defaultSettings.enableNodeDrag}
           enableNavigationControls={defaultSettings.enableNavigationControls}
