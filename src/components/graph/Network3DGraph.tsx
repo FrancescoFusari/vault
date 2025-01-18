@@ -45,7 +45,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
 
       const centerForce = simulation.force('center');
       if (centerForce) {
-        centerForce.strength(0.3); // Reduced from 1.2
+        centerForce.strength(1); // Changed from 0.3 to 1
       }
 
       const collisionForce = simulation.force('collision');
@@ -108,7 +108,8 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
             sprite.borderRadius = 3;
             
             group.add(sprite);
-            sprite.position.set(5, 0, 0); // Moved text further out due to larger sphere
+            // Position the sprite using the group's position system
+            sprite.translateX(5);
             
             return group;
           } else if (node.type === 'tag') {
