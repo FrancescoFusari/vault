@@ -107,9 +107,9 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
             sprite.padding = 2;
             sprite.borderRadius = 3;
             
-            // Add sprite to group at an offset position
+            // Add sprite to group and position it
             group.add(sprite);
-            sprite.translateX(3);
+            sprite.position.x = 3;
             
             return group;
           }
