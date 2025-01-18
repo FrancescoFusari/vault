@@ -3,6 +3,7 @@ import ForceGraph3D, { ForceGraphMethods } from 'react-force-graph-3d';
 import { NetworkNode, NetworkLink, processNetworkData } from '@/utils/networkGraphUtils';
 import { Note } from '@/types/graph';
 import * as d3 from 'd3';
+import SpriteText from 'three-spritetext';
 
 interface Network3DGraphProps {
   notes: Note[];
