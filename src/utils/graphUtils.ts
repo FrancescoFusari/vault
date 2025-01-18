@@ -3,47 +3,33 @@ import { GraphData, GraphNode, GraphLink, Note } from "@/types/graph";
 export const processGraphData = (
   notes: Note[], 
   highlightedNoteId?: string,
-  theme?: string,
-  isMobile?: boolean
+  theme?: string
 ): GraphData => {
   const nodes: GraphNode[] = [];
   const links: GraphLink[] = [];
   const nodeSet = new Set<string>();
 
+  // Create nodes for notes and their tags
   notes.forEach(note => {
+    // Add note node if it doesn't exist
     if (!nodeSet.has(note.id)) {
       nodes.push({
         id: note.id,
-        name: note.tags[0] || note.content.substring(0, isMobile ? 30 : 40) + '...',
-        val: isMobile ? 2.5 : 2, // Increased size for mobile
+        name: note.tags[0] || note.content.substring(0, 30) + '...',
+        val: 2,
         type: 'note',
-        color: note.id === highlightedNoteId 
-          ? '#f43f5e' 
-          : theme === 'dark' ? '#94a3b8' : '#475569'
       });
       nodeSet.add(note.id);
     }
 
-    if (!nodeSet.has(note.category)) {
-      nodes.push({
-        id: note.category,
-        name: note.category,
-        val: isMobile ? 3.5 : 3, // Increased size for mobile
-        type: 'category',
-        color: theme === 'dark' ? '#f59e0b' : '#d97706'
-      });
-      nodeSet.add(note.category);
-    }
-    links.push({ source: note.id, target: note.category });
-
+    // Add tag nodes and create links
     note.tags.forEach(tag => {
       if (!nodeSet.has(tag)) {
         nodes.push({
           id: tag,
           name: tag,
-          val: isMobile ? 2 : 1.5, // Adjusted size for mobile
+          val: 1.5,
           type: 'tag',
-          color: theme === 'dark' ? '#22c55e' : '#16a34a'
         });
         nodeSet.add(tag);
       }
@@ -54,49 +40,9 @@ export const processGraphData = (
   return { nodes, links };
 };
 
-export const getNodeColor = (
-  node: GraphNode,
-  hoveredNode: GraphNode | null,
-  graphData: GraphData,
-  theme: string
-): string => {
-  if (hoveredNode) {
-    const isConnected = graphData.links.some(
-      link => 
-        (link.source === hoveredNode.id && link.target === node.id) ||
-        (link.target === hoveredNode.id && link.source === node.id)
-    );
-    if (node.id === hoveredNode.id) return node.color || '';
-    return isConnected ? node.color || '' : theme === 'dark' ? '#1e293b' : '#f8fafc';
+export const getNodeColor = (node: GraphNode, theme: string): string => {
+  if (node.type === 'note') {
+    return theme === 'dark' ? '#94a3b8' : '#475569';
   }
-  return node.color || '';
-};
-
-export const getLinkColor = (
-  link: GraphLink,
-  hoveredNode: GraphNode | null,
-  theme: string
-): string => {
-  if (hoveredNode) {
-    const isConnected = 
-      link.source === hoveredNode.id || 
-      link.target === hoveredNode.id;
-    return isConnected 
-      ? theme === 'dark' ? '#94a3b8' : '#475569'
-      : theme === 'dark' ? '#334155' : '#cbd5e1';
-  }
-  return theme === 'dark' ? '#334155' : '#cbd5e1';
-};
-
-export const getLinkWidth = (
-  link: GraphLink,
-  hoveredNode: GraphNode | null
-): number => {
-  if (hoveredNode) {
-    const isConnected = 
-      link.source === hoveredNode.id || 
-      link.target === hoveredNode.id;
-    return isConnected ? 2 : 1;
-  }
-  return 1;
+  return theme === 'dark' ? '#22c55e' : '#16a34a';
 };
