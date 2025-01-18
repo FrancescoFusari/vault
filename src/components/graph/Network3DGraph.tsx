@@ -72,8 +72,10 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     
     const rotateCamera = () => {
       if (fgRef.current && !isPaused) {
-        fgRef.current.camera().position.applyAxisAngle(new THREE.Vector3(0, 1, 0), 0.002);
-        fgRef.current.camera().lookAt(0, 0, 0);
+        const camera = fgRef.current.camera();
+        const rotationAxis = new THREE.Vector3(0, 1, 0);
+        camera.position.applyAxisAngle(rotationAxis, 0.002);
+        camera.lookAt(0, 0, 0);
         rotationRef.current = requestAnimationFrame(rotateCamera);
       }
     };
@@ -204,8 +206,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           warmupTicks={50}
           onNodeDrag={handleInteraction}
           onNodeDragEnd={handleInteraction}
-          onZoom={handleInteraction}
-          onZoomEnd={handleInteraction}
+          onEngineStop={handleInteraction}
         />
       )}
     </div>
