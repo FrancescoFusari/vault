@@ -21,42 +21,33 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       fgRef.current.d3Force('charge', d3.forceManyBody());
       fgRef.current.d3Force('center', d3.forceCenter());
       fgRef.current.d3Force('collision', d3.forceCollide());
-      // Create radial force with center coordinates directly
-      fgRef.current.d3Force('radial', d3.forceRadial(150, 0, 0));
 
       // Then configure them
       const linkForce = fgRef.current.d3Force('link');
       if (linkForce) {
         linkForce
-          .distance(80) // Increased base distance
-          .strength(0.3); // Reduced strength for smoother movement
+          .distance(100) // Reduced distance for tighter clustering
+          .strength(0.2); // Reduced strength for smoother movement
       }
 
       const chargeForce = fgRef.current.d3Force('charge');
       if (chargeForce) {
         chargeForce
-          .strength(-100) // Reduced repulsion for less shaking
-          .distanceMax(300) // Increased maximum distance
-          .theta(0.9); // Increased theta for smoother approximation
+          .strength(-80) // Reduced repulsion for less shaking
+          .distanceMax(250) // Increased maximum distance
+          .theta(0.9); // Higher theta for smoother approximation
       }
 
       const centerForce = fgRef.current.d3Force('center');
       if (centerForce) {
-        centerForce.strength(0.15); // Reduced center pull for more stability
+        centerForce.strength(0.1); // Reduced center pull for more stability
       }
 
       const collisionForce = fgRef.current.d3Force('collision');
       if (collisionForce) {
         collisionForce
-          .radius((node: NetworkNode) => Math.sqrt(node.value || 1) * 10) // Increased node spacing
-          .strength(0.7); // Slightly reduced collision strength
-      }
-
-      const radialForce = fgRef.current.d3Force('radial');
-      if (radialForce) {
-        radialForce
-          .strength(0.4) // Increased radial force for better spherical shape
-          .radius(150); // Increased radius to match initial setup
+          .radius((node: NetworkNode) => Math.sqrt(node.value || 1) * 8) // Adjusted node spacing
+          .strength(0.9); // Increased collision strength for better separation
       }
     }
   }, []);
