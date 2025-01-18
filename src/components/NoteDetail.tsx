@@ -174,13 +174,13 @@ export const NoteDetail = ({ note }: NoteDetailProps) => {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <div className="flex items-center space-x-2">
-            <Badge variant="outline" className="text-primary text-lg font-semibold">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className="text-primary text-sm md:text-lg font-semibold">
               {note.category}
             </Badge>
             <Badge 
               variant="secondary"
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 text-xs md:text-sm"
             >
               {getTypeIcon(note.input_type)}
               {getTypeLabel(note.input_type)}
@@ -194,7 +194,7 @@ export const NoteDetail = ({ note }: NoteDetailProps) => {
               <RefreshCw className={`h-4 w-4 ${isRegeneratingTitle ? 'animate-spin' : ''}`} />
             </Button>
           </div>
-          <div className="flex items-center text-sm text-muted-foreground">
+          <div className="flex items-center text-xs md:text-sm text-muted-foreground">
             <CalendarIcon className="mr-1 h-4 w-4" />
             {new Date(note.created_at).toLocaleDateString()}
           </div>
@@ -211,23 +211,25 @@ export const NoteDetail = ({ note }: NoteDetailProps) => {
             </div>
           )}
           
-          <p className="whitespace-pre-wrap mb-4">{note.content}</p>
+          <div className="whitespace-pre-wrap mb-4 text-sm md:text-base leading-relaxed break-words">
+            {note.content}
+          </div>
           
           {note.metadata && (
-            <div className="space-y-4 mb-6 bg-muted p-4 rounded-lg">
-              <h3 className="font-semibold text-lg">Image Analysis</h3>
+            <div className="space-y-4 mb-6 bg-muted p-3 md:p-4 rounded-lg text-sm md:text-base">
+              <h3 className="font-semibold text-base md:text-lg">Image Analysis</h3>
               
               {note.metadata.technical_details && (
                 <div>
-                  <h4 className="font-medium text-sm text-muted-foreground">Technical Details</h4>
-                  <p>{note.metadata.technical_details}</p>
+                  <h4 className="font-medium text-xs md:text-sm text-muted-foreground">Technical Details</h4>
+                  <p className="mt-1">{note.metadata.technical_details}</p>
                 </div>
               )}
               
               {note.metadata.visual_elements && note.metadata.visual_elements.length > 0 && (
                 <div>
-                  <h4 className="font-medium text-sm text-muted-foreground">Visual Elements</h4>
-                  <div className="flex flex-wrap gap-2">
+                  <h4 className="font-medium text-xs md:text-sm text-muted-foreground">Visual Elements</h4>
+                  <div className="flex flex-wrap gap-2 mt-1">
                     {note.metadata.visual_elements.map((element, index) => (
                       <Badge key={index} variant="secondary">{element}</Badge>
                     ))}
@@ -237,8 +239,8 @@ export const NoteDetail = ({ note }: NoteDetailProps) => {
               
               {note.metadata.color_palette && note.metadata.color_palette.length > 0 && (
                 <div>
-                  <h4 className="font-medium text-sm text-muted-foreground">Color Palette</h4>
-                  <div className="flex flex-wrap gap-2">
+                  <h4 className="font-medium text-xs md:text-sm text-muted-foreground">Color Palette</h4>
+                  <div className="flex flex-wrap gap-2 mt-1">
                     {note.metadata.color_palette.map((color, index) => (
                       <Badge key={index} variant="outline">{color}</Badge>
                     ))}
@@ -248,15 +250,15 @@ export const NoteDetail = ({ note }: NoteDetailProps) => {
               
               {note.metadata.composition_notes && (
                 <div>
-                  <h4 className="font-medium text-sm text-muted-foreground">Composition Notes</h4>
-                  <p>{note.metadata.composition_notes}</p>
+                  <h4 className="font-medium text-xs md:text-sm text-muted-foreground">Composition Notes</h4>
+                  <p className="mt-1">{note.metadata.composition_notes}</p>
                 </div>
               )}
               
               {note.metadata.estimated_date_or_period && (
                 <div>
-                  <h4 className="font-medium text-sm text-muted-foreground">Estimated Period</h4>
-                  <p>{note.metadata.estimated_date_or_period}</p>
+                  <h4 className="font-medium text-xs md:text-sm text-muted-foreground">Estimated Period</h4>
+                  <p className="mt-1">{note.metadata.estimated_date_or_period}</p>
                 </div>
               )}
             </div>
@@ -271,7 +273,7 @@ export const NoteDetail = ({ note }: NoteDetailProps) => {
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
-                className="max-w-[200px]"
+                className="max-w-[200px] text-sm"
               />
               <Button 
                 variant="outline" 
@@ -293,13 +295,14 @@ export const NoteDetail = ({ note }: NoteDetailProps) => {
                         value={editingTag.new}
                         onChange={(e) => setEditingTag({ ...editingTag, new: e.target.value })}
                         onKeyDown={(e) => e.key === 'Enter' && handleRenameTag(tag)}
-                        className="h-7 w-[150px]"
+                        className="h-7 w-[150px] text-sm"
                         autoFocus
                       />
                       <Button 
                         variant="ghost" 
                         size="sm"
                         onClick={() => handleRenameTag(tag)}
+                        className="text-xs"
                       >
                         Save
                       </Button>
@@ -307,7 +310,7 @@ export const NoteDetail = ({ note }: NoteDetailProps) => {
                   ) : (
                     <Badge 
                       variant="secondary"
-                      className="pr-1"
+                      className="pr-1 text-xs md:text-sm"
                     >
                       <span 
                         className="cursor-pointer mr-2"
@@ -332,6 +335,7 @@ export const NoteDetail = ({ note }: NoteDetailProps) => {
                 size="sm"
                 onClick={() => regenerateMetadata('tags')}
                 disabled={isRegeneratingTags}
+                className="text-xs md:text-sm"
               >
                 <RefreshCw className={`h-4 w-4 ${isRegeneratingTags ? 'animate-spin' : ''}`} />
               </Button>
