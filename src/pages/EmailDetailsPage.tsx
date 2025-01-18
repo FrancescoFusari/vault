@@ -7,10 +7,12 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const EmailDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const { data: email, isLoading } = useQuery({
     queryKey: ['email', id],
@@ -36,31 +38,41 @@ const EmailDetailsPage = () => {
   }
 
   if (!email) {
-    return <div className="container mx-auto p-4">Email not found</div>;
+    return (
+      <div className="container mx-auto p-4 mt-16">
+        <div className="text-center text-muted-foreground">
+          Email not found
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 md:mt-16">
       <div className="mb-6">
-        <Button variant="ghost" onClick={() => navigate('/queue')}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate('/queue')}
+          className="group"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2 transition-transform group-hover:-translate-x-1" />
           Back to Queue
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-start">
+      <Card className="overflow-hidden">
+        <CardHeader className="space-y-4">
+          <div className="flex flex-col space-y-4">
             <div>
-              <h2 className="text-2xl font-bold">{email.subject}</h2>
-              <p className="text-muted-foreground">From: {email.sender}</p>
+              <h2 className="text-xl md:text-2xl font-bold break-words">{email.subject}</h2>
+              <p className="text-muted-foreground mt-1">From: {email.sender}</p>
             </div>
             <div className="text-sm text-muted-foreground">
-              {format(new Date(email.received_at), "PPp")}
+              Received: {format(new Date(email.received_at), "PPp")}
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <div>
             <h3 className="font-semibold mb-2">Processing Status</h3>
             <div className="flex items-center gap-2">
@@ -75,24 +87,28 @@ const EmailDetailsPage = () => {
           </div>
 
           {email.error_message && (
-            <div className="bg-red-50 dark:bg-red-900/10 p-4 rounded-lg">
-              <h3 className="font-semibold text-red-600 dark:text-red-400 mb-2">Error</h3>
-              <p className="text-red-600 dark:text-red-400">{email.error_message}</p>
+            <div className="bg-destructive/10 p-4 rounded-lg">
+              <h3 className="font-semibold text-destructive mb-2">Error</h3>
+              <p className="text-destructive text-sm">{email.error_message}</p>
             </div>
           )}
 
           {email.processed_at && (
             <div>
               <h3 className="font-semibold mb-2">Processed At</h3>
-              <p>{format(new Date(email.processed_at), "PPp")}</p>
+              <p className="text-sm text-muted-foreground">
+                {format(new Date(email.processed_at), "PPp")}
+              </p>
             </div>
           )}
 
           {email.email_body && (
             <div>
               <h3 className="font-semibold mb-2">Email Content</h3>
-              <div className="bg-muted p-4 rounded-lg whitespace-pre-wrap">
-                {email.email_body}
+              <div className="bg-muted p-4 rounded-lg">
+                <div className="prose prose-sm dark:prose-invert max-w-none">
+                  {email.email_body}
+                </div>
               </div>
             </div>
           )}
