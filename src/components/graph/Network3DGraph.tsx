@@ -5,6 +5,7 @@ import { Note } from '@/types/graph';
 import * as d3 from 'd3';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import * as THREE from 'three';
 
 interface Network3DGraphProps {
   notes: Note[];
@@ -203,7 +204,8 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           warmupTicks={50}
           onNodeDrag={handleInteraction}
           onNodeDragEnd={handleInteraction}
-          onNavigate={handleInteraction}
+          onZoom={handleInteraction}
+          onZoomEnd={handleInteraction}
         />
       )}
     </div>
