@@ -26,28 +26,28 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       const linkForce = fgRef.current.d3Force('link');
       if (linkForce) {
         linkForce
-          .distance(100) // Reduced distance for tighter clustering
-          .strength(0.2); // Reduced strength for smoother movement
+          .distance(150) // Increased distance for more spread
+          .strength(0.15); // Reduced strength for more freedom of movement
       }
 
       const chargeForce = fgRef.current.d3Force('charge');
       if (chargeForce) {
         chargeForce
-          .strength(-80) // Reduced repulsion for less shaking
-          .distanceMax(250) // Increased maximum distance
-          .theta(0.9); // Higher theta for smoother approximation
+          .strength(-120) // Increased repulsion to push nodes apart
+          .distanceMax(300) // Increased maximum distance
+          .theta(0.8); // Slightly reduced theta for more accurate force calculations
       }
 
       const centerForce = fgRef.current.d3Force('center');
       if (centerForce) {
-        centerForce.strength(0.1); // Reduced center pull for more stability
+        centerForce.strength(0.3); // Increased center pull for better 3D distribution
       }
 
       const collisionForce = fgRef.current.d3Force('collision');
       if (collisionForce) {
         collisionForce
-          .radius((node: NetworkNode) => Math.sqrt(node.value || 1) * 8) // Adjusted node spacing
-          .strength(0.9); // Increased collision strength for better separation
+          .radius((node: NetworkNode) => Math.sqrt(node.value || 1) * 12) // Increased node spacing
+          .strength(0.8); // Strong collision force to prevent overlapping
       }
     }
   }, []);
