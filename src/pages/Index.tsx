@@ -79,7 +79,7 @@ const Index = () => {
                   Gmail Integration
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Connect and manage your Gmail account
+                  Add your emails to the Vault
                 </p>
               </div>
               <div className="flex justify-center">
