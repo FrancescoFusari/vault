@@ -224,7 +224,7 @@ export const NoteDetail = ({ note }: NoteDetailProps) => {
           )}
           
           <div className="whitespace-pre-wrap mb-4 text-sm md:text-base leading-relaxed break-words max-w-full overflow-hidden px-1">
-            <div className="max-w-[calc(100vw-3rem)] md:max-w-[calc(100vw-4rem)] lg:max-w-[65ch] mx-auto">
+            <div className="w-[94vw] lg:max-w-[65ch] mx-auto">
               {formatContent(note.content).split('\n\n').map((paragraph, index) => (
                 <p key={index} className="mb-4 last:mb-0">
                   {paragraph}
