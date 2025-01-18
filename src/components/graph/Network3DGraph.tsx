@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useEffect } from 'react';
 import ForceGraph3D from 'react-force-graph-3d';
 import { NetworkNode, NetworkLink, processNetworkData } from '@/utils/networkGraphUtils';
 import { Note } from '@/types/graph';
@@ -13,36 +13,38 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const graphData = processNetworkData(notes);
   const { nodes, links } = graphData;
 
-  // Configure force simulation
-  const handleEngineTick = useCallback((engine: any) => {
-    // Add forces similar to the D3 example
-    engine
-      .d3Force('link')
-      .distance(link => 30 + 20 * Math.sqrt(link.value || 1))
-      .strength(1);
+  // Configure force simulation using useEffect
+  useEffect(() => {
+    if (fgRef.current) {
+      // Configure forces
+      fgRef.current
+        .d3Force('link')
+        .distance((link: any) => 30 + 20 * Math.sqrt(link.value || 1))
+        .strength(1);
 
-    engine
-      .d3Force('charge')
-      .strength(-100)
-      .distanceMax(200);
+      fgRef.current
+        .d3Force('charge')
+        .strength(-100)
+        .distanceMax(200);
 
-    engine
-      .d3Force('center')
-      .strength(0.1);
+      fgRef.current
+        .d3Force('center')
+        .strength(0.1);
 
-    engine
-      .d3Force('collision')
-      .radius(node => Math.sqrt((node as NetworkNode).value || 1) * 5)
-      .strength(0.7);
+      fgRef.current
+        .d3Force('collision')
+        .radius((node: NetworkNode) => Math.sqrt(node.value || 1) * 5)
+        .strength(0.7);
 
-    // Add X and Y positioning forces
-    engine
-      .d3Force('x', d3.forceX())
-      .strength(0.05);
+      // Add X and Y positioning forces
+      fgRef.current
+        .d3Force('x', d3.forceX())
+        .strength(0.05);
 
-    engine
-      .d3Force('y', d3.forceY())
-      .strength(0.05);
+      fgRef.current
+        .d3Force('y', d3.forceY())
+        .strength(0.05);
+    }
   }, []);
 
   return (
@@ -59,7 +61,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         enableNavigationControls={true}
         enableNodeDrag={true}
         forceEngine="d3"
-        onEngineTick={handleEngineTick}
         cooldownTime={Infinity}
         nodeResolution={32}
       />
