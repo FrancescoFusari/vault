@@ -33,14 +33,14 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       const linkForce = simulation.force('link');
       if (linkForce) {
         linkForce
-          .distance(30) // Reduced from 120
-          .strength(0.2) // Reduced from 0.3 for gentler movement
+          .distance(30)
+          .strength(0.2)
           .iterations(1);
       }
 
       const chargeForce = simulation.force('charge');
       if (chargeForce) {
-        chargeForce.strength(-5); // Reduced from -10 for gentler repulsion
+        chargeForce.strength(-5);
       }
 
       const centerForce = simulation.force('center');
@@ -52,7 +52,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       if (collisionForce) {
         collisionForce
           .radius(5)
-          .strength(0.2); // Added strength parameter for softer collisions
+          .strength(0.2);
       }
 
       // Add sphere boundary force with reduced radius
@@ -78,7 +78,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   }, [nodes]);
 
   const handleNodeDragEnd = (node: any) => {
-    // Fix node position after drag
     node.fx = node.x;
     node.fy = node.y;
     node.fz = node.z;
@@ -101,7 +100,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
             );
             group.add(sphere);
             
-            // Create and position the text label
+            // Create the text label
             const sprite = new SpriteText(node.name);
             sprite.color = '#ffffff';
             sprite.textHeight = 3;
@@ -110,7 +109,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
             sprite.borderRadius = 3;
             
             group.add(sprite);
-            sprite.position.set(5, 0, 0);
             
             return group;
           } else if (node.type === 'tag') {
