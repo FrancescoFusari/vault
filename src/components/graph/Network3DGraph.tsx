@@ -21,9 +21,8 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         nodeLabel={(node: any) => node.name}
         nodeColor={(node: any) => node.type === 'note' ? '#60a5fa' : '#f59e0b'}
         backgroundColor="hsl(229 19% 12%)"
-        d3Force={{
-          link: d3.forceLink().distance(500)
-        }}
+        linkDistance={500}
+        forceEngine="d3"
       />
     </div>
   );
