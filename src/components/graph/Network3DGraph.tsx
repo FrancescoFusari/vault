@@ -96,14 +96,14 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       // Set initial camera position to show all nodes
       const { nodes } = processNetworkData(notes);
       if (nodes.length > 0) {
-        // Calculate the bounding sphere radius based on number of nodes
-        const radius = Math.cbrt(nodes.length) * 200;
+        // Calculate the bounding sphere radius based on number of nodes and multiply by 4
+        const radius = Math.cbrt(nodes.length) * 200 * 4;
         console.log('Setting initial camera distance to:', radius);
         fgRef.current.camera().position.set(radius, radius, radius);
         fgRef.current.camera().lookAt(0, 0, 0);
       } else {
-        // Default camera position if no nodes
-        fgRef.current.camera().position.set(200, 200, 200);
+        // Default camera position if no nodes, also multiplied by 4
+        fgRef.current.camera().position.set(800, 800, 800);
         fgRef.current.camera().lookAt(0, 0, 0);
       }
       
