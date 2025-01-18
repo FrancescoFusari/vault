@@ -93,12 +93,23 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       fgRef.current.controls().dampingFactor = 0.1;
       fgRef.current.controls().enableZoom = true;
       
-      fgRef.current.camera().position.set(200, 200, 200);
-      fgRef.current.camera().lookAt(0, 0, 0);
+      // Set initial camera position to show all nodes
+      const { nodes } = processNetworkData(notes);
+      if (nodes.length > 0) {
+        // Calculate the bounding sphere radius based on number of nodes
+        const radius = Math.cbrt(nodes.length) * 200;
+        console.log('Setting initial camera distance to:', radius);
+        fgRef.current.camera().position.set(radius, radius, radius);
+        fgRef.current.camera().lookAt(0, 0, 0);
+      } else {
+        // Default camera position if no nodes
+        fgRef.current.camera().position.set(200, 200, 200);
+        fgRef.current.camera().lookAt(0, 0, 0);
+      }
       
       setIsInitialized(true);
     }
-  }, [graphSettings, isInitialized]);
+  }, [graphSettings, isInitialized, notes]);
 
   // Reset force simulation when settings change
   useEffect(() => {
