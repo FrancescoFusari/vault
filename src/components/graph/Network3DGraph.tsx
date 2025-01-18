@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import ForceGraph3D from 'react-force-graph-3d';
 import { NetworkNode, NetworkLink, processNetworkData } from '@/utils/networkGraphUtils';
 import { Note } from '@/types/graph';
+import * as d3 from 'd3';
 
 interface Network3DGraphProps {
   notes: Note[];
@@ -20,7 +21,9 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         nodeLabel={(node: any) => node.name}
         nodeColor={(node: any) => node.type === 'note' ? '#60a5fa' : '#f59e0b'}
         backgroundColor="hsl(229 19% 12%)"
-        d3Force={('link', (d3.forceLink() as any).distance(500))}
+        d3Force={{
+          link: d3.forceLink().distance(500)
+        }}
       />
     </div>
   );
