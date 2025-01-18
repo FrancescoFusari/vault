@@ -46,10 +46,10 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   useEffect(() => {
     if (fgRef.current) {
       // Force the link distance
-      const forceLink = fgRef.current.d3Force('link');
-      if (forceLink) {
-        forceLink.distance(defaultSettings.linkDistance);
-      }
+      const forceLink = d3.forceLink()
+        .distance(() => defaultSettings.linkDistance);
+      
+      fgRef.current.d3Force('link', forceLink);
       
       // Set camera position and controls
       const camera = fgRef.current.camera();
@@ -115,7 +115,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           showNavInfo={defaultSettings.showNavInfo}
           d3VelocityDecay={0.1}
           warmupTicks={50}
-          linkDistance={defaultSettings.linkDistance}
+          forceEngine="d3"
         />
       )}
     </div>
