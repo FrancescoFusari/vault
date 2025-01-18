@@ -28,8 +28,10 @@ const defaultSettings: Network3DSettings = {
 };
 
 // Type guard to validate if the data matches Network3DSettings structure
-const isValidSettings = (data: Json): data is Network3DSettings => {
+const isValidSettings = (data: unknown): data is Network3DSettings => {
   if (typeof data !== 'object' || data === null || Array.isArray(data)) return false;
+  
+  const settings = data as Record<string, unknown>;
   
   const requiredKeys: (keyof Network3DSettings)[] = [
     'nodeSize',
@@ -46,7 +48,19 @@ const isValidSettings = (data: Json): data is Network3DSettings => {
     'tiltAngle'
   ];
   
-  return requiredKeys.every(key => key in data);
+  return requiredKeys.every(key => key in settings) &&
+    typeof settings.nodeSize === 'number' &&
+    typeof settings.linkWidth === 'number' &&
+    typeof settings.backgroundColor === 'string' &&
+    typeof settings.enableNodeDrag === 'boolean' &&
+    typeof settings.enableNavigationControls === 'boolean' &&
+    typeof settings.showNavInfo === 'boolean' &&
+    typeof settings.linkLength === 'number' &&
+    typeof settings.enablePointerInteraction === 'boolean' &&
+    typeof settings.enableNodeFixing === 'boolean' &&
+    typeof settings.cameraDistance === 'number' &&
+    typeof settings.rotationSpeed === 'number' &&
+    typeof settings.tiltAngle === 'number';
 };
 
 export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
