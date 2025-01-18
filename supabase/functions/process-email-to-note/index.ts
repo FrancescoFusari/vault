@@ -48,7 +48,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -95,7 +95,10 @@ serve(async (req) => {
       analysis = JSON.parse(content);
       
       // Validate the response format
-      if (!Array.isArray(analysis.tags) || !analysis.metadata) {
+      if (!Array.isArray(analysis.tags) || !analysis.metadata || 
+          !Array.isArray(analysis.metadata.key_points) || 
+          !Array.isArray(analysis.metadata.action_items) || 
+          !Array.isArray(analysis.metadata.important_dates)) {
         throw new Error('Invalid response structure');
       }
       
@@ -139,7 +142,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify(note),
+      JSON.stringify({ note }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
