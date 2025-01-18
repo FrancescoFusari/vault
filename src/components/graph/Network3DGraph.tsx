@@ -44,7 +44,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
 
   useEffect(() => {
     if (fgRef.current && !isInitialized) {
-      // Configure the force simulation
       const distance = defaultSettings.linkDistance * 3;
       console.log('Setting link distance to:', distance);
       
@@ -53,7 +52,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       fgRef.current.controls().dampingFactor = 0.1;
       fgRef.current.controls().enableZoom = true;
       
-      // Set initial camera position to show all nodes
       const { nodes } = processNetworkData(notes);
       if (nodes.length > 0) {
         console.log('Setting initial camera distance to: 5000');
@@ -69,7 +67,8 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     }
   }, [isInitialized, notes]);
 
-  const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
+  const graphData = processNetworkData(notes);
+  const { nodes, links, tagUsageCount, colorScale } = graphData;
 
   const nodeRelSize = defaultSettings.nodeSize;
   const nodeSizeScale = d3.scaleLinear()

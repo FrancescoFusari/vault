@@ -39,10 +39,3 @@ export const processGraphData = (
 
   return { nodes, links };
 };
-
-export const getNodeColor = (node: GraphNode, theme: string): string => {
-  if (node.type === 'note') {
-    return theme === 'dark' ? '#94a3b8' : '#475569';
-  }
-  return theme === 'dark' ? '#22c55e' : '#16a34a';
-};

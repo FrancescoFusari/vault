@@ -1,4 +1,5 @@
 import { Note } from '@/types/graph';
+import * as d3 from 'd3';
 
 export interface NetworkNode {
   id: string;
@@ -9,15 +10,23 @@ export interface NetworkNode {
 }
 
 export interface NetworkLink {
-  source: NetworkNode;
-  target: NetworkNode;
+  source: string;
+  target: string;
   value: number;
 }
 
-export const processNetworkData = (notes: Note[]) => {
+export interface NetworkData {
+  nodes: NetworkNode[];
+  links: NetworkLink[];
+  tagUsageCount: Map<string, number>;
+  colorScale: d3.ScaleLinear<string, string>;
+}
+
+export const processNetworkData = (notes: Note[]): NetworkData => {
   const nodes: NetworkNode[] = [];
   const links: NetworkLink[] = [];
   const nodeMap = new Map<string, NetworkNode>();
+  const tagUsageCount = new Map<string, number>();
 
   // Process notes and create nodes
   notes.forEach(note => {
@@ -34,8 +43,9 @@ export const processNetworkData = (notes: Note[]) => {
     // Create tag nodes and links
     note.tags.forEach(tag => {
       const tagId = `tag-${tag}`;
-      let tagNode = nodeMap.get(tagId);
+      tagUsageCount.set(tag, (tagUsageCount.get(tag) || 0) + 1);
       
+      let tagNode = nodeMap.get(tagId);
       if (!tagNode) {
         tagNode = {
           id: tagId,
@@ -48,12 +58,18 @@ export const processNetworkData = (notes: Note[]) => {
       }
 
       links.push({
-        source: noteNode,
-        target: tagNode,
+        source: noteNode.id,
+        target: tagId,
         value: 1
       });
     });
   });
 
-  return { nodes, links };
+  const maxUsage = Math.max(...Array.from(tagUsageCount.values()));
+  const colorScale = d3.scaleLinear<string>()
+    .domain([0, maxUsage])
+    .range(['#60a5fa', '#f59e0b'])
+    .interpolate(d3.interpolateHcl);
+
+  return { nodes, links, tagUsageCount, colorScale };
 };

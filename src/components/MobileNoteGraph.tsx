@@ -30,7 +30,7 @@ export const MobileNoteGraph = ({ notes, highlightedNoteId }: MobileNoteGraphPro
 
   // Process graph data with emphasis on frequently connected nodes
   useEffect(() => {
-    const data = processGraphData(notes, highlightedNoteId, theme, true);
+    const data = processGraphData(notes, highlightedNoteId, theme);
     
     // Adjust node sizes based on connection count
     data.nodes = data.nodes.map(node => {
