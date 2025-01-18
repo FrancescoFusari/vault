@@ -51,8 +51,9 @@ const Index = () => {
           variant="ghost" 
           onClick={handleSignOut}
           className="text-muted-foreground hover:text-foreground transition-colors"
+          size="icon"
         >
-          Sign Out
+          <Settings className="h-4 w-4" />
         </Button>
       </div>
       
