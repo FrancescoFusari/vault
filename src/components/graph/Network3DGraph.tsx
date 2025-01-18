@@ -88,7 +88,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         ref={fgRef}
         graphData={{ nodes, links }}
         nodeLabel={(node: any) => node.name}
-        nodeColor={(node: any) => node.type === 'note' ? '#60a5fa' : '#f59e0b'}
+        nodeColor={(node: any) => node.type === 'note' ? '#EF7234' : '#E0E0D7'}
         backgroundColor="hsl(229 19% 12%)"
         linkWidth={0.3}
         linkDirectionalParticles={1}
