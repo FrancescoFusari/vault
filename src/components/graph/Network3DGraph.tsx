@@ -34,23 +34,25 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       if (linkForce) {
         linkForce
           .distance(30) // Reduced from 120
-          .strength(0.3) // Reduced from 1.5
-          .iterations(1); // Reduced from 10
+          .strength(0.2) // Reduced from 0.3 for gentler movement
+          .iterations(1);
       }
 
       const chargeForce = simulation.force('charge');
       if (chargeForce) {
-        chargeForce.strength(-10); // Reduced from -20
+        chargeForce.strength(-5); // Reduced from -10 for gentler repulsion
       }
 
       const centerForce = simulation.force('center');
       if (centerForce) {
-        centerForce.strength(1); // Changed from 0.3 to 1
+        centerForce.strength(1);
       }
 
       const collisionForce = simulation.force('collision');
       if (collisionForce) {
-        collisionForce.radius(5);
+        collisionForce
+          .radius(5)
+          .strength(0.2); // Added strength parameter for softer collisions
       }
 
       // Add sphere boundary force with reduced radius
@@ -63,7 +65,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           );
           
           if (distance > 0) {
-            const targetRadius = 60; // Changed from 100 to 60
+            const targetRadius = 60;
             const scale = targetRadius / distance;
             
             node.x *= scale;
@@ -94,7 +96,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
             
             // Create a larger sphere for note nodes
             const sphere = new THREE.Mesh(
-              new THREE.SphereGeometry(4), // Increased from 2 to 4
+              new THREE.SphereGeometry(4),
               new THREE.MeshLambertMaterial({ color: '#EF7234' })
             );
             group.add(sphere);
@@ -108,14 +110,13 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
             sprite.borderRadius = 3;
             
             group.add(sprite);
-            // Position the sprite using the group's position system
-            sprite.translateX(5);
+            sprite.position.set(5, 0, 0);
             
             return group;
           } else if (node.type === 'tag') {
             // Create smaller spheres for tag nodes
             const sphere = new THREE.Mesh(
-              new THREE.SphereGeometry(1.5), // Reduced size for tags
+              new THREE.SphereGeometry(1.5),
               new THREE.MeshLambertMaterial({ color: '#E0E0D7' })
             );
             return sphere;
