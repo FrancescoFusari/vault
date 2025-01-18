@@ -14,7 +14,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const { nodes, links } = graphData;
 
   // Configure force simulation
-  const handleEngineInitialized = useCallback((engine: any) => {
+  const handleEngineTick = useCallback((engine: any) => {
     // Add forces similar to the D3 example
     engine
       .d3Force('link')
@@ -43,9 +43,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     engine
       .d3Force('y', d3.forceY())
       .strength(0.05);
-
-    // Set alpha target for continuous simulation
-    engine.d3AlphaTarget(0);
   }, []);
 
   return (
@@ -62,7 +59,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         enableNavigationControls={true}
         enableNodeDrag={true}
         forceEngine="d3"
-        onEngineInitialized={handleEngineInitialized}
+        onEngineTick={handleEngineTick}
         cooldownTime={Infinity}
         nodeResolution={32}
       />
