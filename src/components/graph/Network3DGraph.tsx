@@ -9,7 +9,7 @@ interface Network3DGraphProps {
 }
 
 export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
-  const fgRef = useRef<ForceGraph3D>();
+  const fgRef = useRef<typeof ForceGraph3D>();
   const graphData = processNetworkData(notes);
   const { nodes, links } = graphData;
 
