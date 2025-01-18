@@ -221,7 +221,7 @@ const QueuePage = () => {
         <div className="space-y-3">
           <h2 className="text-lg font-semibold">Senders</h2>
           <div className="flex flex-wrap gap-2">
-            {senderStats.map(({ sender, count }) => (
+            {senderStats.slice(0, 5).map(({ sender, count }) => (
               <Badge 
                 key={sender} 
                 variant={selectedSender === sender ? "default" : "secondary"}
@@ -231,6 +231,33 @@ const QueuePage = () => {
                 {sender} ({count})
               </Badge>
             ))}
+            {senderStats.length > 5 && (
+              <Collapsible>
+                <CollapsibleTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="h-6 px-2 text-sm"
+                  >
+                    +{senderStats.length - 5} more
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-2">
+                  <div className="flex flex-wrap gap-2">
+                    {senderStats.slice(5).map(({ sender, count }) => (
+                      <Badge 
+                        key={sender} 
+                        variant={selectedSender === sender ? "default" : "secondary"}
+                        className="text-sm py-1 cursor-pointer"
+                        onClick={() => setSelectedSender(sender)}
+                      >
+                        {sender} ({count})
+                      </Badge>
+                    ))}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
           </div>
         </div>
 
