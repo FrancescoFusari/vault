@@ -21,44 +21,40 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       fgRef.current.d3Force('charge', d3.forceManyBody());
       fgRef.current.d3Force('center', d3.forceCenter());
       fgRef.current.d3Force('collision', d3.forceCollide());
-      fgRef.current.d3Force('x', d3.forceX());
-      fgRef.current.d3Force('y', d3.forceY());
+      fgRef.current.d3Force('radial', d3.forceRadial(100)); // Add radial force for spherical layout
 
       // Then configure them
       const linkForce = fgRef.current.d3Force('link');
       if (linkForce) {
         linkForce
-          .distance((link: any) => 30 + 20 * Math.sqrt(link.value || 1))
-          .strength(1);
+          .distance((link: any) => 50) // More consistent distance
+          .strength(0.5); // Reduced strength for more natural spacing
       }
 
       const chargeForce = fgRef.current.d3Force('charge');
       if (chargeForce) {
         chargeForce
-          .strength(-100)
-          .distanceMax(200);
+          .strength(-150) // Increased repulsion
+          .distanceMax(250); // Increased maximum distance
       }
 
       const centerForce = fgRef.current.d3Force('center');
       if (centerForce) {
-        centerForce.strength(0.1);
+        centerForce.strength(0.3); // Increased center pull
       }
 
       const collisionForce = fgRef.current.d3Force('collision');
       if (collisionForce) {
         collisionForce
-          .radius((node: NetworkNode) => Math.sqrt(node.value || 1) * 5)
-          .strength(0.7);
+          .radius((node: NetworkNode) => Math.sqrt(node.value || 1) * 8) // Increased node spacing
+          .strength(0.9); // Increased collision strength
       }
 
-      const xForce = fgRef.current.d3Force('x');
-      if (xForce) {
-        xForce.strength(0.05);
-      }
-
-      const yForce = fgRef.current.d3Force('y');
-      if (yForce) {
-        yForce.strength(0.05);
+      const radialForce = fgRef.current.d3Force('radial');
+      if (radialForce) {
+        radialForce
+          .strength(0.2) // Gentle radial force
+          .radius(100); // Radius of the sphere
       }
     }
   }, []);
