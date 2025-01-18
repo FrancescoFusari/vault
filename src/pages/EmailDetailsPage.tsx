@@ -39,7 +39,7 @@ const EmailDetailsPage = () => {
 
   if (!email) {
     return (
-      <div className="container mx-auto p-4 mt-16">
+      <div className="container mx-auto p-4 mt-8 md:mt-16">
         <div className="text-center text-muted-foreground">
           Email not found
         </div>
@@ -48,33 +48,38 @@ const EmailDetailsPage = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 md:mt-16">
-      <div className="mb-6">
+    <div className="container mx-auto p-4 md:mt-16 max-w-3xl">
+      <div className="mb-4 md:mb-6">
         <Button 
           variant="ghost" 
           onClick={() => navigate('/queue')}
-          className="group"
+          className="group -ml-2"
+          size={isMobile ? "sm" : "default"}
         >
           <ArrowLeft className="h-4 w-4 mr-2 transition-transform group-hover:-translate-x-1" />
           Back to Queue
         </Button>
       </div>
 
-      <Card className="overflow-hidden">
-        <CardHeader className="space-y-4">
-          <div className="flex flex-col space-y-4">
+      <Card className="overflow-hidden shadow-lg">
+        <CardHeader className="space-y-4 p-4 md:p-6">
+          <div className="flex flex-col space-y-3">
             <div>
-              <h2 className="text-xl md:text-2xl font-bold break-words">{email.subject}</h2>
-              <p className="text-muted-foreground mt-1">From: {email.sender}</p>
+              <h2 className="text-lg md:text-2xl font-bold break-words leading-tight">
+                {email.subject}
+              </h2>
+              <p className="text-sm md:text-base text-muted-foreground mt-2">
+                From: {email.sender}
+              </p>
             </div>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-xs md:text-sm text-muted-foreground">
               Received: {format(new Date(email.received_at), "PPp")}
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 p-4 md:p-6">
           <div>
-            <h3 className="font-semibold mb-2">Processing Status</h3>
+            <h3 className="font-semibold mb-2 text-sm md:text-base">Processing Status</h3>
             <div className="flex items-center gap-2">
               <div className={`h-2 w-2 rounded-full ${
                 email.status === 'completed' ? 'bg-green-500' :
@@ -82,21 +87,21 @@ const EmailDetailsPage = () => {
                 email.status === 'processing' ? 'bg-blue-500' :
                 'bg-yellow-500'
               }`} />
-              <span className="capitalize">{email.status}</span>
+              <span className="capitalize text-sm">{email.status}</span>
             </div>
           </div>
 
           {email.error_message && (
-            <div className="bg-destructive/10 p-4 rounded-lg">
-              <h3 className="font-semibold text-destructive mb-2">Error</h3>
-              <p className="text-destructive text-sm">{email.error_message}</p>
+            <div className="bg-destructive/10 p-3 md:p-4 rounded-lg">
+              <h3 className="font-semibold text-destructive text-sm md:text-base mb-1">Error</h3>
+              <p className="text-destructive text-xs md:text-sm">{email.error_message}</p>
             </div>
           )}
 
           {email.processed_at && (
             <div>
-              <h3 className="font-semibold mb-2">Processed At</h3>
-              <p className="text-sm text-muted-foreground">
+              <h3 className="font-semibold mb-1 text-sm md:text-base">Processed At</h3>
+              <p className="text-xs md:text-sm text-muted-foreground">
                 {format(new Date(email.processed_at), "PPp")}
               </p>
             </div>
@@ -104,9 +109,9 @@ const EmailDetailsPage = () => {
 
           {email.email_body && (
             <div>
-              <h3 className="font-semibold mb-2">Email Content</h3>
-              <div className="bg-muted p-4 rounded-lg">
-                <div className="prose prose-sm dark:prose-invert max-w-none">
+              <h3 className="font-semibold mb-2 text-sm md:text-base">Email Content</h3>
+              <div className="bg-muted p-3 md:p-4 rounded-lg">
+                <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none text-xs md:text-sm">
                   {email.email_body}
                 </div>
               </div>
