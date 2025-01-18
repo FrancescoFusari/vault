@@ -13,8 +13,8 @@ export default {
 		container: {
 			center: true,
 			padding: {
-				DEFAULT: "0.5rem",  // Reduced from 1rem to 0.5rem for mobile
-				md: "1rem",        // Reduced from 2rem to 1rem for medium screens
+				DEFAULT: "0.5rem",
+				md: "1rem",
 			},
 			screens: {
 				'2xl': '1400px'
@@ -25,10 +25,10 @@ export default {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
-				background: 'hsl(var(--background))',
+				background: '#1B1B1F',
 				foreground: 'hsl(var(--foreground))',
 				primary: {
-					DEFAULT: 'hsl(var(--primary))',
+					DEFAULT: '#EF7234',
 					foreground: 'hsl(var(--primary-foreground))'
 				},
 				secondary: {
