@@ -1,7 +1,9 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Toaster } from "./components/ui/toaster";
-import { DesktopNav } from "./components/DesktopNav";
+import { NavBar } from "./components/ui/tubelight-navbar";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Home, StickyNote, Tags, Network, Settings, Timer } from "lucide-react";
 import Auth from "./pages/Auth";
 import Index from "./pages/Index";
 import NotesListPage from "./pages/NotesListPage";
@@ -15,8 +17,18 @@ import EmailDetailsPage from "./pages/EmailDetailsPage";
 import { supabase } from "./integrations/supabase/client";
 import "./App.css";
 
+const navItems = [
+  { name: "Home", url: "/", icon: Home },
+  { name: "Notes", url: "/notes", icon: StickyNote },
+  { name: "Tags", url: "/tags", icon: Tags },
+  { name: "Network", url: "/network3d", icon: Network },
+  { name: "Queue", url: "/queue", icon: Timer },
+  { name: "Settings", url: "/settings", icon: Settings },
+];
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Check initial auth state
@@ -40,8 +52,18 @@ function App() {
   return (
     <>
       <div className="min-h-screen bg-background w-full">
-        {isAuthenticated && <DesktopNav />}
-        <main className={`${isAuthenticated ? "pt-16 pb-4" : ""} px-2 md:px-8`}>
+        {isAuthenticated && (
+          <div className={cn(
+            "fixed z-50 w-full",
+            isMobile ? "bottom-0 left-0" : "top-0 left-0"
+          )}>
+            <NavBar items={navItems} />
+          </div>
+        )}
+        <main className={cn(
+          isAuthenticated && (isMobile ? "pb-20" : "pt-16 pb-4"),
+          "px-2 md:px-8"
+        )}>
           <Routes>
             <Route
               path="/auth"
