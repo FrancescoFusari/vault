@@ -59,15 +59,15 @@ export const NoteCard = ({ note }: NoteCardProps) => {
       className="note-card cursor-pointer hover:bg-accent transition-colors"
       onClick={() => navigate(`/note/${note.id}`)}
     >
-      <CardHeader className="flex flex-col space-y-2 py-4">
-        <div className="flex justify-between items-start">
-          <h3 className="font-medium">{title}</h3>
-          <div className="flex items-center text-sm text-muted-foreground">
-            <CalendarIcon className="mr-1 h-4 w-4" />
+      <CardHeader className="flex flex-col space-y-2 p-3 md:p-4">
+        <div className="flex justify-between items-start gap-2">
+          <h3 className="font-medium text-secondary text-sm md:text-base">{title}</h3>
+          <div className="flex items-center text-xs md:text-sm text-muted-foreground shrink-0">
+            <CalendarIcon className="mr-1 h-3 w-3 md:h-4 md:w-4" />
             {new Date(note.created_at).toLocaleDateString()}
           </div>
         </div>
-        <p className="text-sm text-muted-foreground">{truncatedContent}</p>
+        <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">{truncatedContent}</p>
         <div className="flex flex-wrap gap-1">
           <Badge 
             variant="secondary"

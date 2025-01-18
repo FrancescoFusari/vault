@@ -48,21 +48,21 @@ const NotesListPage = () => {
       <div className="flex min-h-screen w-full">
         <TagsSidebar />
         <div className="flex-1">
-          <div className="container mx-auto py-8 md:mt-16">
-            <div className="flex flex-col space-y-6">
-              <h1 className="text-2xl font-semibold">Vault</h1>
-              <div className="relative">
+          <div className="container mx-auto py-4 md:py-8 px-2 md:px-4 md:mt-16">
+            <div className="flex flex-col space-y-4 md:space-y-6">
+              <h1 className="text-2xl font-semibold text-secondary">Vault</h1>
+              <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="text"
                   placeholder="Search notes and tags..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 w-full bg-muted border-muted"
                 />
               </div>
               {isLoading ? (
-                <div className="text-center py-12">Loading notes...</div>
+                <div className="text-center py-12 text-secondary">Loading notes...</div>
               ) : error ? (
                 <div className="text-center text-red-500 py-12">
                   Error loading notes. Please try again.
