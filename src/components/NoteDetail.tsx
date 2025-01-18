@@ -163,6 +163,18 @@ export const NoteDetail = ({ note }: NoteDetailProps) => {
     }
   };
 
+  const formatContent = (content: string) => {
+    // Replace multiple newlines with double breaks
+    const formattedContent = content
+      .replace(/\n\s*\n/g, '\n\n')
+      // Ensure paragraphs are properly spaced
+      .split('\n\n')
+      .filter(para => para.trim() !== '')
+      .join('\n\n');
+    
+    return formattedContent;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -211,8 +223,12 @@ export const NoteDetail = ({ note }: NoteDetailProps) => {
             </div>
           )}
           
-          <div className="whitespace-pre-wrap mb-4 text-sm md:text-base leading-relaxed break-words">
-            {note.content}
+          <div className="whitespace-pre-wrap mb-4 text-sm md:text-base leading-relaxed break-words max-w-full overflow-hidden">
+            {formatContent(note.content).split('\n\n').map((paragraph, index) => (
+              <p key={index} className="mb-4 last:mb-0">
+                {paragraph}
+              </p>
+            ))}
           </div>
           
           {note.metadata && (
