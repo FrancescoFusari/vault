@@ -21,7 +21,8 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       fgRef.current.d3Force('charge', d3.forceManyBody());
       fgRef.current.d3Force('center', d3.forceCenter());
       fgRef.current.d3Force('collision', d3.forceCollide());
-      fgRef.current.d3Force('radial', d3.forceRadial(150)); // Increased radius for better distribution
+      // Create radial force with center coordinates directly
+      fgRef.current.d3Force('radial', d3.forceRadial(150, 0, 0));
 
       // Then configure them
       const linkForce = fgRef.current.d3Force('link');
@@ -55,10 +56,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       if (radialForce) {
         radialForce
           .strength(0.4) // Increased radial force for better spherical shape
-          .radius(150) // Increased radius to match initial setup
-          .x(0) // Center X coordinate
-          .y(0) // Center Y coordinate
-          .z(0); // Center Z coordinate
+          .radius(150); // Increased radius to match initial setup
       }
     }
   }, []);
