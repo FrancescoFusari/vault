@@ -21,40 +21,44 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       fgRef.current.d3Force('charge', d3.forceManyBody());
       fgRef.current.d3Force('center', d3.forceCenter());
       fgRef.current.d3Force('collision', d3.forceCollide());
-      fgRef.current.d3Force('radial', d3.forceRadial(100)); // Add radial force for spherical layout
+      fgRef.current.d3Force('radial', d3.forceRadial(150)); // Increased radius for better distribution
 
       // Then configure them
       const linkForce = fgRef.current.d3Force('link');
       if (linkForce) {
         linkForce
-          .distance((link: any) => 50) // More consistent distance
-          .strength(0.5); // Reduced strength for more natural spacing
+          .distance(80) // Increased base distance
+          .strength(0.3); // Reduced strength for smoother movement
       }
 
       const chargeForce = fgRef.current.d3Force('charge');
       if (chargeForce) {
         chargeForce
-          .strength(-150) // Increased repulsion
-          .distanceMax(250); // Increased maximum distance
+          .strength(-100) // Reduced repulsion for less shaking
+          .distanceMax(300) // Increased maximum distance
+          .theta(0.9); // Increased theta for smoother approximation
       }
 
       const centerForce = fgRef.current.d3Force('center');
       if (centerForce) {
-        centerForce.strength(0.3); // Increased center pull
+        centerForce.strength(0.15); // Reduced center pull for more stability
       }
 
       const collisionForce = fgRef.current.d3Force('collision');
       if (collisionForce) {
         collisionForce
-          .radius((node: NetworkNode) => Math.sqrt(node.value || 1) * 8) // Increased node spacing
-          .strength(0.9); // Increased collision strength
+          .radius((node: NetworkNode) => Math.sqrt(node.value || 1) * 10) // Increased node spacing
+          .strength(0.7); // Slightly reduced collision strength
       }
 
       const radialForce = fgRef.current.d3Force('radial');
       if (radialForce) {
         radialForce
-          .strength(0.2) // Gentle radial force
-          .radius(100); // Radius of the sphere
+          .strength(0.4) // Increased radial force for better spherical shape
+          .radius(150) // Increased radius to match initial setup
+          .x(0) // Center X coordinate
+          .y(0) // Center Y coordinate
+          .z(0); // Center Z coordinate
       }
     }
   }, []);
