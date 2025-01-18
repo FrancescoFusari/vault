@@ -91,18 +91,16 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
             );
             group.add(sphere);
             
-            // Create the text label
+            // Create and position the text label
             const sprite = new SpriteText(node.name);
             sprite.color = '#ffffff';
             sprite.textHeight = 3;
             sprite.backgroundColor = 'rgba(0,0,0,0.5)';
             sprite.padding = 2;
             sprite.borderRadius = 3;
+            sprite.position.set(3, 0, 0);
             
-            // Position the sprite using its mesh property
-            sprite.mesh.position.set(3, 0, 0);
-            
-            group.add(sprite.mesh);
+            group.add(sprite);
             
             return group;
           }
