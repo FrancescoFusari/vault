@@ -12,6 +12,8 @@ const navItems = [
 
 export function DesktopNav() {
   return (
-    <NavBar items={navItems} />
+    <div className="fixed top-0 left-0 right-0 z-50">
+      <NavBar items={navItems} />
+    </div>
   );
 }
