@@ -22,7 +22,7 @@ export function BottomNav() {
   const location = useLocation();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
+    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-muted bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
       <nav className="flex h-16 items-center px-4">
         <div className="flex w-full justify-around">
           {navItems.map((item) => {
@@ -33,10 +33,10 @@ export function BottomNav() {
                 key={item.href}
                 to={item.href}
                 className={cn(
-                  "flex flex-col items-center justify-center",
+                  "flex flex-col items-center justify-center rounded-lg p-2 transition-colors",
                   isActive 
-                    ? "text-accent-foreground" 
-                    : "text-muted-foreground"
+                    ? "text-primary" 
+                    : "text-muted-foreground hover:text-secondary"
                 )}
               >
                 <Icon className="h-5 w-5" />

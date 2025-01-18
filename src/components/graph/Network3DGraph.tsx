@@ -13,56 +13,46 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const graphData = processNetworkData(notes);
   const { nodes, links } = graphData;
 
-  // Configure force simulation using useEffect
   useEffect(() => {
-    // Wait for the ForceGraph component to be initialized
     requestAnimationFrame(() => {
       const fg = fgRef.current;
       if (!fg) return;
 
-      // Get the simulation
       const simulation = fg.d3Force('simulation');
       if (!simulation) return;
 
-      // Reset to default forces
       simulation
         .force('link', d3.forceLink())
         .force('charge', d3.forceManyBody())
         .force('center', d3.forceCenter())
         .force('collision', d3.forceCollide());
 
-      // Configure link force for tighter connections
       const linkForce = simulation.force('link');
       if (linkForce) {
         linkForce
           .id((d: any) => d.id)
-          .distance(15) // Even shorter distance for more compact sphere
-          .strength(1.5) // Stronger link force for tighter clustering
+          .distance(15)
+          .strength(1.5)
           .iterations(10);
       }
 
-      // Configure charge force for tighter 3D distribution
       const chargeForce = simulation.force('charge');
       if (chargeForce) {
-        chargeForce.strength(-20); // Less repulsion for closer nodes
+        chargeForce.strength(-20);
       }
 
-      // Configure center force to maintain spherical shape
       const centerForce = simulation.force('center');
       if (centerForce) {
-        centerForce.strength(1.2); // Stronger centering force
+        centerForce.strength(1.2);
       }
 
-      // Add collision force to prevent overlap
       const collisionForce = simulation.force('collision');
       if (collisionForce) {
-        collisionForce.radius(3); // Smaller radius for tighter packing
+        collisionForce.radius(3);
       }
 
-      // Add a custom force to maintain spherical shape
       simulation.force('sphere', () => {
         nodes.forEach((node: any) => {
-          // Calculate distance from center
           const distance = Math.sqrt(
             node.x * node.x + 
             node.y * node.y + 
@@ -70,11 +60,9 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           );
           
           if (distance > 0) {
-            // Reduced target radius for a more compact sphere (was 100)
             const targetRadius = 50;
             const scale = targetRadius / distance;
             
-            // Move nodes towards the sphere surface
             node.x *= scale;
             node.y *= scale;
             node.z *= scale;
@@ -91,7 +79,8 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         graphData={{ nodes, links }}
         nodeLabel={(node: any) => node.name}
         nodeColor={(node: any) => node.type === 'note' ? '#EF7234' : '#E0E0D7'}
-        backgroundColor="hsl(229 19% 12%)"
+        backgroundColor="#1B1B1F"
+        linkColor={() => "#8E9196"}
         linkWidth={0.3}
         linkDirectionalParticles={1}
         linkDirectionalParticleWidth={0.2}
