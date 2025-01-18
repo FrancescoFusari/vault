@@ -42,16 +42,34 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     };
   }, []);
 
-  // Set up graph configuration once when the component mounts
+  // Initialize graph configuration
   useEffect(() => {
     if (fgRef.current) {
-      // Force the link distance
+      console.log('Initializing force graph with custom settings');
+      
+      // Clear existing forces first
+      fgRef.current.d3Force('link', null);
+      fgRef.current.d3Force('charge', null);
+      
+      // Set up custom forces
       const forceLink = d3.forceLink()
-        .distance(() => defaultSettings.linkDistance);
+        .distance(() => defaultSettings.linkDistance)
+        .id((d: any) => d.id);
       
+      const forceCharge = d3.forceManyBody()
+        .strength(-500);
+      
+      // Apply forces
       fgRef.current.d3Force('link', forceLink);
+      fgRef.current.d3Force('charge', forceCharge);
       
-      // Set camera position and controls
+      // Set camera position
+      const distance = Math.sqrt(
+        Math.pow(defaultSettings.cameraPosition.x, 2) +
+        Math.pow(defaultSettings.cameraPosition.y, 2) +
+        Math.pow(defaultSettings.cameraPosition.z, 2)
+      );
+      
       const camera = fgRef.current.camera();
       const controls = fgRef.current.controls();
       
@@ -65,10 +83,13 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         controls.enableDamping = true;
         controls.dampingFactor = 0.1;
         controls.enableZoom = true;
+        controls.minDistance = distance * 0.5;
+        controls.maxDistance = distance * 1.5;
       }
 
-      // Force a re-render of the graph
+      // Force a re-render and reheat simulation
       fgRef.current.refresh();
+      fgRef.current._animationCycle();
     }
   }, []);
 
