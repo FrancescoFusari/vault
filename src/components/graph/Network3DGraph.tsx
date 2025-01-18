@@ -3,24 +3,12 @@ import ForceGraph3D from 'react-force-graph-3d';
 import { NetworkNode, NetworkLink, processNetworkData } from '@/utils/networkGraphUtils';
 import { Note } from '@/types/graph';
 import * as d3 from 'd3';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 
 interface Network3DGraphProps {
   notes: Note[];
 }
 
-interface GraphSettings {
-  nodeSize: number;
-  linkWidth: number;
-  backgroundColor: string;
-  enableNodeDrag: boolean;
-  enableNavigationControls: boolean;
-  showNavInfo: boolean;
-  linkDistance: number;
-}
-
-const defaultSettings: GraphSettings = {
+const defaultSettings = {
   nodeSize: 6,
   linkWidth: 1,
   backgroundColor: "hsl(229 19% 12%)",
@@ -35,34 +23,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
   const [isInitialized, setIsInitialized] = useState(false);
-
-  const { data: graphSettings } = useQuery({
-    queryKey: ['graphSettings'],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('User not authenticated');
-
-      const { data, error } = await supabase
-        .from('graph_settings')
-        .select('settings')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      if (error && error.code !== 'PGRST116') throw error;
-      
-      // Safely type cast the settings
-      const settings = data?.settings as Record<keyof GraphSettings, any>;
-      return settings ? {
-        nodeSize: Number(settings.nodeSize) || defaultSettings.nodeSize,
-        linkWidth: Number(settings.linkWidth) || defaultSettings.linkWidth,
-        backgroundColor: String(settings.backgroundColor) || defaultSettings.backgroundColor,
-        enableNodeDrag: Boolean(settings.enableNodeDrag ?? defaultSettings.enableNodeDrag),
-        enableNavigationControls: Boolean(settings.enableNavigationControls ?? defaultSettings.enableNavigationControls),
-        showNavInfo: Boolean(settings.showNavInfo ?? defaultSettings.showNavInfo),
-        linkDistance: Number(settings.linkDistance) || defaultSettings.linkDistance
-      } : defaultSettings;
-    }
-  });
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -83,9 +43,9 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   }, []);
 
   useEffect(() => {
-    if (fgRef.current && graphSettings && !isInitialized) {
+    if (fgRef.current && !isInitialized) {
       // Configure the force simulation
-      const distance = (graphSettings.linkDistance || defaultSettings.linkDistance) * 3;
+      const distance = defaultSettings.linkDistance * 3;
       console.log('Setting link distance to:', distance);
       
       fgRef.current.d3Force('link').distance(() => distance);
@@ -107,23 +67,11 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       
       setIsInitialized(true);
     }
-  }, [graphSettings, isInitialized, notes]);
-
-  // Reset force simulation when settings change
-  useEffect(() => {
-    if (fgRef.current && graphSettings && isInitialized) {
-      const distance = (graphSettings.linkDistance || defaultSettings.linkDistance) * 3;
-      console.log('Updating link distance to:', distance);
-      fgRef.current.d3Force('link').distance(() => distance);
-      // Get the current graph data directly from the component's props
-      const currentData = { nodes, links };
-      fgRef.current.d3Force('link').initialize(currentData.links);
-    }
-  }, [graphSettings?.linkDistance]);
+  }, [isInitialized, notes]);
 
   const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
 
-  const nodeRelSize = graphSettings?.nodeSize || defaultSettings.nodeSize;
+  const nodeRelSize = defaultSettings.nodeSize;
   const nodeSizeScale = d3.scaleLinear()
     .domain([0, Math.max(...Array.from(tagUsageCount.values()))])
     .range([nodeRelSize, nodeRelSize * 2]);
@@ -156,11 +104,11 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           nodeRelSize={nodeRelSize}
           nodeVal={getNodeSize}
           nodeColor={getNodeColor}
-          linkWidth={graphSettings?.linkWidth || defaultSettings.linkWidth}
-          backgroundColor={graphSettings?.backgroundColor || defaultSettings.backgroundColor}
-          enableNodeDrag={graphSettings?.enableNodeDrag ?? defaultSettings.enableNodeDrag}
-          enableNavigationControls={graphSettings?.enableNavigationControls ?? defaultSettings.enableNavigationControls}
-          showNavInfo={graphSettings?.showNavInfo ?? defaultSettings.showNavInfo}
+          linkWidth={defaultSettings.linkWidth}
+          backgroundColor={defaultSettings.backgroundColor}
+          enableNodeDrag={defaultSettings.enableNodeDrag}
+          enableNavigationControls={defaultSettings.enableNavigationControls}
+          showNavInfo={defaultSettings.showNavInfo}
           d3VelocityDecay={0.1}
           warmupTicks={50}
         />
