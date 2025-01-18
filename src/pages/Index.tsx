@@ -72,6 +72,17 @@ const Index = () => {
           <div className="w-full max-w-2xl mx-auto space-y-12">
             <NoteInput onNoteSubmit={handleNoteSubmit} />
             
+            {/* Gmail Integration Section */}
+            <div className="space-y-6">
+              <div className="text-center">
+                <h2 className="text-xl font-medium text-foreground mb-2">Gmail Integration</h2>
+                <p className="text-sm text-muted-foreground">Connect and manage your Gmail account</p>
+              </div>
+              <div className="flex justify-center">
+                <GmailIntegration />
+              </div>
+            </div>
+            
             <div className="space-y-6">
               <div className="text-center">
                 <h2 className="text-xl font-medium text-foreground mb-2">Connect services</h2>
