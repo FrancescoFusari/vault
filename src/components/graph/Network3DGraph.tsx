@@ -21,7 +21,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       if (!fg) return;
 
       // Get the simulation
-      const simulation = fg.d3Force();
+      const simulation = fg.d3Force('simulation');  // Add 'simulation' as the force name
       if (!simulation) return;
 
       // Reset to default forces
