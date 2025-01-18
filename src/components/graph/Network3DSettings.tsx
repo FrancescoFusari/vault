@@ -15,6 +15,9 @@ export interface Network3DSettings {
   enablePointerInteraction: boolean;
   backgroundColor: string;
   enableNodeFixing: boolean;
+  cameraDistance: number;
+  rotationSpeed: number;
+  tiltAngle: number;
 }
 
 interface Network3DSettingsProps {
@@ -66,6 +69,39 @@ export const Network3DSettingsDialog = ({ settings, onSettingChange }: Network3D
               step={5}
               value={[settings.linkLength]}
               onValueChange={([value]) => onSettingChange('linkLength', value)}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="cameraDistance">Camera Distance</Label>
+            <Slider
+              id="cameraDistance"
+              min={1000}
+              max={10000}
+              step={100}
+              value={[settings.cameraDistance]}
+              onValueChange={([value]) => onSettingChange('cameraDistance', value)}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="rotationSpeed">Rotation Speed</Label>
+            <Slider
+              id="rotationSpeed"
+              min={0}
+              max={0.005}
+              step={0.0001}
+              value={[settings.rotationSpeed]}
+              onValueChange={([value]) => onSettingChange('rotationSpeed', value)}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="tiltAngle">Tilt Angle</Label>
+            <Slider
+              id="tiltAngle"
+              min={0}
+              max={45}
+              step={1}
+              value={[settings.tiltAngle]}
+              onValueChange={([value]) => onSettingChange('tiltAngle', value)}
             />
           </div>
           <div className="flex items-center justify-between">

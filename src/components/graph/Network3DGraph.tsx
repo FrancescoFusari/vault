@@ -5,32 +5,22 @@ import { Note } from '@/types/graph';
 import * as d3 from 'd3';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { Network3DSettings, Network3DSettingsDialog } from './Network3DSettings';
 
 interface Network3DGraphProps {
   notes: Note[];
 }
 
-interface GraphSettings {
-  nodeSize: number;
-  linkWidth: number;
-  backgroundColor: string;
-  enableNodeDrag: boolean;
-  enableNavigationControls: boolean;
-  showNavInfo: boolean;
-  linkDistance: number;
-  cameraDistance: number;
-  rotationSpeed: number;
-  tiltAngle: number;
-}
-
-const defaultSettings: GraphSettings = {
+const defaultSettings: Network3DSettings = {
   nodeSize: 6,
   linkWidth: 1,
   backgroundColor: "hsl(229 19% 12%)",
   enableNodeDrag: true,
   enableNavigationControls: true,
   showNavInfo: true,
-  linkDistance: 120,
+  linkLength: 120,
+  enablePointerInteraction: true,
+  enableNodeFixing: true,
   cameraDistance: 5000,
   rotationSpeed: 0.001,
   tiltAngle: 23
@@ -57,34 +47,49 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       
       if (error && error.code !== 'PGRST116') throw error;
       
-      const settings = data?.settings as Record<keyof GraphSettings, any>;
-      return settings ? {
+      if (!data?.settings) {
+        // If no settings exist, create default settings
+        const { error: insertError } = await supabase
+          .from('graph_settings')
+          .insert({
+            user_id: user.id,
+            settings: defaultSettings
+          });
+        
+        if (insertError) throw insertError;
+        return defaultSettings;
+      }
+      
+      const settings = data.settings as Record<keyof Network3DSettings, any>;
+      return {
         nodeSize: Number(settings.nodeSize) || defaultSettings.nodeSize,
         linkWidth: Number(settings.linkWidth) || defaultSettings.linkWidth,
         backgroundColor: String(settings.backgroundColor) || defaultSettings.backgroundColor,
         enableNodeDrag: Boolean(settings.enableNodeDrag ?? defaultSettings.enableNodeDrag),
         enableNavigationControls: Boolean(settings.enableNavigationControls ?? defaultSettings.enableNavigationControls),
         showNavInfo: Boolean(settings.showNavInfo ?? defaultSettings.showNavInfo),
-        linkDistance: Number(settings.linkDistance) || defaultSettings.linkDistance,
+        linkLength: Number(settings.linkLength) || defaultSettings.linkLength,
+        enablePointerInteraction: Boolean(settings.enablePointerInteraction ?? defaultSettings.enablePointerInteraction),
+        enableNodeFixing: Boolean(settings.enableNodeFixing ?? defaultSettings.enableNodeFixing),
         cameraDistance: Number(settings.cameraDistance) || defaultSettings.cameraDistance,
         rotationSpeed: Number(settings.rotationSpeed) || defaultSettings.rotationSpeed,
         tiltAngle: Number(settings.tiltAngle) || defaultSettings.tiltAngle
-      } : defaultSettings;
-    }
+      };
+    },
+    initialData: defaultSettings
   });
 
-  // Save settings to Supabase
-  const saveSettings = async (newSettings: Partial<GraphSettings>) => {
+  const saveSettings = async (key: keyof Network3DSettings, value: any) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const mergedSettings = { ...graphSettings, ...newSettings };
+    const newSettings = { ...graphSettings, [key]: value };
     
     const { error } = await supabase
       .from('graph_settings')
       .upsert({
         user_id: user.id,
-        settings: mergedSettings
+        settings: newSettings
       });
 
     if (error) {
@@ -116,7 +121,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   useEffect(() => {
     if (fgRef.current && graphSettings && !isInitialized) {
       // Configure the force simulation
-      const distance = (graphSettings.linkDistance || defaultSettings.linkDistance) * 3;
+      const distance = (graphSettings.linkLength || defaultSettings.linkLength) * 3;
       console.log('Setting link distance to:', distance);
       
       fgRef.current.d3Force('link').distance(() => distance);
@@ -152,13 +157,13 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   // Reset force simulation when settings change
   useEffect(() => {
     if (fgRef.current && graphSettings && isInitialized) {
-      const distance = (graphSettings.linkDistance || defaultSettings.linkDistance) * 3;
+      const distance = (graphSettings.linkLength || defaultSettings.linkLength) * 3;
       console.log('Updating link distance to:', distance);
       fgRef.current.d3Force('link').distance(() => distance);
       const { nodes, links } = processNetworkData(notes);
       fgRef.current.d3Force('link').initialize(links);
     }
-  }, [graphSettings?.linkDistance, notes]);
+  }, [graphSettings?.linkLength, notes]);
 
   const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
 
@@ -185,6 +190,10 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
 
   return (
     <div ref={containerRef} className="w-full h-full">
+      <Network3DSettingsDialog 
+        settings={graphSettings} 
+        onSettingChange={saveSettings}
+      />
       {dimensions.width > 0 && dimensions.height > 0 && (
         <ForceGraph3D
           ref={fgRef}
