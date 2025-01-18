@@ -81,13 +81,26 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         nodeLabel={(node: any) => node.name}
         nodeThreeObject={(node: any) => {
           if (node.type === 'note') {
+            const group = new THREE.Group();
+            
+            // Create the sphere for the node
+            const sphere = new THREE.Mesh(
+              new THREE.SphereGeometry(2),
+              new THREE.MeshLambertMaterial({ color: '#EF7234' })
+            );
+            group.add(sphere);
+            
+            // Create the text label
             const sprite = new SpriteText(node.name);
             sprite.color = '#ffffff';
             sprite.textHeight = 3;
             sprite.backgroundColor = 'rgba(0,0,0,0.5)';
             sprite.padding = 2;
             sprite.borderRadius = 3;
-            return sprite;
+            sprite.position.set(3, 0, 0); // Position the text to the right of the sphere
+            group.add(sprite);
+            
+            return group;
           }
           return null;
         }}
