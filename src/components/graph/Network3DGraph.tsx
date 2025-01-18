@@ -20,6 +20,9 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       const fg = fgRef.current;
       if (!fg) return;
 
+      // Set initial camera position
+      fg.cameraPosition({ z: 200 });
+
       const simulation = fg.d3Force('simulation');
       if (!simulation) return;
 
@@ -133,7 +136,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         nodeResolution={32}
         controlType="orbit"
         showNavInfo={false}
-        cameraDistance={200}
       />
     </div>
   );
