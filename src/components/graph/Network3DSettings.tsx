@@ -4,7 +4,6 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Settings } from "lucide-react";
-import { Json } from "@/integrations/supabase/types";
 
 export interface Network3DSettings {
   nodeSize: number;
@@ -16,9 +15,6 @@ export interface Network3DSettings {
   enablePointerInteraction: boolean;
   backgroundColor: string;
   enableNodeFixing: boolean;
-  cameraDistance: number;
-  rotationSpeed: number;
-  tiltAngle: number;
 }
 
 interface Network3DSettingsProps {
@@ -30,15 +26,11 @@ export const Network3DSettingsDialog = ({ settings, onSettingChange }: Network3D
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="icon" 
-          className="fixed top-20 right-4 z-50"
-        >
+        <Button variant="outline" size="icon" className="absolute top-4 right-4 z-10">
           <Settings className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="z-[100] sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Graph Settings</DialogTitle>
         </DialogHeader>
@@ -74,39 +66,6 @@ export const Network3DSettingsDialog = ({ settings, onSettingChange }: Network3D
               step={5}
               value={[settings.linkLength]}
               onValueChange={([value]) => onSettingChange('linkLength', value)}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="cameraDistance">Camera Distance</Label>
-            <Slider
-              id="cameraDistance"
-              min={1000}
-              max={10000}
-              step={100}
-              value={[settings.cameraDistance]}
-              onValueChange={([value]) => onSettingChange('cameraDistance', value)}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="rotationSpeed">Rotation Speed</Label>
-            <Slider
-              id="rotationSpeed"
-              min={0}
-              max={0.005}
-              step={0.0001}
-              value={[settings.rotationSpeed]}
-              onValueChange={([value]) => onSettingChange('rotationSpeed', value)}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="tiltAngle">Tilt Angle</Label>
-            <Slider
-              id="tiltAngle"
-              min={0}
-              max={45}
-              step={1}
-              value={[settings.tiltAngle]}
-              onValueChange={([value]) => onSettingChange('tiltAngle', value)}
             />
           </div>
           <div className="flex items-center justify-between">
