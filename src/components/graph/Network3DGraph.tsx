@@ -98,7 +98,11 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
             sprite.backgroundColor = 'rgba(0,0,0,0.5)';
             sprite.padding = 2;
             sprite.borderRadius = 3;
-            sprite.position.set(3, 0, 0); // Position the text to the right of the sphere
+            
+            // Set position using Three.js Vector3
+            const textPosition = new THREE.Vector3(3, 0, 0);
+            sprite.position.copy(textPosition);
+            
             group.add(sprite);
             
             return group;
