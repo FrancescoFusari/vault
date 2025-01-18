@@ -42,8 +42,13 @@ export const NoteDetail = ({ note }: NoteDetailProps) => {
     ? supabase.storage.from('note_images').getPublicUrl(note.source_image_path).data.publicUrl
     : null;
 
+  console.log('Note input type:', note.input_type); // Debug log
+
   const getTypeIcon = (type?: string) => {
-    switch (type?.toLowerCase()) {
+    const inputType = type?.toLowerCase();
+    console.log('Getting icon for type:', inputType); // Debug log
+    
+    switch (inputType) {
       case 'url':
         return <Link2Icon className="h-4 w-4" />;
       case 'image':
@@ -56,7 +61,10 @@ export const NoteDetail = ({ note }: NoteDetailProps) => {
   };
 
   const getTypeLabel = (type?: string) => {
-    switch (type?.toLowerCase()) {
+    const inputType = type?.toLowerCase();
+    console.log('Getting label for type:', inputType); // Debug log
+    
+    switch (inputType) {
       case 'url':
         return 'URL Note';
       case 'image':
@@ -191,6 +199,7 @@ export const NoteDetail = ({ note }: NoteDetailProps) => {
             {new Date(note.created_at).toLocaleDateString()}
           </div>
         </CardHeader>
+        
         <CardContent>
           {imageUrl && (
             <div className="mb-6">
