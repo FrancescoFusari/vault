@@ -15,7 +15,8 @@ const defaultSettings = {
   enableNodeDrag: true,
   enableNavigationControls: true,
   showNavInfo: true,
-  linkDistance: 820, // Updated from 1024 to 820
+  linkDistance: 800, // Updated from 820 to 800
+  linkCurvature: 0.2, // Added default link curvature
   cameraPosition: { x: 5000, y: 5000, z: 5000 }
 };
 
@@ -96,6 +97,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           nodeVal={getNodeSize}
           nodeColor={getNodeColor}
           linkWidth={defaultSettings.linkWidth}
+          linkCurvature={defaultSettings.linkCurvature}
           backgroundColor={defaultSettings.backgroundColor}
           enableNodeDrag={defaultSettings.enableNodeDrag}
           enableNavigationControls={defaultSettings.enableNavigationControls}
