@@ -34,6 +34,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const fgRef = useRef<any>();
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const { data: graphSettings } = useQuery({
     queryKey: ['graphSettings'],
@@ -82,17 +83,30 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   }, []);
 
   useEffect(() => {
-    if (fgRef.current) {
+    if (fgRef.current && graphSettings && !isInitialized) {
       // Configure the force simulation
-      const distance = (graphSettings?.linkDistance || defaultSettings.linkDistance) * 3;
-      fgRef.current.d3Force('link').distance(() => distance);
+      const distance = (graphSettings.linkDistance || defaultSettings.linkDistance) * 3;
+      console.log('Setting link distance to:', distance);
       
+      fgRef.current.d3Force('link').distance(() => distance);
       fgRef.current.controls().enableDamping = true;
       fgRef.current.controls().dampingFactor = 0.1;
       fgRef.current.controls().enableZoom = true;
       
       fgRef.current.camera().position.set(200, 200, 200);
       fgRef.current.camera().lookAt(0, 0, 0);
+      
+      setIsInitialized(true);
+    }
+  }, [graphSettings, isInitialized]);
+
+  // Reset force simulation when settings change
+  useEffect(() => {
+    if (fgRef.current && graphSettings && isInitialized) {
+      const distance = (graphSettings.linkDistance || defaultSettings.linkDistance) * 3;
+      console.log('Updating link distance to:', distance);
+      fgRef.current.d3Force('link').distance(() => distance);
+      fgRef.current.d3Force('link').initialize(fgRef.current.graphData().links);
     }
   }, [graphSettings?.linkDistance]);
 
