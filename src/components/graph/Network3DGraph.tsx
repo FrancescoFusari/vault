@@ -59,7 +59,27 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         return defaultSettings;
       }
       
-      return (data?.settings as GraphSettings) || defaultSettings;
+      // Validate and transform the settings
+      const settings = data?.settings as Record<string, any>;
+      if (!settings) return defaultSettings;
+
+      // Ensure all required properties exist with correct types
+      const validatedSettings: GraphSettings = {
+        nodeSize: typeof settings.nodeSize === 'number' ? settings.nodeSize : defaultSettings.nodeSize,
+        linkWidth: typeof settings.linkWidth === 'number' ? settings.linkWidth : defaultSettings.linkWidth,
+        backgroundColor: typeof settings.backgroundColor === 'string' ? settings.backgroundColor : defaultSettings.backgroundColor,
+        enableNodeDrag: typeof settings.enableNodeDrag === 'boolean' ? settings.enableNodeDrag : defaultSettings.enableNodeDrag,
+        enableNavigationControls: typeof settings.enableNavigationControls === 'boolean' ? settings.enableNavigationControls : defaultSettings.enableNavigationControls,
+        showNavInfo: typeof settings.showNavInfo === 'boolean' ? settings.showNavInfo : defaultSettings.showNavInfo,
+        linkDistance: typeof settings.linkDistance === 'number' ? settings.linkDistance : defaultSettings.linkDistance,
+        cameraPosition: {
+          x: typeof settings.cameraPosition?.x === 'number' ? settings.cameraPosition.x : defaultSettings.cameraPosition.x,
+          y: typeof settings.cameraPosition?.y === 'number' ? settings.cameraPosition.y : defaultSettings.cameraPosition.y,
+          z: typeof settings.cameraPosition?.z === 'number' ? settings.cameraPosition.z : defaultSettings.cameraPosition.z,
+        }
+      };
+
+      return validatedSettings;
     }
   });
 
@@ -133,7 +153,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           height={dimensions.height}
           graphData={{ nodes, links }}
           nodeLabel={(node: any) => node.name}
-          nodeRelSize={nodeRelSize}
+          nodeRelSize={settings.nodeSize}
           nodeVal={getNodeSize}
           nodeColor={getNodeColor}
           linkWidth={settings.linkWidth}
