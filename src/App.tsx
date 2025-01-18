@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Toaster } from "./components/ui/toaster";
 import { DesktopNav } from "./components/DesktopNav";
+import { BottomNav } from "./components/BottomNav";
 import Auth from "./pages/Auth";
 import Index from "./pages/Index";
 import NotesListPage from "./pages/NotesListPage";
@@ -40,8 +41,13 @@ function App() {
   return (
     <>
       <div className="min-h-screen bg-background w-full">
-        {isAuthenticated && <DesktopNav />}
-        <main className={`${isAuthenticated ? "pt-16 pb-4" : ""} px-2 md:px-8`}>
+        {isAuthenticated && (
+          <>
+            <DesktopNav />
+            <BottomNav />
+          </>
+        )}
+        <main className={`${isAuthenticated ? "pt-16 pb-20 md:pb-4" : ""} px-2 md:px-8`}>
           <Routes>
             <Route
               path="/auth"

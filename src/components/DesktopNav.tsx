@@ -1,5 +1,6 @@
 import { Home, StickyNote, Tags, Network, Settings, Timer } from "lucide-react";
 import { NavBar } from "@/components/ui/tubelight-navbar";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const navItems = [
   { name: "Home", url: "/", icon: Home },
@@ -11,6 +12,10 @@ const navItems = [
 ];
 
 export function DesktopNav() {
+  const isMobile = useIsMobile();
+  
+  if (isMobile) return null;
+  
   return (
     <div className="fixed top-0 left-0 right-0 z-50">
       <NavBar items={navItems} />
