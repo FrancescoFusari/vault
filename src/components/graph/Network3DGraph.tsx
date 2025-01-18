@@ -117,7 +117,9 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       const distance = (graphSettings.linkDistance || defaultSettings.linkDistance) * 3;
       console.log('Updating link distance to:', distance);
       fgRef.current.d3Force('link').distance(() => distance);
-      fgRef.current.d3Force('link').initialize(fgRef.current.graphData().links);
+      // Get the current graph data directly from the component's props
+      const currentData = { nodes, links };
+      fgRef.current.d3Force('link').initialize(currentData.links);
     }
   }, [graphSettings?.linkDistance]);
 
