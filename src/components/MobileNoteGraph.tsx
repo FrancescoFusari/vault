@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import { useTheme } from 'next-themes';
 import * as d3 from 'd3';
@@ -24,16 +24,14 @@ export const MobileNoteGraph = ({ notes, highlightedNoteId }: MobileNoteGraphPro
   const navigate = useNavigate();
   const { toast } = useToast();
   const dimensions = useGraphDimensions(containerRef, true);
-  const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [popoverOpen, setPopoverOpen] = useState(false);
 
   // Memoize graph data processing
-  useEffect(() => {
+  const graphData = useMemo(() => {
     const data = processGraphData(notes, highlightedNoteId, theme);
-    
-    // Optimize node sizes calculation
     const nodeConnections = new Map();
+    
     data.links.forEach(link => {
       nodeConnections.set(link.source, (nodeConnections.get(link.source) || 0) + 1);
       nodeConnections.set(link.target, (nodeConnections.get(link.target) || 0) + 1);
@@ -44,36 +42,41 @@ export const MobileNoteGraph = ({ notes, highlightedNoteId }: MobileNoteGraphPro
       val: Math.max(2, Math.min(5, 1 + (nodeConnections.get(node.id) || 0) * 0.5))
     }));
 
-    setGraphData(data);
+    return data;
   }, [notes, highlightedNoteId, theme]);
 
   // Optimize force simulation
   useEffect(() => {
-    if (graphRef.current) {
-      // Reduce simulation iterations for better performance
-      graphRef.current.d3Force('charge')
-        .strength(-100)
-        .distanceMax(200);
+    if (!graphRef.current) return;
 
-      graphRef.current.d3Force('link')
-        .distance(40)
-        .strength(0.2);
+    const fg = graphRef.current;
+    
+    // Optimize force parameters
+    fg.d3Force('charge')
+      .strength(-100)
+      .distanceMax(200);
 
-      // Add collision force with optimization
-      graphRef.current.d3Force('collision')
-        .radius(20)
-        .strength(0.7)
-        .iterations(1);
+    fg.d3Force('link')
+      .distance(40)
+      .strength(0.2);
 
-      // Optimize center force
-      graphRef.current.d3Force('center')
-        .strength(0.05);
+    fg.d3Force('collision')
+      .radius(20)
+      .strength(0.7)
+      .iterations(1);
 
-      // Initial zoom with delay for better performance
-      setTimeout(() => {
-        graphRef.current?.zoomToFit(250, 10);
-      }, 250);
-    }
+    fg.d3Force('center')
+      .strength(0.05);
+
+    // Delayed zoom fit for better performance
+    const timer = setTimeout(() => {
+      fg.zoomToFit(250, 10);
+    }, 250);
+
+    return () => {
+      clearTimeout(timer);
+      fg.pauseAnimation();
+    };
   }, []);
 
   // Memoize node click handler
@@ -99,6 +102,16 @@ export const MobileNoteGraph = ({ notes, highlightedNoteId }: MobileNoteGraphPro
     return notes.find(note => note.id === selectedNode.id);
   }, [selectedNode, notes]);
 
+  // Memoize node color getter
+  const getNodeColor = useCallback((node: GraphNode) => {
+    if (node.id === highlightedNoteId) return '#f43f5e';
+    switch (node.type) {
+      case 'note': return theme === 'dark' ? '#94a3b8' : '#475569';
+      case 'category': return theme === 'dark' ? '#f59e0b' : '#d97706';
+      case 'tag': return theme === 'dark' ? '#22c55e' : '#16a34a';
+    }
+  }, [highlightedNoteId, theme]);
+
   return (
     <div 
       ref={containerRef} 
@@ -115,15 +128,7 @@ export const MobileNoteGraph = ({ notes, highlightedNoteId }: MobileNoteGraphPro
         maxZoom={8}
         enableZoomInteraction={true}
         enablePanInteraction={true}
-        nodeColor={(node: any) => {
-          const n = node as GraphNode;
-          if (n.id === highlightedNoteId) return '#f43f5e';
-          switch (n.type) {
-            case 'note': return theme === 'dark' ? '#94a3b8' : '#475569';
-            case 'category': return theme === 'dark' ? '#f59e0b' : '#d97706';
-            case 'tag': return theme === 'dark' ? '#22c55e' : '#16a34a';
-          }
-        }}
+        nodeColor={getNodeColor}
         linkColor={() => theme === 'dark' ? '#334155' : '#cbd5e1'}
         onNodeClick={handleNodeClick}
         backgroundColor={theme === 'dark' ? '#1e293b' : '#f8fafc'}
@@ -134,7 +139,7 @@ export const MobileNoteGraph = ({ notes, highlightedNoteId }: MobileNoteGraphPro
         onEngineStop={() => {
           graphRef.current?.zoomToFit(250, 10);
         }}
-        warmupTicks={50}
+        warmupTicks={20}
         d3AlphaDecay={0.02}
         d3VelocityDecay={0.3}
       />

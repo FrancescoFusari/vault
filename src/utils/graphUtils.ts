@@ -8,30 +8,34 @@ export const processGraphData = (
   const nodes: GraphNode[] = [];
   const links: GraphLink[] = [];
   const nodeSet = new Set<string>();
+  const nodeMap = new Map<string, GraphNode>();
 
-  // Create nodes for notes and their tags
+  // Process notes in a single pass
   notes.forEach(note => {
-    // Add note node if it doesn't exist
     if (!nodeSet.has(note.id)) {
-      nodes.push({
+      const noteNode: GraphNode = {
         id: note.id,
         name: note.tags[0] || note.content.substring(0, 30) + '...',
         val: 2,
         type: 'note',
-      });
+      };
+      nodes.push(noteNode);
       nodeSet.add(note.id);
+      nodeMap.set(note.id, noteNode);
     }
 
-    // Add tag nodes and create links
+    // Process tags in the same loop
     note.tags.forEach(tag => {
       if (!nodeSet.has(tag)) {
-        nodes.push({
+        const tagNode: GraphNode = {
           id: tag,
           name: tag,
           val: 1.5,
           type: 'tag',
-        });
+        };
+        nodes.push(tagNode);
         nodeSet.add(tag);
+        nodeMap.set(tag, tagNode);
       }
       links.push({ source: note.id, target: tag });
     });

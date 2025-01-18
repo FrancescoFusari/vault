@@ -7,6 +7,12 @@ export interface NetworkNode {
   type: 'note' | 'tag';
   value: number;
   originalNote?: Note;
+  x?: number;
+  y?: number;
+  z?: number;
+  fx?: number;
+  fy?: number;
+  fz?: number;
 }
 
 export interface NetworkLink {
@@ -28,7 +34,7 @@ export const processNetworkData = (notes: Note[]): NetworkData => {
   const nodeMap = new Map<string, NetworkNode>();
   const tagUsageCount = new Map<string, number>();
 
-  // Process notes and create nodes
+  // Process notes in a single pass
   notes.forEach(note => {
     const noteNode: NetworkNode = {
       id: `note-${note.id}`,
@@ -40,10 +46,11 @@ export const processNetworkData = (notes: Note[]): NetworkData => {
     nodes.push(noteNode);
     nodeMap.set(noteNode.id, noteNode);
 
-    // Create tag nodes and links
+    // Process tags in the same loop
     note.tags.forEach(tag => {
       const tagId = `tag-${tag}`;
-      tagUsageCount.set(tag, (tagUsageCount.get(tag) || 0) + 1);
+      const currentCount = (tagUsageCount.get(tag) || 0) + 1;
+      tagUsageCount.set(tag, currentCount);
       
       let tagNode = nodeMap.get(tagId);
       if (!tagNode) {
