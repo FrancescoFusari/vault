@@ -2,7 +2,6 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Toaster } from "./components/ui/toaster";
 import { DesktopNav } from "./components/DesktopNav";
-import { useIsMobile } from "./hooks/use-mobile";
 import Auth from "./pages/Auth";
 import Index from "./pages/Index";
 import NotesListPage from "./pages/NotesListPage";
@@ -18,7 +17,6 @@ import "./App.css";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Check initial auth state
@@ -43,7 +41,7 @@ function App() {
     <>
       <div className="min-h-screen bg-background w-full">
         {isAuthenticated && <DesktopNav />}
-        <main className={`${isAuthenticated ? `${isMobile ? "pb-20" : "pt-16"} pb-4` : ""} px-2 md:px-8`}>
+        <main className={`${isAuthenticated ? "pt-16 pb-4" : ""} px-2 md:px-8`}>
           <Routes>
             <Route
               path="/auth"
