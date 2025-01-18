@@ -1,120 +1,114 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from '@supabase/supabase-js';
+import { corsHeaders } from '../_shared/cors.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+const openAiKey = Deno.env.get('OPENAI_API_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL');
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const { emailId, userId } = await req.json();
-    console.log('Processing email:', { emailId, userId });
+    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+    
+    const { emailId } = await req.json();
+    
+    if (!emailId) {
+      throw new Error('Email ID is required');
+    }
 
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    );
-
-    // Fetch email details
-    const { data: email, error: emailError } = await supabaseClient
+    // Fetch email details from the queue
+    const { data: emailData, error: emailError } = await supabase
       .from('email_processing_queue')
       .select('*')
       .eq('id', emailId)
       .single();
 
-    if (emailError || !email) {
-      console.error('Error fetching email:', emailError);
-      throw new Error('Email not found');
+    if (emailError || !emailData) {
+      throw new Error('Failed to fetch email data');
     }
 
-    console.log('Email fetched:', email);
+    // Process email content with OpenAI
+    const prompt = `
+      Analyze this email and extract key information:
+      
+      Subject: ${emailData.subject}
+      From: ${emailData.sender}
+      Content: ${emailData.email_body}
+      
+      Provide a JSON response with:
+      1. tags: Array of relevant tags/keywords
+      2. category: Main category or topic
+      3. metadata: Object containing:
+         - key_points: Array of main points
+         - action_items: Array of action items
+         - important_dates: Array of any mentioned dates
+    `;
 
-    // Analyze content with OpenAI
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
-    }
-
-    const analysisResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    const openAiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${openAiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4',
         messages: [
           {
             role: 'system',
-            content: `Analyze the email content and provide:
-            1. Relevant tags (including the subject as first tag)
-            2. Any key metadata or insights
-
-            Return a JSON object in this exact format:
-            {
-              "tags": ["string"],
-              "metadata": {
-                "key_points": ["string"],
-                "action_items": ["string"],
-                "important_dates": ["string"]
-              }
-            }`
+            content: 'You are a helpful assistant that analyzes emails and extracts structured information.'
           },
           {
             role: 'user',
-            content: `Subject: ${email.subject}\nFrom: ${email.sender}\n\nContent:\n${email.email_body || 'No content available'}`
+            content: prompt
           }
         ],
         temperature: 0.7,
-        max_tokens: 1000
-      }),
+      })
     });
 
-    if (!analysisResponse.ok) {
-      console.error('OpenAI API error:', await analysisResponse.text());
-      throw new Error(`OpenAI API error: ${analysisResponse.statusText}`);
+    if (!openAiResponse.ok) {
+      console.error('OpenAI API error:', await openAiResponse.text());
+      throw new Error('Failed to process with OpenAI');
     }
 
-    const analysisData = await analysisResponse.json();
-    console.log('OpenAI analysis response:', analysisData);
-
-    if (!analysisData.choices?.[0]?.message?.content) {
-      console.error('Unexpected OpenAI response format:', analysisData);
-      throw new Error('Unexpected response format from OpenAI');
+    const openAiData = await openAiResponse.json();
+    
+    if (!openAiData.choices?.[0]?.message?.content) {
+      throw new Error('Invalid OpenAI response format');
     }
+
+    const content = openAiData.choices[0].message.content;
+    console.log('OpenAI response:', content);
 
     let analysis;
     try {
-      const content = analysisData.choices[0].message.content.trim();
       analysis = JSON.parse(content);
-      
-      // Validate the response format
-      if (!Array.isArray(analysis.tags) || !analysis.metadata || 
-          !Array.isArray(analysis.metadata.key_points) || 
-          !Array.isArray(analysis.metadata.action_items) || 
-          !Array.isArray(analysis.metadata.important_dates)) {
-        throw new Error('Invalid response structure');
-      }
-      
-      console.log('Parsed analysis:', analysis);
-    } catch (error) {
-      console.error('Error parsing OpenAI response:', error);
-      throw new Error('Invalid response format from OpenAI');
+    } catch (e) {
+      console.error('Failed to parse OpenAI response:', e);
+      throw new Error('Invalid JSON response from OpenAI');
     }
 
-    // Create note
-    const { data: note, error: noteError } = await supabaseClient
+    // Basic validation of the analysis structure
+    if (!analysis || !Array.isArray(analysis.tags) || typeof analysis.category !== 'string' || !analysis.metadata) {
+      console.error('Invalid analysis structure:', analysis);
+      throw new Error('Invalid response structure from OpenAI');
+    }
+
+    // Create note from processed email
+    const { data: note, error: noteError } = await supabase
       .from('notes')
       .insert({
-        user_id: userId,
-        content: email.email_body || 'No content available',
-        category: 'Email Note',
+        user_id: emailData.user_id,
+        content: `
+          From: ${emailData.sender}
+          Subject: ${emailData.subject}
+          
+          ${emailData.email_body}
+        `,
+        category: analysis.category,
         tags: analysis.tags,
         input_type: 'email',
         metadata: analysis.metadata
@@ -123,22 +117,20 @@ serve(async (req) => {
       .single();
 
     if (noteError) {
-      console.error('Error creating note:', noteError);
-      throw noteError;
+      throw new Error('Failed to create note');
     }
 
-    // Update email status
-    const { error: updateError } = await supabaseClient
+    // Update email processing status
+    const { error: updateError } = await supabase
       .from('email_processing_queue')
       .update({
-        status: 'processed',
+        status: 'completed',
         processed_at: new Date().toISOString()
       })
       .eq('id', emailId);
 
     if (updateError) {
-      console.error('Error updating email status:', updateError);
-      throw updateError;
+      console.error('Failed to update email status:', updateError);
     }
 
     return new Response(
@@ -146,9 +138,11 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error in process-email-to-note function:', error);
+    console.error('Processing error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : 'Unknown error occurred' 
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
