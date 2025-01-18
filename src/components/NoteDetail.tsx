@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { CalendarIcon } from "@radix-ui/react-icons";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, RefreshCw, X } from "lucide-react";
+import { ArrowLeft, Plus, RefreshCw, X, Link2Icon, ImageIcon, MailIcon, TextIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "./ui/use-toast";
 import { useState } from "react";
@@ -17,6 +17,7 @@ interface NoteDetailProps {
     category: string;
     tags: string[];
     created_at: string;
+    input_type?: string;
     source_image_path?: string;
     metadata?: {
       technical_details?: string;
@@ -40,6 +41,32 @@ export const NoteDetail = ({ note }: NoteDetailProps) => {
   const imageUrl = note.source_image_path 
     ? supabase.storage.from('note_images').getPublicUrl(note.source_image_path).data.publicUrl
     : null;
+
+  const getTypeIcon = (type?: string) => {
+    switch (type?.toLowerCase()) {
+      case 'url':
+        return <Link2Icon className="h-4 w-4" />;
+      case 'image':
+        return <ImageIcon className="h-4 w-4" />;
+      case 'email':
+        return <MailIcon className="h-4 w-4" />;
+      default:
+        return <TextIcon className="h-4 w-4" />;
+    }
+  };
+
+  const getTypeLabel = (type?: string) => {
+    switch (type?.toLowerCase()) {
+      case 'url':
+        return 'URL Note';
+      case 'image':
+        return 'Image Note';
+      case 'email':
+        return 'Email Note';
+      default:
+        return 'Text Note';
+    }
+  };
 
   const updateNoteMutation = useMutation({
     mutationFn: async (tags: string[]) => {
@@ -142,6 +169,13 @@ export const NoteDetail = ({ note }: NoteDetailProps) => {
           <div className="flex items-center space-x-2">
             <Badge variant="outline" className="text-primary text-lg font-semibold">
               {note.category}
+            </Badge>
+            <Badge 
+              variant="secondary"
+              className="flex items-center gap-1"
+            >
+              {getTypeIcon(note.input_type)}
+              {getTypeLabel(note.input_type)}
             </Badge>
             <Button 
               variant="ghost" 

@@ -1,6 +1,6 @@
 import { Card, CardHeader } from "@/components/ui/card";
 import { CalendarIcon } from "@radix-ui/react-icons";
-import { Link2Icon, ImageIcon } from "lucide-react";
+import { Link2Icon, ImageIcon, MailIcon, TextIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 
@@ -28,6 +28,32 @@ export const NoteCard = ({ note }: NoteCardProps) => {
   // Use first tag as title, or first line of content if no tags
   const title = note.tags[0] || note.content.split('\n')[0].substring(0, 50) + (note.content.length > 50 ? '...' : '');
 
+  const getTypeIcon = (type?: string) => {
+    switch (type?.toLowerCase()) {
+      case 'url':
+        return <Link2Icon className="h-3 w-3" />;
+      case 'image':
+        return <ImageIcon className="h-3 w-3" />;
+      case 'email':
+        return <MailIcon className="h-3 w-3" />;
+      default:
+        return <TextIcon className="h-3 w-3" />;
+    }
+  };
+
+  const getTypeLabel = (type?: string) => {
+    switch (type?.toLowerCase()) {
+      case 'url':
+        return 'URL Note';
+      case 'image':
+        return 'Image Note';
+      case 'email':
+        return 'Email Note';
+      default:
+        return 'Text Note';
+    }
+  };
+
   return (
     <Card 
       className="note-card cursor-pointer hover:bg-accent transition-colors"
@@ -43,6 +69,13 @@ export const NoteCard = ({ note }: NoteCardProps) => {
         </div>
         <p className="text-sm text-muted-foreground">{truncatedContent}</p>
         <div className="flex flex-wrap gap-1">
+          <Badge 
+            variant="secondary"
+            className="text-xs flex items-center gap-1"
+          >
+            {getTypeIcon(note.input_type)}
+            {getTypeLabel(note.input_type)}
+          </Badge>
           {note.tags.slice(1, 4).map(tag => (
             <Badge 
               key={tag}
@@ -52,24 +85,6 @@ export const NoteCard = ({ note }: NoteCardProps) => {
               {tag}
             </Badge>
           ))}
-          {note.source_url && (
-            <Badge 
-              variant="secondary"
-              className="text-xs flex items-center gap-1"
-            >
-              <Link2Icon className="h-3 w-3" />
-              URL
-            </Badge>
-          )}
-          {note.source_image_path && (
-            <Badge 
-              variant="secondary"
-              className="text-xs flex items-center gap-1"
-            >
-              <ImageIcon className="h-3 w-3" />
-              Image
-            </Badge>
-          )}
         </div>
       </CardHeader>
     </Card>
