@@ -15,8 +15,8 @@ const defaultSettings = {
   enableNodeDrag: true,
   enableNavigationControls: true,
   showNavInfo: true,
-  linkDistance: 360, // Increased from 120 to 360 (3x) as permanent default
-  cameraPosition: { x: 5000, y: 5000, z: 5000 } // Added default camera position
+  linkDistance: 1024, // Updated from 360 to 1024
+  cameraPosition: { x: 5000, y: 5000, z: 5000 }
 };
 
 export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
