@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import ForceGraph3D from '3d-force-graph';
 import SpriteText from 'three-spritetext';
 import { useTheme } from 'next-themes';
+import * as d3 from 'd3';
 
 interface Node {
   id: string;
@@ -35,7 +36,7 @@ interface Network3DGraphProps {
 }
 
 const Network3DGraph = ({ data, settings }: Network3DGraphProps) => {
-  const fgRef = useRef();
+  const fgRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { theme } = useTheme();
 
@@ -57,7 +58,9 @@ const Network3DGraph = ({ data, settings }: Network3DGraphProps) => {
   }, [navigate]);
 
   useEffect(() => {
-    const fg = ForceGraph3D()(fgRef.current)
+    if (!fgRef.current) return;
+
+    const fg = new ForceGraph3D()(fgRef.current)
       .graphData(data)
       .nodeVal((node: any) => node.val * settings.nodeSize)
       .nodeLabel('name')
