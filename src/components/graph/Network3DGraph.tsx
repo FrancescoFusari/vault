@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback, useMemo } from 'react';
 import ForceGraph3D, { ForceGraphMethods } from 'react-force-graph-3d';
 import { NetworkNode, NetworkLink, processNetworkData } from '@/utils/networkGraphUtils';
 import { Note } from '@/types/graph';
@@ -12,9 +12,12 @@ interface Network3DGraphProps {
 
 export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const fgRef = useRef<ForceGraphMethods>();
-  const graphData = processNetworkData(notes);
+  
+  // Memoize graph data processing
+  const graphData = useMemo(() => processNetworkData(notes), [notes]);
   const { nodes, links } = graphData;
 
+  // Optimize force simulation
   useEffect(() => {
     requestAnimationFrame(() => {
       const fg = fgRef.current;
@@ -23,66 +26,79 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       const simulation = fg.d3Force('simulation');
       if (!simulation) return;
 
-      // Reduce force strengths for gentler interactions
+      // Optimize force parameters
       simulation
-        .force('link', d3.forceLink().id((d: any) => d.id))
-        .force('charge', d3.forceManyBody())
-        .force('center', d3.forceCenter())
-        .force('collision', d3.forceCollide());
-
-      const linkForce = simulation.force('link');
-      if (linkForce) {
-        linkForce
-          .distance(30) // Reduced from 120
-          .strength(0.2) // Reduced from 0.3 for gentler movement
-          .iterations(1);
-      }
-
-      const chargeForce = simulation.force('charge');
-      if (chargeForce) {
-        chargeForce.strength(-5); // Reduced from -10 for gentler repulsion
-      }
-
-      const centerForce = simulation.force('center');
-      if (centerForce) {
-        centerForce.strength(1);
-      }
-
-      const collisionForce = simulation.force('collision');
-      if (collisionForce) {
-        collisionForce
+        .force('link', d3.forceLink().id((d: any) => d.id)
+          .distance(25)
+          .strength(0.3))
+        .force('charge', d3.forceManyBody()
+          .strength(-8)
+          .distanceMax(150))
+        .force('center', d3.forceCenter()
+          .strength(0.05))
+        .force('collision', d3.forceCollide()
           .radius(5)
-          .strength(0.2); // Added strength parameter for softer collisions
-      }
+          .strength(0.2)
+          .iterations(1));
 
-      // Add sphere boundary force with reduced radius
+      // Add optimized sphere boundary force
       simulation.force('sphere', () => {
+        const targetRadius = 50;
         nodes.forEach((node: any) => {
-          const distance = Math.sqrt(
-            node.x * node.x + 
-            node.y * node.y + 
-            node.z * node.z
-          );
+          const distSq = node.x * node.x + node.y * node.y + node.z * node.z;
+          if (distSq === 0) return;
           
-          if (distance > 0) {
-            const targetRadius = 60;
-            const scale = targetRadius / distance;
-            
-            node.x *= scale;
-            node.y *= scale;
-            node.z *= scale;
-          }
+          const dist = Math.sqrt(distSq);
+          const scale = targetRadius / dist;
+          
+          node.x *= scale;
+          node.y *= scale;
+          node.z *= scale;
         });
       });
+
+      // Reduce initial movement
+      simulation.alpha(0.3).alphaDecay(0.02);
     });
   }, [nodes]);
 
-  const handleNodeDragEnd = (node: any) => {
-    // Fix node position after drag
+  // Memoize node drag handler
+  const handleNodeDragEnd = useCallback((node: any) => {
     node.fx = node.x;
     node.fy = node.y;
     node.fz = node.z;
-  };
+  }, []);
+
+  // Memoize node object creation
+  const createNodeObject = useCallback((node: any) => {
+    if (node.type === 'note') {
+      const group = new THREE.Group();
+      
+      const sphere = new THREE.Mesh(
+        new THREE.SphereGeometry(3),
+        new THREE.MeshLambertMaterial({ color: '#EF7234' })
+      );
+      group.add(sphere);
+      
+      const sprite = new SpriteText(node.name);
+      sprite.color = '#ffffff';
+      sprite.textHeight = 2;
+      sprite.backgroundColor = 'rgba(0,0,0,0.5)';
+      sprite.padding = 1;
+      sprite.borderRadius = 2;
+      
+      sprite.position.set(4, 0, 0);
+      group.add(sprite);
+      
+      return group;
+    } else if (node.type === 'tag') {
+      return new THREE.Mesh(
+        new THREE.SphereGeometry(1.5),
+        new THREE.MeshLambertMaterial({ color: '#E0E0D7' })
+      );
+    }
+    return null;
+  }, []);
 
   return (
     <div className="w-full h-full">
@@ -90,51 +106,22 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         ref={fgRef}
         graphData={{ nodes, links }}
         nodeLabel={(node: any) => node.name}
-        nodeThreeObject={(node: any) => {
-          if (node.type === 'note') {
-            const group = new THREE.Group();
-            
-            // Create a larger sphere for note nodes
-            const sphere = new THREE.Mesh(
-              new THREE.SphereGeometry(4),
-              new THREE.MeshLambertMaterial({ color: '#EF7234' })
-            );
-            group.add(sphere);
-            
-            // Create and position the text label
-            const sprite = new SpriteText(node.name);
-            sprite.color = '#ffffff';
-            sprite.textHeight = 3;
-            sprite.backgroundColor = 'rgba(0,0,0,0.5)';
-            sprite.padding = 2;
-            sprite.borderRadius = 3;
-            
-            group.add(sprite);
-            sprite.position.set(5, 0, 0);
-            
-            return group;
-          } else if (node.type === 'tag') {
-            // Create smaller spheres for tag nodes
-            const sphere = new THREE.Mesh(
-              new THREE.SphereGeometry(1.5),
-              new THREE.MeshLambertMaterial({ color: '#E0E0D7' })
-            );
-            return sphere;
-          }
-          return null;
-        }}
+        nodeThreeObject={createNodeObject}
         nodeColor={(node: any) => node.type === 'note' ? '#EF7234' : '#E0E0D7'}
         backgroundColor="#1B1B1F"
         linkColor={() => "#8E9196"}
-        linkWidth={0.3}
-        linkDirectionalParticles={1}
-        linkDirectionalParticleWidth={0.2}
+        linkWidth={0.2}
+        linkDirectionalParticles={0}
         enableNavigationControls={true}
         enableNodeDrag={true}
         onNodeDragEnd={handleNodeDragEnd}
         forceEngine="d3"
-        cooldownTime={Infinity}
-        nodeResolution={32}
+        cooldownTime={2000}
+        cooldownTicks={100}
+        warmupTicks={50}
+        nodeResolution={16}
+        d3AlphaDecay={0.02}
+        d3VelocityDecay={0.3}
       />
     </div>
   );

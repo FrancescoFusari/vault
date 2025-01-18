@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import { useTheme } from 'next-themes';
 import * as d3 from 'd3';
@@ -28,40 +28,56 @@ export const MobileNoteGraph = ({ notes, highlightedNoteId }: MobileNoteGraphPro
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [popoverOpen, setPopoverOpen] = useState(false);
 
-  // Process graph data with emphasis on frequently connected nodes
+  // Memoize graph data processing
   useEffect(() => {
     const data = processGraphData(notes, highlightedNoteId, theme);
     
-    // Adjust node sizes based on connection count
-    data.nodes = data.nodes.map(node => {
-      const connectionCount = data.links.filter(
-        link => link.source === node.id || link.target === node.id
-      ).length;
-      return {
-        ...node,
-        val: Math.max(2, Math.min(5, 1 + connectionCount * 0.5))
-      };
+    // Optimize node sizes calculation
+    const nodeConnections = new Map();
+    data.links.forEach(link => {
+      nodeConnections.set(link.source, (nodeConnections.get(link.source) || 0) + 1);
+      nodeConnections.set(link.target, (nodeConnections.get(link.target) || 0) + 1);
     });
+
+    data.nodes = data.nodes.map(node => ({
+      ...node,
+      val: Math.max(2, Math.min(5, 1 + (nodeConnections.get(node.id) || 0) * 0.5))
+    }));
 
     setGraphData(data);
   }, [notes, highlightedNoteId, theme]);
 
-  // Initialize and configure the force graph
+  // Optimize force simulation
   useEffect(() => {
     if (graphRef.current) {
-      // Optimize force simulation for mobile
-      graphRef.current.d3Force('charge').strength(-150);
-      graphRef.current.d3Force('link').distance(60);
-      graphRef.current.d3Force('collision', d3.forceCollide(25));
-      
-      // Center the graph and adjust initial zoom to show all nodes
+      // Reduce simulation iterations for better performance
+      graphRef.current.d3Force('charge')
+        .strength(-100)
+        .distanceMax(200);
+
+      graphRef.current.d3Force('link')
+        .distance(40)
+        .strength(0.2);
+
+      // Add collision force with optimization
+      graphRef.current.d3Force('collision')
+        .radius(20)
+        .strength(0.7)
+        .iterations(1);
+
+      // Optimize center force
+      graphRef.current.d3Force('center')
+        .strength(0.05);
+
+      // Initial zoom with delay for better performance
       setTimeout(() => {
-        graphRef.current.zoomToFit(400, 10);
-      }, 100);
+        graphRef.current?.zoomToFit(250, 10);
+      }, 250);
     }
   }, []);
 
-  const handleNodeClick = (node: GraphNode) => {
+  // Memoize node click handler
+  const handleNodeClick = useCallback((node: GraphNode) => {
     if (node.type === 'note') {
       setSelectedNode(node);
       setPopoverOpen(true);
@@ -75,12 +91,13 @@ export const MobileNoteGraph = ({ notes, highlightedNoteId }: MobileNoteGraphPro
         } notes`,
       });
     }
-  };
+  }, [graphData.links, toast]);
 
-  const getSelectedNote = () => {
+  // Memoize selected note getter
+  const getSelectedNote = useCallback(() => {
     if (!selectedNode || selectedNode.type !== 'note') return null;
     return notes.find(note => note.id === selectedNode.id);
-  };
+  }, [selectedNode, notes]);
 
   return (
     <div 
@@ -93,7 +110,7 @@ export const MobileNoteGraph = ({ notes, highlightedNoteId }: MobileNoteGraphPro
         graphData={graphData}
         nodeLabel="name"
         nodeRelSize={6}
-        linkWidth={2}
+        linkWidth={1}
         minZoom={0.5}
         maxZoom={8}
         enableZoomInteraction={true}
@@ -113,9 +130,13 @@ export const MobileNoteGraph = ({ notes, highlightedNoteId }: MobileNoteGraphPro
         width={dimensions.width}
         height={dimensions.height}
         cooldownTicks={50}
+        cooldownTime={2000}
         onEngineStop={() => {
-          graphRef.current?.zoomToFit(400, 10);
+          graphRef.current?.zoomToFit(250, 10);
         }}
+        warmupTicks={50}
+        d3AlphaDecay={0.02}
+        d3VelocityDecay={0.3}
       />
       {selectedNode && selectedNode.type === 'note' && (
         <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
