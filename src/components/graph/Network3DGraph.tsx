@@ -49,7 +49,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       if (error && error.code !== 'PGRST116') throw error;
       
       if (!data?.settings) {
-        // If no settings exist, create default settings
         const { error: insertError } = await supabase
           .from('graph_settings')
           .insert({
@@ -61,26 +60,13 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         return defaultSettings;
       }
       
-      const settings = data.settings as Record<keyof Network3DSettings, any>;
-      return {
-        nodeSize: Number(settings.nodeSize) || defaultSettings.nodeSize,
-        linkWidth: Number(settings.linkWidth) || defaultSettings.linkWidth,
-        backgroundColor: String(settings.backgroundColor) || defaultSettings.backgroundColor,
-        enableNodeDrag: Boolean(settings.enableNodeDrag ?? defaultSettings.enableNodeDrag),
-        enableNavigationControls: Boolean(settings.enableNavigationControls ?? defaultSettings.enableNavigationControls),
-        showNavInfo: Boolean(settings.showNavInfo ?? defaultSettings.showNavInfo),
-        linkLength: Number(settings.linkLength) || defaultSettings.linkLength,
-        enablePointerInteraction: Boolean(settings.enablePointerInteraction ?? defaultSettings.enablePointerInteraction),
-        enableNodeFixing: Boolean(settings.enableNodeFixing ?? defaultSettings.enableNodeFixing),
-        cameraDistance: Number(settings.cameraDistance) || defaultSettings.cameraDistance,
-        rotationSpeed: Number(settings.rotationSpeed) || defaultSettings.rotationSpeed,
-        tiltAngle: Number(settings.tiltAngle) || defaultSettings.tiltAngle
-      };
+      return data.settings as Network3DSettings;
     },
     initialData: defaultSettings
   });
 
   const saveSettings = async (key: keyof Network3DSettings, value: any) => {
+    console.log('Saving setting:', key, value);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
@@ -119,56 +105,63 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     };
   }, []);
 
+  // Apply settings when they change
   useEffect(() => {
-    if (fgRef.current && graphSettings && !isInitialized) {
-      // Configure the force simulation
-      const distance = (graphSettings.linkLength || defaultSettings.linkLength) * 3;
-      console.log('Setting link distance to:', distance);
+    if (fgRef.current && graphSettings) {
+      console.log('Applying settings:', graphSettings);
       
+      // Update force simulation settings
+      const distance = graphSettings.linkLength * 3;
       fgRef.current.d3Force('link').distance(() => distance);
-      fgRef.current.controls().enableDamping = true;
-      fgRef.current.controls().dampingFactor = 0.1;
-      fgRef.current.controls().enableZoom = true;
       
-      // Set initial camera position
-      const cameraDistance = graphSettings.cameraDistance || defaultSettings.cameraDistance;
-      console.log('Setting camera distance to:', cameraDistance);
-      fgRef.current.camera().position.set(cameraDistance, cameraDistance, cameraDistance);
-      fgRef.current.camera().lookAt(0, 0, 0);
+      // Update camera settings
+      const camera = fgRef.current.camera();
+      camera.position.set(
+        graphSettings.cameraDistance,
+        graphSettings.cameraDistance,
+        graphSettings.cameraDistance
+      );
+      camera.lookAt(0, 0, 0);
 
-      // Set up orbital rotation with tilt
+      // Update scene rotation
       const scene = fgRef.current.scene();
-      const tiltAngle = (graphSettings.tiltAngle || defaultSettings.tiltAngle) * Math.PI / 180;
-      scene.rotation.x = tiltAngle;
-      
-      // Start the orbital rotation animation
-      const animate = () => {
-        if (fgRef.current) {
-          rotationRef.current += (graphSettings.rotationSpeed || defaultSettings.rotationSpeed);
-          scene.rotation.y = rotationRef.current;
-          requestAnimationFrame(animate);
-        }
-      };
-      animate();
-      
-      setIsInitialized(true);
-    }
-  }, [graphSettings, isInitialized]);
+      scene.rotation.x = (graphSettings.tiltAngle * Math.PI) / 180;
 
-  // Reset force simulation when settings change
-  useEffect(() => {
-    if (fgRef.current && graphSettings && isInitialized) {
-      const distance = (graphSettings.linkLength || defaultSettings.linkLength) * 3;
-      console.log('Updating link distance to:', distance);
-      fgRef.current.d3Force('link').distance(() => distance);
-      const { nodes, links } = processNetworkData(notes);
-      fgRef.current.d3Force('link').initialize(links);
+      // Update controls
+      const controls = fgRef.current.controls();
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.1;
+      controls.enabled = graphSettings.enableNavigationControls;
+      
+      // Restart simulation with new settings
+      fgRef.current.d3ReheatSimulation();
     }
-  }, [graphSettings?.linkLength, notes]);
+  }, [graphSettings]);
+
+  // Handle rotation animation
+  useEffect(() => {
+    let animationFrameId: number;
+    
+    const animate = () => {
+      if (fgRef.current && graphSettings.rotationSpeed > 0) {
+        rotationRef.current += graphSettings.rotationSpeed;
+        fgRef.current.scene().rotation.y = rotationRef.current;
+        animationFrameId = requestAnimationFrame(animate);
+      }
+    };
+
+    animate();
+    
+    return () => {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [graphSettings.rotationSpeed]);
 
   const { nodes, links, tagUsageCount, colorScale } = processNetworkData(notes);
 
-  const nodeRelSize = graphSettings?.nodeSize || defaultSettings.nodeSize;
+  const nodeRelSize = graphSettings.nodeSize;
   const nodeSizeScale = d3.scaleLinear()
     .domain([0, Math.max(...Array.from(tagUsageCount.values()))])
     .range([nodeRelSize, nodeRelSize * 2]);
@@ -205,11 +198,21 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           nodeRelSize={nodeRelSize}
           nodeVal={getNodeSize}
           nodeColor={getNodeColor}
-          linkWidth={graphSettings?.linkWidth || defaultSettings.linkWidth}
-          backgroundColor={graphSettings?.backgroundColor || defaultSettings.backgroundColor}
-          enableNodeDrag={graphSettings?.enableNodeDrag ?? defaultSettings.enableNodeDrag}
-          enableNavigationControls={graphSettings?.enableNavigationControls ?? defaultSettings.enableNavigationControls}
-          showNavInfo={graphSettings?.showNavInfo ?? defaultSettings.showNavInfo}
+          linkWidth={graphSettings.linkWidth}
+          backgroundColor={graphSettings.backgroundColor}
+          enableNodeDrag={graphSettings.enableNodeDrag}
+          enableNavigationControls={graphSettings.enableNavigationControls}
+          showNavInfo={graphSettings.showNavInfo}
+          enablePointerInteraction={graphSettings.enablePointerInteraction}
+          onNodeDragEnd={node => {
+            if (graphSettings.enableNodeFixing) {
+              // Fix node position after drag
+              const n = node as NetworkNode;
+              n.fx = n.x;
+              n.fy = n.y;
+              n.fz = n.z;
+            }
+          }}
           d3VelocityDecay={0.1}
           warmupTicks={50}
         />
