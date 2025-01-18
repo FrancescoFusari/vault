@@ -33,12 +33,12 @@ export const Network3DSettingsDialog = ({ settings, onSettingChange }: Network3D
         <Button 
           variant="outline" 
           size="icon" 
-          className="absolute top-20 right-4 z-10"
+          className="fixed top-20 right-4 z-50"
         >
           <Settings className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="z-[100] sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Graph Settings</DialogTitle>
         </DialogHeader>
