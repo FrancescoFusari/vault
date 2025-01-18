@@ -47,16 +47,29 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   useEffect(() => {
     if (fgRef.current) {
       console.log('Setting link distance to:', defaultSettings.linkDistance);
-      fgRef.current.d3Force('link').distance(() => defaultSettings.linkDistance);
       
-      fgRef.current.controls().enableDamping = true;
-      fgRef.current.controls().dampingFactor = 0.1;
-      fgRef.current.controls().enableZoom = true;
+      // Optimize force simulation
+      const fg = fgRef.current;
+      fg.d3Force('link').distance(() => defaultSettings.linkDistance);
+      
+      // Reduce charge strength for better performance
+      fg.d3Force('charge').strength(-50);
+      
+      // Add collision force to prevent node overlap
+      fg.d3Force('collision', d3.forceCollide(10));
+      
+      // Optimize rendering
+      fg.controls().enableDamping = true;
+      fg.controls().dampingFactor = 0.1;
+      fg.controls().enableZoom = true;
+      
+      // Reduce WebGL texture quality for better performance
+      fg.renderer().setPixelRatio(Math.min(2, window.devicePixelRatio));
       
       console.log('Setting camera position to:', defaultSettings.cameraPosition);
       const { x, y, z } = defaultSettings.cameraPosition;
-      fgRef.current.camera().position.set(x, y, z);
-      fgRef.current.camera().lookAt(0, 0, 0);
+      fg.camera().position.set(x, y, z);
+      fg.camera().lookAt(0, 0, 0);
     }
   }, []);
 
@@ -109,6 +122,8 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           showNavInfo={defaultSettings.showNavInfo}
           d3VelocityDecay={0.1}
           warmupTicks={50}
+          cooldownTime={2000}
+          cooldownTicks={100}
         />
       )}
     </div>
