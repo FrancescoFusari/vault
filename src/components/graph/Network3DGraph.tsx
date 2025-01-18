@@ -68,7 +68,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       sprite.borderRadius = 2;
       
       group.add(sprite);
-      sprite.translateX(4);
+      sprite.position.x = 4; // Fixed: Using proper Three.js position property
       
       return group;
     } else if (node.type === 'tag') {
