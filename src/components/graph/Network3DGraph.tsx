@@ -87,10 +87,9 @@ export const Network3DGraph = forwardRef<ForceGraphMethods, Network3DGraphProps>
         sprite.backgroundColor = 'rgba(0,0,0,0.5)';
         sprite.padding = isMobile ? 0.5 : 1;
         sprite.borderRadius = 2;
+        sprite.position.set(4, 0, 0); // Use position.set instead of translateX
         
-        const spritePos = new THREE.Vector3(4, 0, 0);
         group.add(sprite);
-        sprite.translateX(spritePos.x);
         
         return group;
       } else if (node.type === 'tag') {
@@ -112,10 +111,9 @@ export const Network3DGraph = forwardRef<ForceGraphMethods, Network3DGraphProps>
         sprite.backgroundColor = 'rgba(0,0,0,0.3)';
         sprite.padding = isMobile ? 0.3 : 0.5;
         sprite.borderRadius = 1;
+        sprite.position.set(3, 0, 0); // Use position.set instead of translateX
         
-        const spritePos = new THREE.Vector3(3, 0, 0);
         group.add(sprite);
-        sprite.translateX(spritePos.x);
         
         return group;
       }

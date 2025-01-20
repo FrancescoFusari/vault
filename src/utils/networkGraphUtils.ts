@@ -7,6 +7,7 @@ export interface NetworkNode {
   type: 'note' | 'tag';
   value: number;
   originalNote?: Note;
+  connections?: string[];  // Add this line
   x?: number;
   y?: number;
   z?: number;
@@ -41,7 +42,8 @@ export const processNetworkData = (notes: Note[]): NetworkData => {
       name: note.tags[0] || note.content.split('\n')[0].substring(0, 30) + '...',
       type: 'note',
       value: 2,
-      originalNote: note
+      originalNote: note,
+      connections: note.tags.map(tag => `tag-${tag}`) // Add connections for notes
     };
     nodes.push(noteNode);
     nodeMap.set(noteNode.id, noteNode);
@@ -58,10 +60,16 @@ export const processNetworkData = (notes: Note[]): NetworkData => {
           id: tagId,
           name: tag,
           type: 'tag',
-          value: 1
+          value: 1,
+          connections: [] // Initialize connections array for tags
         };
         nodes.push(tagNode);
         nodeMap.set(tagId, tagNode);
+      }
+      
+      // Add note ID to tag's connections
+      if (tagNode.connections) {
+        tagNode.connections.push(noteNode.id);
       }
 
       links.push({
