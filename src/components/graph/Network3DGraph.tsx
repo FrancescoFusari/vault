@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import ForceGraph3D from "react-force-graph-3d";
-import { NetworkNode } from "@/utils/networkGraphUtils";
+import { NetworkNode, NetworkLink } from "@/utils/networkGraphUtils";
 import * as THREE from "three";
 import SpriteText from "three-spritetext";
 
@@ -11,7 +11,6 @@ interface Network3DGraphProps {
 // Define ForceGraphMethods type
 interface ForceGraphMethods {
   cameraPosition: (position: { x: number; y: number; z: number }, lookAt?: { x: number; y: number; z: number }, transitionMs?: number) => void;
-  // Add other methods as needed
 }
 
 const Network3DGraph = React.forwardRef<ForceGraphMethods, Network3DGraphProps>(({ notes }, ref) => {
@@ -42,7 +41,8 @@ const Network3DGraph = React.forwardRef<ForceGraphMethods, Network3DGraphProps>(
       sprite.borderRadius = 2;
       
       group.add(sprite);
-      sprite.position.set(4, 0, 0);
+      // Use THREE.Object3D's position instead of SpriteText's position
+      (sprite as unknown as THREE.Object3D).position.set(4, 0, 0);
       
       return group;
     } else if (node.type === 'tag') {
@@ -59,7 +59,8 @@ const Network3DGraph = React.forwardRef<ForceGraphMethods, Network3DGraphProps>(
       sprite.borderRadius = 1;
       
       group.add(sprite);
-      sprite.position.set(3, 0, 0);
+      // Use THREE.Object3D's position instead of SpriteText's position
+      (sprite as unknown as THREE.Object3D).position.set(3, 0, 0);
       
       return group;
     }
@@ -67,10 +68,16 @@ const Network3DGraph = React.forwardRef<ForceGraphMethods, Network3DGraphProps>(
     return group;
   };
 
+  // Create empty links array to satisfy GraphData type
+  const graphData = {
+    nodes: notes,
+    links: [] as NetworkLink[]
+  };
+
   return (
     <ForceGraph3D
       ref={graphRef}
-      graphData={{ nodes: notes }}
+      graphData={graphData}
       nodeThreeObject={nodeThreeObject}
       onNodeClick={(node) => {
         console.log("Node clicked:", node);
