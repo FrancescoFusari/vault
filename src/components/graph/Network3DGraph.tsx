@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useMemo } from 'react';
+import { useRef, useEffect, useCallback, useMemo } from 'react';
 import ForceGraph3D, { ForceGraphMethods } from 'react-force-graph-3d';
 import { NetworkNode, NetworkLink, processNetworkData } from '@/utils/networkGraphUtils';
 import { Note } from '@/types/graph';
@@ -6,14 +6,13 @@ import * as d3 from 'd3';
 import SpriteText from 'three-spritetext';
 import * as THREE from 'three';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { MutableRefObject } from 'react';
 
 interface Network3DGraphProps {
   notes: Note[];
-  graphRef: MutableRefObject<ForceGraphMethods | undefined>;
 }
 
-export const Network3DGraph = ({ notes, graphRef }: Network3DGraphProps) => {
+export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
+  const fgRef = useRef<ForceGraphMethods>();
   const isMobile = useIsMobile();
   
   // Memoize graph data processing
@@ -22,7 +21,7 @@ export const Network3DGraph = ({ notes, graphRef }: Network3DGraphProps) => {
 
   // Initialize graph with mobile-optimized settings
   useEffect(() => {
-    const fg = graphRef.current;
+    const fg = fgRef.current;
     if (!fg) return;
 
     // Reset camera and controls
@@ -54,18 +53,69 @@ export const Network3DGraph = ({ notes, graphRef }: Network3DGraphProps) => {
         fg.pauseAnimation();
       }
     };
-  }, [isMobile, graphRef]);
+  }, [isMobile]);
 
   // Memoize node object creation
   const createNodeObject = useCallback((node: NetworkNode) => {
-    const sprite = new SpriteText(node.name);
-    sprite.color = '#ffffff';
-    sprite.textHeight = isMobile ? 3 : 2;
-    sprite.backgroundColor = node.type === 'note' ? 'rgba(239,114,52,0.8)' : 'rgba(224,224,215,0.6)';
-    sprite.padding = 1;
-    sprite.borderRadius = 2;
-
-    return sprite;
+    if (node.type === 'note') {
+      const group = new THREE.Group();
+      
+      const sphereGeometry = new THREE.SphiteGeometry(isMobile ? 2 : 3);
+      const sphere = new THREE.Mesh(
+        sphereGeometry,
+        new THREE.MeshLambertMaterial({ 
+          color: '#EF7234',
+          transparent: true,
+          opacity: 0.8
+        })
+      );
+      group.add(sphere);
+      
+      // Add text sprites for both mobile and desktop
+      const sprite = new SpriteText(node.name);
+      sprite.color = '#ffffff';
+      sprite.textHeight = isMobile ? 1.5 : 2;
+      sprite.backgroundColor = 'rgba(0,0,0,0.5)';
+      sprite.padding = isMobile ? 0.5 : 1;
+      sprite.borderRadius = 2;
+      
+      // Create a new Vector3 for position
+      const spritePosition = new THREE.Vector3(4, 0, 0);
+      sprite.position.copy(spritePosition);
+      
+      group.add(sprite);
+      
+      return group;
+    } else if (node.type === 'tag') {
+      const group = new THREE.Group();
+      
+      const sphere = new THREE.Mesh(
+        new THREE.SphereGeometry(isMobile ? 1.2 : 1.5),
+        new THREE.MeshLambertMaterial({ 
+          color: '#E0E0D7',
+          transparent: true,
+          opacity: 0.6
+        })
+      );
+      group.add(sphere);
+      
+      // Add smaller text sprites for tags
+      const sprite = new SpriteText(node.name);
+      sprite.color = '#E0E0D7';
+      sprite.textHeight = isMobile ? 1 : 1.5;
+      sprite.backgroundColor = 'rgba(0,0,0,0.3)';
+      sprite.padding = isMobile ? 0.3 : 0.5;
+      sprite.borderRadius = 1;
+      
+      // Create a new Vector3 for position
+      const spritePosition = new THREE.Vector3(3, 0, 0);
+      sprite.position.copy(spritePosition);
+      
+      group.add(sprite);
+      
+      return group;
+    }
+    return null;
   }, [isMobile]);
 
   // Handle node drag
@@ -78,10 +128,11 @@ export const Network3DGraph = ({ notes, graphRef }: Network3DGraphProps) => {
   return (
     <div className="w-full h-full">
       <ForceGraph3D
-        ref={graphRef}
+        ref={fgRef}
         graphData={{ nodes, links }}
         nodeLabel={(node: NetworkNode) => node.name}
         nodeThreeObject={createNodeObject}
+        nodeColor={(node: NetworkNode) => node.type === 'note' ? '#EF7234' : '#E0E0D7'}
         backgroundColor="#1B1B1F"
         linkColor={() => "#8E9196"}
         linkWidth={0.2}
