@@ -1,18 +1,26 @@
 import React, { useEffect, useRef } from "react";
-import { ForceGraph3D } from "react-force-graph-3d";
+import ForceGraph3D from "react-force-graph-3d";
 import { NetworkNode } from "@/utils/networkGraphUtils";
 import * as THREE from "three";
-import { SpriteText } from "three-spritetext";
+import SpriteText from "three-spritetext";
 
 interface Network3DGraphProps {
   notes: NetworkNode[];
 }
 
+// Define ForceGraphMethods type
+interface ForceGraphMethods {
+  cameraPosition: (position: { x: number; y: number; z: number }, lookAt?: { x: number; y: number; z: number }, transitionMs?: number) => void;
+  // Add other methods as needed
+}
+
 const Network3DGraph = React.forwardRef<ForceGraphMethods, Network3DGraphProps>(({ notes }, ref) => {
-  const graphRef = useRef<ForceGraphMethods>(null);
+  const graphRef = useRef<any>(null);
 
   useEffect(() => {
-    if (ref) {
+    if (ref && typeof ref === 'function') {
+      ref(graphRef.current);
+    } else if (ref) {
       ref.current = graphRef.current;
     }
   }, [ref]);
@@ -34,7 +42,7 @@ const Network3DGraph = React.forwardRef<ForceGraphMethods, Network3DGraphProps>(
       sprite.borderRadius = 2;
       
       group.add(sprite);
-      sprite.translateX(4);
+      sprite.position.set(4, 0, 0);
       
       return group;
     } else if (node.type === 'tag') {
@@ -51,7 +59,7 @@ const Network3DGraph = React.forwardRef<ForceGraphMethods, Network3DGraphProps>(
       sprite.borderRadius = 1;
       
       group.add(sprite);
-      sprite.translateX(3);
+      sprite.position.set(3, 0, 0);
       
       return group;
     }
