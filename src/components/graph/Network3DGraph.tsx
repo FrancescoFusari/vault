@@ -40,9 +40,9 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         .strength(0.7)
         .iterations(isMobile ? 1 : 2));
 
-      // Smoother camera transition with adjusted initial position
+      // Adjusted camera position for better mobile visibility
       fg.cameraPosition(
-        { x: 0, y: 0, z: isMobile ? 180 : 150 },
+        { x: 0, y: 0, z: isMobile ? 250 : 150 },
         { x: 0, y: 0, z: 0 },
         1000
       );
@@ -61,7 +61,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       const group = new THREE.Group();
       
       // Simplified geometry for mobile
-      const sphereGeometry = new THREE.SphereGeometry(isMobile ? 1.5 : 3);
+      const sphereGeometry = new THREE.SphereGeometry(isMobile ? 2.5 : 3);
       const sphere = new THREE.Mesh(
         sphereGeometry,
         new THREE.MeshLambertMaterial({ 
@@ -87,7 +87,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       return group;
     } else if (node.type === 'tag') {
       return new THREE.Mesh(
-        new THREE.SphereGeometry(isMobile ? 0.8 : 1.5),
+        new THREE.SphereGeometry(isMobile ? 1.5 : 1.5),
         new THREE.MeshLambertMaterial({ 
           color: '#E0E0D7',
           transparent: true,
