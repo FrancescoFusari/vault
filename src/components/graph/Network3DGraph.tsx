@@ -19,49 +19,48 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   const graphData = useMemo(() => processNetworkData(notes), [notes]);
   const { nodes, links } = graphData;
 
-  // Optimize force simulation
+  // Initialize graph with mobile-optimized settings
   useEffect(() => {
-    requestAnimationFrame(() => {
-      const fg = fgRef.current;
-      if (!fg) return;
+    const fg = fgRef.current;
+    if (!fg) return;
 
-      // Mobile-optimized force parameters
-      const forceStrength = isMobile ? -15 : -30;
-      const distanceMax = isMobile ? 100 : 200;
-      const linkDistance = isMobile ? 20 : 40;
-      
-      fg.d3Force('link')?.distance(linkDistance).strength(0.2);
-      fg.d3Force('charge')?.strength(forceStrength).distanceMax(distanceMax);
-      fg.d3Force('center')?.strength(0.05);
+    // Reset camera and controls
+    fg.pauseAnimation();
+    fg.cameraPosition({ x: 0, y: 0, z: isMobile ? 200 : 150 });
+    
+    // Mobile-optimized force parameters
+    const forceStrength = isMobile ? -20 : -30;
+    const distanceMax = isMobile ? 150 : 200;
+    const linkDistance = isMobile ? 30 : 40;
+    
+    fg.d3Force('link')?.distance(linkDistance).strength(0.2);
+    fg.d3Force('charge')?.strength(forceStrength).distanceMax(distanceMax);
+    fg.d3Force('center')?.strength(0.1);
+    
+    fg.d3Force('collision', d3.forceCollide()
+      .radius(isMobile ? 3 : 5)
+      .strength(0.7)
+      .iterations(isMobile ? 1 : 2)
+    );
 
-      // Optimized collision detection for mobile
-      fg.d3Force('collision', d3.forceCollide()
-        .radius(isMobile ? 4 : 8)
-        .strength(0.7)
-        .iterations(isMobile ? 1 : 2));
-
-      // Adjusted camera position for better mobile visibility
-      fg.cameraPosition(
-        { x: 0, y: 0, z: isMobile ? 250 : 150 },
-        { x: 0, y: 0, z: 0 },
-        1000
-      );
-    });
+    // Resume animation after settings are applied
+    setTimeout(() => {
+      fg.resumeAnimation();
+    }, 100);
 
     return () => {
-      if (fgRef.current) {
-        fgRef.current.pauseAnimation();
+      if (fg) {
+        fg.pauseAnimation();
       }
     };
   }, [isMobile]);
 
-  // Memoize node object creation with mobile optimizations
+  // Memoize node object creation
   const createNodeObject = useCallback((node: NetworkNode) => {
     if (node.type === 'note') {
       const group = new THREE.Group();
       
-      // Simplified geometry for mobile
-      const sphereGeometry = new THREE.SphereGeometry(isMobile ? 2.5 : 3);
+      const sphereGeometry = new THREE.SphereGeometry(isMobile ? 2 : 3);
       const sphere = new THREE.Mesh(
         sphereGeometry,
         new THREE.MeshLambertMaterial({ 
@@ -72,7 +71,6 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       );
       group.add(sphere);
       
-      // Only add text sprites on non-mobile or for hovered nodes
       if (!isMobile) {
         const sprite = new SpriteText(node.name);
         sprite.color = '#ffffff';
@@ -80,14 +78,14 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         sprite.backgroundColor = 'rgba(0,0,0,0.5)';
         sprite.padding = 1;
         sprite.borderRadius = 2;
+        sprite.position.set(4, 0, 0);
         group.add(sprite);
-        (sprite as any).position.x = 4;
       }
       
       return group;
     } else if (node.type === 'tag') {
       return new THREE.Mesh(
-        new THREE.SphereGeometry(isMobile ? 1.5 : 1.5),
+        new THREE.SphereGeometry(isMobile ? 1.2 : 1.5),
         new THREE.MeshLambertMaterial({ 
           color: '#E0E0D7',
           transparent: true,
@@ -98,7 +96,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     return null;
   }, [isMobile]);
 
-  // Memoize node drag handler
+  // Handle node drag
   const handleNodeDragEnd = useCallback((node: NetworkNode) => {
     node.fx = node.x;
     node.fy = node.y;
