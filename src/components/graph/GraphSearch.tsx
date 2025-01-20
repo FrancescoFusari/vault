@@ -2,8 +2,8 @@ import { Input } from "@/components/ui/input";
 import { NetworkNode } from "@/utils/networkGraphUtils";
 import { useEffect, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
+import { SearchResult } from "./SearchResult";
 
 interface GraphSearchProps {
   nodes: NetworkNode[];
@@ -26,6 +26,30 @@ export const GraphSearch = ({ nodes, onNodeSelect }: GraphSearchProps) => {
     setResults(filtered);
   }, [searchTerm, nodes]);
 
+  const getRelatedNodes = (node: NetworkNode): NetworkNode[] => {
+    // For tag nodes, find all notes that have this tag
+    if (node.type === 'tag') {
+      return nodes.filter(n => 
+        n.type === 'note' && 
+        node.connections?.includes(n.id)
+      );
+    }
+    
+    // For note nodes, find all connected tags and notes with common tags
+    const connectedNodeIds = node.connections || [];
+    const connectedNodes = nodes.filter(n => connectedNodeIds.includes(n.id));
+    
+    // Find notes that share tags with this note
+    const noteTags = connectedNodes.filter(n => n.type === 'tag');
+    const relatedNotes = nodes.filter(n => 
+      n.type === 'note' && 
+      n.id !== node.id && 
+      noteTags.some(tag => n.connections?.includes(tag.id))
+    );
+    
+    return [...connectedNodes, ...relatedNotes];
+  };
+
   return (
     <div className="absolute top-4 left-1/2 -translate-x-1/2 w-full max-w-lg px-4 z-10">
       <div className="relative">
@@ -40,26 +64,21 @@ export const GraphSearch = ({ nodes, onNodeSelect }: GraphSearchProps) => {
       </div>
       
       {results.length > 0 && (
-        <div className="mt-2 bg-background/95 backdrop-blur-sm border rounded-lg shadow-lg">
-          <ScrollArea className="h-[min(300px,60vh)] rounded-lg">
-            <div className="p-2 space-y-1">
+        <div className="mt-2">
+          <ScrollArea className="h-[min(400px,60vh)]">
+            <div className="space-y-2 pr-2">
               {results.map((node) => (
-                <Button
+                <SearchResult
                   key={node.id}
-                  variant="ghost"
-                  className="w-full justify-start text-left h-auto py-2"
-                  onClick={() => {
-                    onNodeSelect(node);
-                    setSearchTerm("");
+                  node={node}
+                  relatedNodes={getRelatedNodes(node)}
+                  onSelect={(selectedNode) => {
+                    onNodeSelect(selectedNode);
+                    if (selectedNode.id !== node.id) {
+                      setSearchTerm("");
+                    }
                   }}
-                >
-                  <span className="truncate">
-                    {node.name}
-                    <span className="ml-2 text-xs text-muted-foreground">
-                      ({node.type})
-                    </span>
-                  </span>
-                </Button>
+                />
               ))}
             </div>
           </ScrollArea>
