@@ -60,7 +60,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
     if (node.type === 'note') {
       const group = new THREE.Group();
       
-      const sphereGeometry = new THREE.SphereGeometry(isMobile ? 2 : 3);
+      const sphereGeometry = new THREE.SphiteGeometry(isMobile ? 2 : 3);
       const sphere = new THREE.Mesh(
         sphereGeometry,
         new THREE.MeshLambertMaterial({ 
@@ -71,20 +71,25 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       );
       group.add(sphere);
       
-      if (!isMobile) {
-        const sprite = new SpriteText(node.name);
-        sprite.color = '#ffffff';
-        sprite.textHeight = 2;
-        sprite.backgroundColor = 'rgba(0,0,0,0.5)';
-        sprite.padding = 1;
-        sprite.borderRadius = 2;
-        sprite.position.set(4, 0, 0);
-        group.add(sprite);
-      }
+      // Add text sprites for both mobile and desktop
+      const sprite = new SpriteText(node.name);
+      sprite.color = '#ffffff';
+      sprite.textHeight = isMobile ? 1.5 : 2;
+      sprite.backgroundColor = 'rgba(0,0,0,0.5)';
+      sprite.padding = isMobile ? 0.5 : 1;
+      sprite.borderRadius = 2;
+      
+      // Create a new Vector3 for position
+      const spritePosition = new THREE.Vector3(4, 0, 0);
+      sprite.position.copy(spritePosition);
+      
+      group.add(sprite);
       
       return group;
     } else if (node.type === 'tag') {
-      return new THREE.Mesh(
+      const group = new THREE.Group();
+      
+      const sphere = new THREE.Mesh(
         new THREE.SphereGeometry(isMobile ? 1.2 : 1.5),
         new THREE.MeshLambertMaterial({ 
           color: '#E0E0D7',
@@ -92,6 +97,23 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
           opacity: 0.6
         })
       );
+      group.add(sphere);
+      
+      // Add smaller text sprites for tags
+      const sprite = new SpriteText(node.name);
+      sprite.color = '#E0E0D7';
+      sprite.textHeight = isMobile ? 1 : 1.5;
+      sprite.backgroundColor = 'rgba(0,0,0,0.3)';
+      sprite.padding = isMobile ? 0.3 : 0.5;
+      sprite.borderRadius = 1;
+      
+      // Create a new Vector3 for position
+      const spritePosition = new THREE.Vector3(3, 0, 0);
+      sprite.position.copy(spritePosition);
+      
+      group.add(sprite);
+      
+      return group;
     }
     return null;
   }, [isMobile]);
