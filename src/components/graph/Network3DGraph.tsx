@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback, useMemo } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import ForceGraph3D, { ForceGraphMethods } from 'react-force-graph-3d';
 import { NetworkNode, NetworkLink, processNetworkData } from '@/utils/networkGraphUtils';
 import { Note } from '@/types/graph';
@@ -6,13 +6,14 @@ import * as d3 from 'd3';
 import SpriteText from 'three-spritetext';
 import * as THREE from 'three';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { MutableRefObject } from 'react';
 
 interface Network3DGraphProps {
   notes: Note[];
+  graphRef: MutableRefObject<ForceGraphMethods | undefined>;
 }
 
-export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
-  const fgRef = useRef<ForceGraphMethods>();
+export const Network3DGraph = ({ notes, graphRef }: Network3DGraphProps) => {
   const isMobile = useIsMobile();
   
   // Memoize graph data processing
@@ -21,7 +22,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
 
   // Initialize graph with mobile-optimized settings
   useEffect(() => {
-    const fg = fgRef.current;
+    const fg = graphRef.current;
     if (!fg) return;
 
     // Reset camera and controls
@@ -53,47 +54,18 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         fg.pauseAnimation();
       }
     };
-  }, [isMobile]);
+  }, [isMobile, graphRef]);
 
   // Memoize node object creation
   const createNodeObject = useCallback((node: NetworkNode) => {
-    if (node.type === 'note') {
-      const group = new THREE.Group();
-      
-      const sphereGeometry = new THREE.SphereGeometry(isMobile ? 2 : 3);
-      const sphere = new THREE.Mesh(
-        sphereGeometry,
-        new THREE.MeshLambertMaterial({ 
-          color: '#EF7234',
-          transparent: true,
-          opacity: 0.8
-        })
-      );
-      group.add(sphere);
-      
-      if (!isMobile) {
-        const sprite = new SpriteText(node.name);
-        sprite.color = '#ffffff';
-        sprite.textHeight = 2;
-        sprite.backgroundColor = 'rgba(0,0,0,0.5)';
-        sprite.padding = 1;
-        sprite.borderRadius = 2;
-        sprite.position.set(4, 0, 0);
-        group.add(sprite);
-      }
-      
-      return group;
-    } else if (node.type === 'tag') {
-      return new THREE.Mesh(
-        new THREE.SphereGeometry(isMobile ? 1.2 : 1.5),
-        new THREE.MeshLambertMaterial({ 
-          color: '#E0E0D7',
-          transparent: true,
-          opacity: 0.6
-        })
-      );
-    }
-    return null;
+    const sprite = new SpriteText(node.name);
+    sprite.color = '#ffffff';
+    sprite.textHeight = isMobile ? 3 : 2;
+    sprite.backgroundColor = node.type === 'note' ? 'rgba(239,114,52,0.8)' : 'rgba(224,224,215,0.6)';
+    sprite.padding = 1;
+    sprite.borderRadius = 2;
+
+    return sprite;
   }, [isMobile]);
 
   // Handle node drag
@@ -106,11 +78,10 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
   return (
     <div className="w-full h-full">
       <ForceGraph3D
-        ref={fgRef}
+        ref={graphRef}
         graphData={{ nodes, links }}
         nodeLabel={(node: NetworkNode) => node.name}
         nodeThreeObject={createNodeObject}
-        nodeColor={(node: NetworkNode) => node.type === 'note' ? '#EF7234' : '#E0E0D7'}
         backgroundColor="#1B1B1F"
         linkColor={() => "#8E9196"}
         linkWidth={0.2}
