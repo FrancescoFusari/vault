@@ -51,7 +51,7 @@ export const GraphSearch = ({ nodes, onNodeSelect }: GraphSearchProps) => {
   };
 
   return (
-    <div className="absolute top-4 left-1/2 -translate-x-1/2 w-full max-w-lg px-4 z-10">
+    <div className="absolute top-4 left-1/2 -translate-x-1/2 w-full max-w-md px-4 z-10">
       <div className="relative">
         <Input
           type="text"
@@ -65,7 +65,7 @@ export const GraphSearch = ({ nodes, onNodeSelect }: GraphSearchProps) => {
       
       {results.length > 0 && (
         <div className="mt-2">
-          <ScrollArea className="h-[min(400px,60vh)]">
+          <ScrollArea className="h-[200px]">
             <div className="space-y-2 pr-2">
               {results.map((node) => (
                 <SearchResult

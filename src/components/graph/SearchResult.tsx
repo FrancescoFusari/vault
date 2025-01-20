@@ -29,13 +29,13 @@ export const SearchResult = ({ node, relatedNodes, onSelect }: SearchResultProps
     <div 
       className={cn(
         "bg-background/95 backdrop-blur-sm border rounded-lg transition-all duration-200",
-        isExpanded ? "p-4" : "p-3"
+        isExpanded ? "p-3" : "p-2"
       )}
     >
       <div className="flex items-center justify-between">
         <Button
           variant="ghost"
-          className="flex-1 justify-start font-medium truncate"
+          className="flex-1 justify-start font-medium truncate text-sm"
           onClick={handleSelect}
         >
           {node.name}
@@ -44,7 +44,7 @@ export const SearchResult = ({ node, relatedNodes, onSelect }: SearchResultProps
           variant="ghost"
           size="sm"
           onClick={handleToggle}
-          className="ml-2"
+          className="ml-2 h-7 w-7 p-0"
         >
           {isExpanded ? (
             <ChevronUp className="h-4 w-4" />
@@ -55,19 +55,19 @@ export const SearchResult = ({ node, relatedNodes, onSelect }: SearchResultProps
       </div>
 
       {isExpanded && (
-        <div className="mt-4 space-y-4">
+        <div className="mt-3 space-y-3">
           {relatedTags.length > 0 && (
             <div className="space-y-2">
-              <div className="flex items-center text-sm text-muted-foreground">
-                <Tag className="h-4 w-4 mr-2" />
+              <div className="flex items-center text-xs text-muted-foreground">
+                <Tag className="h-3 w-3 mr-1" />
                 Connected Tags
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1">
                 {relatedTags.map((tag) => (
                   <Badge
                     key={tag.id}
                     variant="secondary"
-                    className="cursor-pointer"
+                    className="cursor-pointer text-xs"
                     onClick={() => onSelect(tag)}
                   >
                     {tag.name}
@@ -78,8 +78,8 @@ export const SearchResult = ({ node, relatedNodes, onSelect }: SearchResultProps
           )}
 
           {relatedNotes.length > 0 && (
-            <div className="space-y-2">
-              <div className="text-sm text-muted-foreground">
+            <div className="space-y-1">
+              <div className="text-xs text-muted-foreground">
                 Notes with Common Tags
               </div>
               <div className="space-y-1">
@@ -88,7 +88,7 @@ export const SearchResult = ({ node, relatedNodes, onSelect }: SearchResultProps
                     key={note.id}
                     variant="ghost"
                     size="sm"
-                    className="w-full justify-start text-sm font-normal"
+                    className="w-full justify-start text-xs font-normal h-7"
                     onClick={() => onSelect(note)}
                   >
                     {note.name}
