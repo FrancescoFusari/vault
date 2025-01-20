@@ -3,11 +3,8 @@ import { GraphSearch } from "@/components/graph/GraphSearch";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useRef } from "react";
+import { ForceGraphMethods } from "react-force-graph-3d";
 import { NetworkNode, processNetworkData } from "@/utils/networkGraphUtils";
-
-interface ForceGraphMethods {
-  cameraPosition: (position: { x: number; y: number; z: number }, lookAt?: { x: number; y: number; z: number }, transitionMs?: number) => void;
-}
 
 const Network3DPage = () => {
   const graphRef = useRef<ForceGraphMethods>();
@@ -48,7 +45,7 @@ const Network3DPage = () => {
     <div className="fixed inset-0">
       <GraphSearch nodes={nodes} onNodeSelect={handleNodeSelect} />
       <div className="w-full h-screen pt-16 pb-16 md:pb-0">
-        <Network3DGraph ref={graphRef} notes={nodes} />
+        <Network3DGraph ref={graphRef} notes={notes} />
       </div>
     </div>
   );
