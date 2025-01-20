@@ -17,8 +17,8 @@ const Network3DPage = () => {
   });
 
   return (
-    <div className="fixed inset-0 flex flex-col h-screen w-screen">
-      <div className="flex-1 relative w-full h-full mt-16">
+    <div className="fixed inset-0 flex flex-col h-[calc(100dvh-4rem)] md:h-[calc(100dvh-6rem)] mt-16">
+      <div className="flex-1 relative w-full h-full">
         <Network3DGraph notes={notes} />
       </div>
     </div>

@@ -26,22 +26,26 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       if (!fg) return;
 
       // Mobile-optimized force parameters
-      const forceStrength = isMobile ? -20 : -30;
-      const distanceMax = isMobile ? 150 : 200;
-      const linkDistance = isMobile ? 30 : 40;
+      const forceStrength = isMobile ? -15 : -30;
+      const distanceMax = isMobile ? 100 : 200;
+      const linkDistance = isMobile ? 20 : 40;
       
       fg.d3Force('link')?.distance(linkDistance).strength(0.2);
       fg.d3Force('charge')?.strength(forceStrength).distanceMax(distanceMax);
-      fg.d3Force('center')?.strength(0.02);
+      fg.d3Force('center')?.strength(0.05);
 
       // Optimized collision detection for mobile
       fg.d3Force('collision', d3.forceCollide()
-        .radius(isMobile ? 6 : 8)
-        .strength(0.5)
+        .radius(isMobile ? 4 : 8)
+        .strength(0.7)
         .iterations(isMobile ? 1 : 2));
 
-      // Smoother camera transition
-      fg.cameraPosition({ z: isMobile ? 120 : 150 }, { x: 0, y: 0, z: 0 }, 1000);
+      // Smoother camera transition with adjusted initial position
+      fg.cameraPosition(
+        { x: 0, y: 0, z: isMobile ? 180 : 150 },
+        { x: 0, y: 0, z: 0 },
+        1000
+      );
     });
 
     return () => {
@@ -57,7 +61,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       const group = new THREE.Group();
       
       // Simplified geometry for mobile
-      const sphereGeometry = new THREE.SphereGeometry(isMobile ? 2 : 3);
+      const sphereGeometry = new THREE.SphereGeometry(isMobile ? 1.5 : 3);
       const sphere = new THREE.Mesh(
         sphereGeometry,
         new THREE.MeshLambertMaterial({ 
@@ -83,7 +87,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
       return group;
     } else if (node.type === 'tag') {
       return new THREE.Mesh(
-        new THREE.SphereGeometry(isMobile ? 1 : 1.5),
+        new THREE.SphereGeometry(isMobile ? 0.8 : 1.5),
         new THREE.MeshLambertMaterial({ 
           color: '#E0E0D7',
           transparent: true,
@@ -123,7 +127,7 @@ export const Network3DGraph = ({ notes }: Network3DGraphProps) => {
         d3AlphaDecay={isMobile ? 0.02 : 0.01}
         d3VelocityDecay={isMobile ? 0.3 : 0.2}
         rendererConfig={{
-          antialias: !isMobile, // Disable antialiasing on mobile
+          antialias: !isMobile,
           alpha: true,
           powerPreference: 'high-performance'
         }}
